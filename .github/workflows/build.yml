@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ironlog-offline-app
+        working-directory: haushaltsbuch-offline-app
     steps:
       - uses: actions/checkout@v4
 
@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: ironlog-offline-app/app/build/outputs/apk/debug/app-debug.apk
+          path: haushaltsbuch-offline-app/app/build/outputs/apk/debug/app-debug.apk
