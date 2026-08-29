@@ -520,7 +520,7 @@
         <input type="number" id="loanOriginal" placeholder="Kreditsumme (€)" step="0.01" class="full">
         <input type="number" id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" class="full" required>
         <div class="full">
-          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Laufzeit in Monaten (optional, laut Vertrag)</label>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Gesamtlaufzeit in Monaten (optional, laut Vertrag)</label>
           <input type="number" id="loanTermMonths" placeholder="z. B. 36" min="1" step="1">
         </div>
         <button type="submit">Kredit hinzufügen</button>
@@ -1608,33 +1608,31 @@ var nativeStorage = {
   }
 
   /* ---------- Kredite ---------- */
-  function formatRemainingTerm(remainingBalance, monthlyPayment, endDate){
-    if(remainingBalance <= 0) return 'Abbezahlt';
+  function formatRemainingTerm(loan){
+    if(loan.remainingBalance <= 0) return 'Abbezahlt';
 
-    // Falls ein echtes Laufzeit-Ende aus dem Vertrag hinterlegt ist, dieses
-    // verwenden (genauer als die reine Rechnung, z.B. bei verzinsten Krediten) -
-    // sonst wie bisher aus Restschuld/Monatsrate hochrechnen.
-    if(endDate){
-      var end = new Date(endDate+'T00:00:00');
-      if(!isNaN(end.getTime())){
-        var now = new Date();
-        now.setHours(0,0,0,0);
-        var totalMonths = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
-        if(end.getDate() < now.getDate()) totalMonths--;
-        if(totalMonths <= 0) return 'Läuft in Kürze aus';
-        var y2 = Math.floor(totalMonths / 12);
-        var m2 = totalMonths % 12;
-        if(y2 === 0) return m2 + (m2 === 1 ? ' Monat' : ' Monate');
-        var yStr2 = y2 + (y2 === 1 ? ' Jahr' : ' Jahre');
-        if(m2 === 0) return yStr2;
-        return yStr2 + ', ' + m2 + (m2 === 1 ? ' Monat' : ' Monate');
-      }
+    // Falls eine Gesamtlaufzeit (laut Vertrag) hinterlegt ist: davon die Anzahl
+    // bereits erfasster Raten abziehen. Das zaehlt automatisch runter, sobald
+    // eine neue Rate gebucht wird - anders als eine reine Kalender-Rechnung.
+    if(loan.totalTermMonths){
+      var paymentsMade = state.loanPayments.filter(function(p){
+        return p.loanId === loan.id && p.type === 'payment';
+      }).length;
+      var remaining = Math.max(0, loan.totalTermMonths - paymentsMade);
+      if(remaining === 0) return 'Letzte Rate fällig';
+      var y2 = Math.floor(remaining / 12);
+      var m2 = remaining % 12;
+      if(y2 === 0) return m2 + (m2 === 1 ? ' Monat' : ' Monate');
+      var yStr2 = y2 + (y2 === 1 ? ' Jahr' : ' Jahre');
+      if(m2 === 0) return yStr2;
+      return yStr2 + ', ' + m2 + (m2 === 1 ? ' Monat' : ' Monate');
     }
 
+    var monthlyPayment = loan.monthlyPayment;
     if(!monthlyPayment || monthlyPayment <= 0) return '–';
     // Kleine Toleranz (0.01 Cent) gegen Kommazahlen-Rundungsfehler, damit z.B.
     // exakt 12 Monate nicht durch einen winzigen Rest auf 13 aufgerundet werden.
-    var months = Math.ceil((remainingBalance / monthlyPayment) - 0.0001);
+    var months = Math.ceil((loan.remainingBalance / monthlyPayment) - 0.0001);
     var years = Math.floor(months / 12);
     var restMonths = months % 12;
     if(years === 0) return restMonths + (restMonths === 1 ? ' Monat' : ' Monate');
@@ -1660,21 +1658,12 @@ var nativeStorage = {
     var html = '';
     state.loans.slice().sort(function(a,b){ return a.remainingBalance - b.remainingBalance; }).forEach(function(loan){
       if(editing.loan === loan.id){
-        var prefillMonths = '';
-        if(loan.endDate){
-          var endD = new Date(loan.endDate+'T00:00:00');
-          if(!isNaN(endD.getTime())){
-            var nowD = new Date(); nowD.setHours(0,0,0,0);
-            var diffMonths = (endD.getFullYear()-nowD.getFullYear())*12 + (endD.getMonth()-nowD.getMonth());
-            if(endD.getDate() < nowD.getDate()) diffMonths--;
-            prefillMonths = diffMonths > 0 ? diffMonths : '';
-          }
-        }
+        var prefillMonths = loan.totalTermMonths || '';
         html += '<div class="edit-row" data-id="'+loan.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(loan.name)+'" placeholder="Bezeichnung">'+
                   '<input type="number" step="0.01" class="edit-original" value="'+loan.originalAmount+'" placeholder="Kreditsumme (€)">'+
                   '<input type="number" step="0.01" class="edit-monthly" value="'+loan.monthlyPayment+'" placeholder="Rate/Monat (€)">'+
-                  '<input type="number" step="1" min="1" class="edit-term-months full" value="'+prefillMonths+'" placeholder="Laufzeit in Monaten (optional)">'+
+                  '<input type="number" step="1" min="1" class="edit-term-months full" value="'+prefillMonths+'" placeholder="Gesamtlaufzeit in Monaten (optional)">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-loan">Abbrechen</button>'+
                     '<button type="button" class="btn-save" data-action="save-edit-loan" data-id="'+loan.id+'">Speichern</button>'+
@@ -1685,7 +1674,7 @@ var nativeStorage = {
         html += '<div class="loan-card" data-id="'+loan.id+'">'+
                   '<div class="loan-top"><span class="loan-name" data-action="toggle-history" data-id="'+loan.id+'" style="cursor:pointer;"><button class="icon-btn info-btn'+(expandedLoans[loan.id]?' active':'')+'" data-action="toggle-history" data-id="'+loan.id+'" aria-label="Verlauf anzeigen" title="Verlauf anzeigen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
                   (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '<div class="loan-sub" style="margin-top:6px;"><span>Rate: '+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>')+
-                  '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan.remainingBalance, loan.monthlyPayment, loan.endDate)+'</span></div>'+
+                  '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
                     '<button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Schulden erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>'+
@@ -2276,15 +2265,12 @@ var nativeStorage = {
       var monthly = parseAmount(document.getElementById('loanMonthly').value);
       var termMonthsRaw = document.getElementById('loanTermMonths').value;
       var termMonths = termMonthsRaw ? parseInt(termMonthsRaw, 10) : NaN;
-      var endDate = '';
-      if(!isNaN(termMonths) && termMonths > 0){
-        var d = new Date();
-        d.setMonth(d.getMonth() + termMonths);
-        endDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      }
       if(!name || isNaN(monthly)) return;
       original = isNaN(original) ? 0 : original;
-      state.loans.push({id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly, endDate:endDate});
+      state.loans.push({
+        id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly,
+        totalTermMonths: (!isNaN(termMonths) && termMonths > 0) ? termMonths : null
+      });
       saveState();
       document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanMonthly').value=''; document.getElementById('loanTermMonths').value='';
       renderAll();
@@ -2322,13 +2308,7 @@ var nativeStorage = {
           loan.remainingBalance = roundCents(Math.max(0, loan.remainingBalance + delta));
           loan.originalAmount = newOriginal;
           loan.monthlyPayment = monthly;
-          if(!isNaN(termMonths) && termMonths > 0){
-            var d = new Date();
-            d.setMonth(d.getMonth() + termMonths);
-            loan.endDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-          } else {
-            loan.endDate = '';
-          }
+          loan.totalTermMonths = (!isNaN(termMonths) && termMonths > 0) ? termMonths : null;
         }
         editing.loan = null; saveState(); renderAll();
       } else if(action === 'pay-loan'){
@@ -2405,7 +2385,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','endDate']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']}
   ];
@@ -2497,6 +2477,8 @@ var nativeStorage = {
         obj.originalAmount = parseFloat(obj.originalAmount) || 0;
         obj.remainingBalance = parseFloat(obj.remainingBalance) || 0;
         obj.monthlyPayment = parseFloat(obj.monthlyPayment) || 0;
+        var parsedTerm = parseInt(obj.totalTermMonths, 10);
+        obj.totalTermMonths = (!isNaN(parsedTerm) && parsedTerm > 0) ? parsedTerm : null;
       }
       result[currentTable].push(obj);
     });
