@@ -358,6 +358,9 @@
 
         <h2 class="section-title">Kredite</h2>
         <div id="loanList"></div>
+
+        <h2 class="section-title" id="paidLoansHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidLoansBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Verlauf: Abbezahlte Kredite</h2>
+        <div id="paidLoansList"></div>
       </section>
 
       <!-- SPAREN -->
@@ -842,6 +845,7 @@ var nativeStorage = {
   var showPotHistory = loadBoolPref('household-show-pothistory', true);
   var showIncomeList = loadBoolPref('household-show-income', true);
   var showFixedList = loadBoolPref('household-show-fixed', true);
+  var showPaidLoansHistory = loadBoolPref('household-show-paid-loans', false);
   var showSparList = loadBoolPref('household-show-sparlist', true);
   function loadBoolPref(key, fallback){
     try{
@@ -1642,21 +1646,23 @@ var nativeStorage = {
   }
 
   function renderKredite(){
-    var totalRemaining = sum(state.loans,'remainingBalance');
-    var totalOriginal = sum(state.loans,'originalAmount');
-    var totalMonthly = sum(state.loans,'monthlyPayment');
+    var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+    var paidLoans = state.loans.filter(function(l){ return l.remainingBalance <= 0; });
+
+    var totalRemaining = sum(activeLoans,'remainingBalance');
+    var totalOriginal = sum(activeLoans,'originalAmount');
+    var totalMonthly = sum(activeLoans,'monthlyPayment');
     document.getElementById('loanSummary').innerHTML =
       '<div class="summary-row"><span>Restschuld gesamt</span><span class="val neg">'+fmtEUR(totalRemaining)+'</span></div>'+
       '<div class="summary-row"><span>Kreditsumme gesamt</span><span class="val">'+fmtEUR(totalOriginal)+'</span></div>'+
       '<div class="summary-row"><span>Monatliche Raten gesamt</span><span class="val">'+fmtEUR(totalMonthly)+'</span></div>';
 
     var container = document.getElementById('loanList');
-    if(state.loans.length === 0){
-      container.innerHTML = '<div class="empty-state">Noch keine Kredite oder Raten angelegt.</div>';
-      return;
-    }
+    if(activeLoans.length === 0){
+      container.innerHTML = '<div class="empty-state">Noch keine laufenden Kredite oder Raten angelegt.</div>';
+    } else {
     var html = '';
-    state.loans.slice().sort(function(a,b){ return a.remainingBalance - b.remainingBalance; }).forEach(function(loan){
+    activeLoans.slice().sort(function(a,b){ return a.remainingBalance - b.remainingBalance; }).forEach(function(loan){
       if(editing.loan === loan.id){
         var prefillMonths = loan.totalTermMonths || '';
         html += '<div class="edit-row" data-id="'+loan.id+'">'+
@@ -1686,6 +1692,40 @@ var nativeStorage = {
                   (increasingLoan === loan.id ? renderIncreaseLoanForm(loan) : '')+
                 '</div>';
       }
+    });
+    container.innerHTML = html;
+    }
+
+    renderPaidLoansHistory(paidLoans);
+  }
+
+  function renderPaidLoansHistory(paidLoans){
+    document.getElementById('togglePaidLoansBtn').classList.toggle('active', showPaidLoansHistory);
+    var container = document.getElementById('paidLoansList');
+    if(!showPaidLoansHistory){
+      container.innerHTML = '';
+      return;
+    }
+    if(paidLoans.length === 0){
+      container.innerHTML = '<div class="empty-state" style="padding:14px 4px;">Noch keine abbezahlten Kredite.</div>';
+      return;
+    }
+    var html = '';
+    paidLoans.slice().sort(function(a,b){
+      return (b.paidOffDate||'').localeCompare(a.paidOffDate||'');
+    }).forEach(function(loan){
+      var dateLabel = '–';
+      if(loan.paidOffDate){
+        var pd = parseISO(loan.paidOffDate);
+        dateLabel = String(pd.getDate()).padStart(2,'0')+'.'+String(pd.getMonth()+1).padStart(2,'0')+'.'+pd.getFullYear();
+      }
+      html += '<div class="loan-card" data-id="'+loan.id+'" style="opacity:0.85;">'+
+                '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining" style="color:var(--savings);">Abbezahlt</span></div>'+
+                '<div class="loan-sub" style="margin-top:6px;"><span>Kreditsumme: '+fmtEUR(loan.originalAmount)+'</span><span>Abbezahlt am '+dateLabel+'</span></div>'+
+                '<div class="vc-actions">'+
+                  '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                '</div>'+
+              '</div>';
     });
     container.innerHTML = html;
   }
@@ -1746,6 +1786,7 @@ var nativeStorage = {
       });
     }
     html += '</div>';
+    html += '<button type="button" class="settings-btn" style="margin:12px 4px 0;background:var(--savings);" data-action="payoff-loan" data-id="'+loanId+'">Vorzeitig abbezahlt</button>';
     return html;
   }
 
@@ -2017,6 +2058,12 @@ var nativeStorage = {
       showFixedList = !showFixedList;
       saveBoolPref('household-show-fixed', showFixedList);
       renderUebersicht();
+    });
+
+    document.getElementById('paidLoansHeader').addEventListener('click', function(){
+      showPaidLoansHistory = !showPaidLoansHistory;
+      saveBoolPref('household-show-paid-loans', showPaidLoansHistory);
+      renderKredite();
     });
 
     document.getElementById('invoiceForm').addEventListener('submit', function(e){
@@ -2324,8 +2371,18 @@ var nativeStorage = {
         var amount = parseAmount(payRow.querySelector('.pay-amount').value);
         if(!dateStr || isNaN(amount) || amount<=0) return;
         loan2.remainingBalance = roundCents(Math.max(0, loan2.remainingBalance - amount));
+        if(loan2.remainingBalance <= 0 && !loan2.paidOffDate) loan2.paidOffDate = todayISO();
         state.loanPayments.push({id:genId(), loanId:id, date:dateStr, amount:amount, type:'payment'});
         payingLoan = null;
+        saveState(); renderAll();
+      } else if(action === 'payoff-loan'){
+        if(!await confirmDialog('Diesen Kredit wirklich als vorzeitig abbezahlt markieren? Die Restschuld wird auf 0 gesetzt.')) return;
+        var payoffLoan = state.loans.filter(function(x){return x.id===id;})[0];
+        if(payoffLoan){
+          payoffLoan.remainingBalance = 0;
+          if(!payoffLoan.paidOffDate) payoffLoan.paidOffDate = todayISO();
+        }
+        expandedLoans[id] = false;
         saveState(); renderAll();
       } else if(action === 'increase-loan'){
         editing.loan = null; payingLoan = null;
@@ -2385,7 +2442,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']}
   ];
@@ -2862,4 +2919,4 @@ if('serviceWorker' in navigator){
   };
 </script>
 </body>
-  </html>
+        </html>
