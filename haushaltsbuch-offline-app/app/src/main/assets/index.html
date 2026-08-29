@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="description" content="Haushaltsbuch für Einnahmen, Fixkosten, variable Kosten mit Sparbeitrag und Kredite/Raten.">
+<meta name="description" content="Haushaltsbuch fÃ¼r Einnahmen, Fixkosten, variable Kosten mit Sparbeitrag und Kredite/Raten.">
 <meta name="theme-color" content="#1268FF">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibWludCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0QkYwQjQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMjJDOThDIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIGZpbGw9IiMxNDE1MUEiLz4KCiAgPCEtLSBHZWxkYm9lcnNlIC0tPgogIDxyZWN0IHg9IjM4IiB5PSI1NiIgd2lkdGg9IjExNiIgaGVpZ2h0PSI4NiIgcng9IjE4IiBmaWxsPSJ1cmwoI21pbnQpIi8+CiAgPCEtLSBGYWx6LUxpbmllIC0tPgogIDxyZWN0IHg9IjM4IiB5PSI5MCIgd2lkdGg9IjExNiIgaGVpZ2h0PSI3IiByeD0iMy41IiBmaWxsPSIjMTQxNTFBIi8+CiAgPCEtLSBWZXJzY2hsdXNzIC0tPgogIDxjaXJjbGUgY3g9IjEzNCIgY3k9IjkzLjUiIHI9IjEwIiBmaWxsPSIjMTQxNTFBIi8+CiAgPGNpcmNsZSBjeD0iMTM0IiBjeT0iOTMuNSIgcj0iNCIgZmlsbD0idXJsKCNtaW50KSIvPgo8L3N2Zz4K">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibWludCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0QkYwQjQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMjJDOThDIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIGZpbGw9IiMxNDE1MUEiLz4KCiAgPCEtLSBHZWxkYm9lcnNlIC0tPgogIDxyZWN0IHg9IjM4IiB5PSI1NiIgd2lkdGg9IjExNiIgaGVpZ2h0PSI4NiIgcng9IjE4IiBmaWxsPSJ1cmwoI21pbnQpIi8+CiAgPCEtLSBGYWx6LUxpbmllIC0tPgogIDxyZWN0IHg9IjM4IiB5PSI5MCIgd2lkdGg9IjExNiIgaGVpZ2h0PSI3IiByeD0iMy41IiBmaWxsPSIjMTQxNTFBIi8+CiAgPCEtLSBWZXJzY2hsdXNzIC0tPgogIDxjaXJjbGUgY3g9IjEzNCIgY3k9IjkzLjUiIHI9IjEwIiBmaWxsPSIjMTQxNTFBIi8+CiAgPGNpcmNsZSBjeD0iMTM0IiBjeT0iOTMuNSIgcj0iNCIgZmlsbD0idXJsKCNtaW50KSIvPgo8L3N2Zz4K">
@@ -283,7 +283,7 @@
 </head>
 <body>
 <div id="app">
-  <div id="loadingScreen" class="loading">Haushaltsbuch+ wird geöffnet…</div>
+  <div id="loadingScreen" class="loading">Haushaltsbuch+ wird geÃ¶ffnetâ€¦</div>
   <div id="mainUI" style="display:none;">
     <header class="ledger-header">
       <div class="header-top-row">
@@ -293,16 +293,16 @@
         </button>
       </div>
       <div class="header-stats">
-        <div class="stat"><span class="stat-label">Einnahmen</span><span class="stat-value income-color" id="hdrIncome">0 €</span></div>
-        <div class="stat"><span class="stat-label">Fixkosten</span><span class="stat-value expense-color" id="hdrFixed">0 €</span></div>
-        <div class="stat"><span class="stat-label">Rest</span><span class="stat-value rest-color" id="hdrRest">0 €</span></div>
+        <div class="stat"><span class="stat-label">Einnahmen</span><span class="stat-value income-color" id="hdrIncome">0 â‚¬</span></div>
+        <div class="stat"><span class="stat-label">Fixkosten</span><span class="stat-value expense-color" id="hdrFixed">0 â‚¬</span></div>
+        <div class="stat"><span class="stat-label">Rest</span><span class="stat-value rest-color" id="hdrRest">0 â‚¬</span></div>
       </div>
     </header>
 
     <nav class="tabs">
-      <button data-tab="uebersicht" class="tab active" aria-label="Übersicht">
+      <button data-tab="uebersicht" class="tab active" aria-label="Ãœbersicht">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
-        <span>Übersicht</span>
+        <span>Ãœbersicht</span>
       </button>
       <button data-tab="variabel" class="tab">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/></svg>
@@ -323,7 +323,7 @@
     </nav>
 
     <main>
-      <!-- ÜBERSICHT -->
+      <!-- ÃœBERSICHT -->
       <section id="tab-uebersicht" class="tab-panel active">
         <div class="summary-card" id="balanceSummary"></div>
 
@@ -388,7 +388,7 @@
 
     </main>
 
-    <button id="addEntryFab" class="fab-add" aria-label="Hinzufügen">
+    <button id="addEntryFab" class="fab-add" aria-label="HinzufÃ¼gen">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
   </div>
@@ -397,12 +397,12 @@
   <div id="addChooserOverlay" class="settings-overlay">
     <div class="settings-panel">
       <div class="settings-panel-head">
-        <h2>Was möchtest du hinzufügen?</h2>
-        <button class="settings-close-btn" id="addChooserCloseBtn" aria-label="Schließen">×</button>
+        <h2>Was mÃ¶chtest du hinzufÃ¼gen?</h2>
+        <button class="settings-close-btn" id="addChooserCloseBtn" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
         <div data-tab-group="uebersicht">
-          <p class="chooser-group-label">Übersicht</p>
+          <p class="chooser-group-label">Ãœbersicht</p>
           <button type="button" class="settings-btn" style="margin-bottom:0;" data-open-form="addInvoiceOverlay">Offene Rechnung</button>
           <button type="button" class="settings-btn" style="margin-bottom:0;margin-top:6px;" data-open-form="addIncomeOverlay">Einnahme</button>
           <button type="button" class="settings-btn" style="margin-bottom:0;margin-top:6px;" data-open-form="addFixedOverlay">Fixkosten</button>
@@ -433,13 +433,13 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Offene Rechnung</h2>
-        <button class="settings-close-btn" data-close-form="addInvoiceOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addInvoiceOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="invoiceForm" class="entry-form">
         <input type="text" id="invName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="invAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="number" id="invAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
         <input type="date" id="invDueDate" required>
-        <button type="submit">Rechnung hinzufügen</button>
+        <button type="submit">Rechnung hinzufÃ¼gen</button>
       </form>
     </div>
   </div>
@@ -448,12 +448,12 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Einnahme</h2>
-        <button class="settings-close-btn" data-close-form="addIncomeOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addIncomeOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="incomeForm" class="entry-form">
         <input type="text" id="incName" placeholder="Bezeichnung" required>
-        <input type="number" id="incAmount" placeholder="Betrag (€)" step="0.01" required>
-        <button type="submit">Hinzufügen</button>
+        <input type="number" id="incAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
+        <button type="submit">HinzufÃ¼gen</button>
       </form>
     </div>
   </div>
@@ -462,12 +462,12 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Fixkosten</h2>
-        <button class="settings-close-btn" data-close-form="addFixedOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addFixedOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="fixedForm" class="entry-form">
         <input type="text" id="fxName" placeholder="Bezeichnung" required>
-        <input type="number" id="fxAmount" placeholder="Betrag (€)" step="0.01" required>
-        <button type="submit">Hinzufügen</button>
+        <input type="number" id="fxAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
+        <button type="submit">HinzufÃ¼gen</button>
       </form>
     </div>
   </div>
@@ -476,11 +476,11 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Einzahlung in den Spartopf</h2>
-        <button class="settings-close-btn" data-close-form="addContribOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addContribOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="contribForm" class="entry-form">
         <input type="date" id="contribDate" required>
-        <input type="number" id="contribAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="number" id="contribAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
         <button type="submit">Einzahlen</button>
       </form>
     </div>
@@ -490,21 +490,21 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Variable Kostenart</h2>
-        <button class="settings-close-btn" data-close-form="addVcOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addVcOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="vcForm" class="entry-form">
         <input type="text" id="vcName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="vcMonthly" placeholder="Monatlich (€)" step="0.01" required>
-        <input type="number" id="vcActual" placeholder="Rechnung (€, optional)" step="0.01">
+        <input type="number" id="vcMonthly" placeholder="Monatlich (â‚¬)" step="0.01" required>
+        <input type="number" id="vcActual" placeholder="Rechnung (â‚¬, optional)" step="0.01">
         <select id="vcInterval">
-          <option value="monatlich">Monatlich fällig</option>
-          <option value="vierteljaehrlich">Vierteljährlich fällig</option>
-          <option value="halbjaehrlich">Halbjährlich fällig</option>
-          <option value="jaehrlich" selected>Jährlich fällig</option>
-          <option value="zweijaehrlich">Alle 2 Jahre fällig</option>
+          <option value="monatlich">Monatlich fÃ¤llig</option>
+          <option value="vierteljaehrlich">VierteljÃ¤hrlich fÃ¤llig</option>
+          <option value="halbjaehrlich">HalbjÃ¤hrlich fÃ¤llig</option>
+          <option value="jaehrlich" selected>JÃ¤hrlich fÃ¤llig</option>
+          <option value="zweijaehrlich">Alle 2 Jahre fÃ¤llig</option>
         </select>
         <select id="vcDueMonth" class="full"></select>
-        <button type="submit">Kostenart hinzufügen</button>
+        <button type="submit">Kostenart hinzufÃ¼gen</button>
       </form>
     </div>
   </div>
@@ -513,13 +513,17 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Kredit</h2>
-        <button class="settings-close-btn" data-close-form="addLoanOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addLoanOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="loanForm" class="entry-form">
         <input type="text" id="loanName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="loanOriginal" placeholder="Kreditsumme (€)" step="0.01" class="full">
-        <input type="number" id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" class="full" required>
-        <button type="submit">Kredit hinzufügen</button>
+        <input type="number" id="loanOriginal" placeholder="Kreditsumme (â‚¬)" step="0.01" class="full">
+        <input type="number" id="loanMonthly" placeholder="Rate/Monat (â‚¬)" step="0.01" class="full" required>
+        <div class="full">
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Laufzeit in Monaten (optional, laut Vertrag)</label>
+          <input type="number" id="loanTermMonths" placeholder="z. B. 36" min="1" step="1">
+        </div>
+        <button type="submit">Kredit hinzufÃ¼gen</button>
       </form>
     </div>
   </div>
@@ -528,11 +532,11 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Sparen: Einzahlung</h2>
-        <button class="settings-close-btn" data-close-form="addSparOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addSparOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="sparForm" class="entry-form">
         <input type="date" id="sparDate" required>
-        <input type="number" id="sparAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="number" id="sparAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
         <input type="text" id="sparComment" placeholder="Kommentar" class="full">
         <button type="submit">Sparen</button>
       </form>
@@ -543,11 +547,11 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Sparen: Ausgabe</h2>
-        <button class="settings-close-btn" data-close-form="addSparExpenseOverlay" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" data-close-form="addSparExpenseOverlay" aria-label="SchlieÃŸen">Ã—</button>
       </div>
       <form id="sparExpenseForm" class="entry-form">
         <input type="date" id="sparExpenseDate" required>
-        <input type="number" id="sparExpenseAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="number" id="sparExpenseAmount" placeholder="Betrag (â‚¬)" step="0.01" required>
         <input type="text" id="sparExpenseComment" placeholder="Kommentar" class="full">
         <button type="submit">Ausgabe</button>
       </form>
@@ -558,7 +562,7 @@
     <div class="settings-panel">
       <div class="settings-panel-head">
         <h2>Einstellungen</h2>
-        <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
+        <button class="settings-close-btn" id="settingsCloseBtn" aria-label="SchlieÃŸen">Ã—</button>
       </div>
 
       <h2 class="section-title" style="margin-top:0;">Darstellung</h2>
@@ -573,7 +577,7 @@
       <h2 class="section-title">Sichtbare Bereiche</h2>
       <div class="summary-card" id="tabVisibilityList">
         <div class="tab-visibility-row">
-          <span>Übersicht</span>
+          <span>Ãœbersicht</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="uebersicht">
             <span class="track"></span><span class="thumb"></span>
@@ -611,7 +615,7 @@
 
       <h2 class="section-title">Datenbank</h2>
       <div class="summary-card">
-        <p style="margin:0 0 4px;font-size:15px;">Alle deine Daten werden sicher direkt auf deinem Gerät gespeichert.</p>
+        <p style="margin:0 0 4px;font-size:15px;">Alle deine Daten werden sicher direkt auf deinem GerÃ¤t gespeichert.</p>
       </div>
 
       <h2 class="section-title">Manuelles Backup</h2>
@@ -619,43 +623,43 @@
 
       <h2 class="section-title">Automatisches Backup</h2>
       <div class="summary-card">
-        <p style="margin:0 0 4px;font-size:15px;">Wähle einen Ordner (z. B. auf einer Cloud- oder NAS-verknüpften Speicherkarte). Die App sichert dort automatisch, solange die App geöffnet ist bzw. in den Hintergrund wechselt.</p>
-        <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);" id="autoBackupFolderLabel">Noch kein Ordner gewählt</p>
+        <p style="margin:0 0 4px;font-size:15px;">WÃ¤hle einen Ordner (z. B. auf einer Cloud- oder NAS-verknÃ¼pften Speicherkarte). Die App sichert dort automatisch, solange die App geÃ¶ffnet ist bzw. in den Hintergrund wechselt.</p>
+        <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);" id="autoBackupFolderLabel">Noch kein Ordner gewÃ¤hlt</p>
       </div>
-      <button id="autoBackupToggleBtn" class="settings-btn">Ordner für automatisches Backup wählen</button>
+      <button id="autoBackupToggleBtn" class="settings-btn">Ordner fÃ¼r automatisches Backup wÃ¤hlen</button>
       <button id="autoBackupDisableBtn" class="settings-btn" style="display:none;background:var(--primary-soft);color:var(--primary);">Automatisches Backup deaktivieren</button>
 
       <h2 class="section-title">Wiederherstellen</h2>
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
-      <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswählen…</button>
+      <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswÃ¤hlenâ€¦</button>
 
       <button id="exportTextBtn" class="settings-btn" style="display:none;">CSV-Sicherung als Text anzeigen</button>
       <div id="syncTimerCard" style="display:none;"><p id="syncTimerValue"></p></div>
-      <button id="exportSyncBtn" class="settings-btn" style="display:none;">Für Sync exportieren</button>
+      <button id="exportSyncBtn" class="settings-btn" style="display:none;">FÃ¼r Sync exportieren</button>
       <button id="importTextTriggerBtn" class="settings-btn" style="display:none;">CSV-Text wiederherstellen</button>
 
-      <h2 class="section-title">Zurücksetzen</h2>
-      <button class="settings-btn danger" id="resetBtn">Alle Daten löschen</button>
+      <h2 class="section-title">ZurÃ¼cksetzen</h2>
+      <button class="settings-btn danger" id="resetBtn">Alle Daten lÃ¶schen</button>
     </div>
   </div>
 
   <div id="confirmOverlay" class="confirm-overlay">
     <div class="confirm-card">
-      <div class="confirm-icon" id="confirmIcon">🗑️</div>
+      <div class="confirm-icon" id="confirmIcon">ðŸ—‘ï¸</div>
       <p class="confirm-message" id="confirmMessage"></p>
       <div class="confirm-actions">
         <button type="button" class="confirm-btn confirm-btn-cancel" id="confirmCancelBtn">Abbrechen</button>
-        <button type="button" class="confirm-btn confirm-btn-danger" id="confirmOkBtn">Löschen</button>
+        <button type="button" class="confirm-btn confirm-btn-danger" id="confirmOkBtn">LÃ¶schen</button>
       </div>
     </div>
   </div>
 
   <div id="syncReminderOverlay" class="confirm-overlay">
     <div class="confirm-card">
-      <div class="confirm-icon">🔄</div>
-      <p class="confirm-message">Der letzte Sync-Export liegt schon 14 Tage oder länger zurück. Bitte jetzt exportieren, damit deine Daten aktuell auf der NAS gesichert sind.</p>
+      <div class="confirm-icon">ðŸ”„</div>
+      <p class="confirm-message">Der letzte Sync-Export liegt schon 14 Tage oder lÃ¤nger zurÃ¼ck. Bitte jetzt exportieren, damit deine Daten aktuell auf der NAS gesichert sind.</p>
       <div class="confirm-actions">
-        <button type="button" class="confirm-btn confirm-btn-primary" id="syncReminderBtn" style="flex:1 1 100%;">Jetzt für Sync exportieren</button>
+        <button type="button" class="confirm-btn confirm-btn-primary" id="syncReminderBtn" style="flex:1 1 100%;">Jetzt fÃ¼r Sync exportieren</button>
       </div>
     </div>
   </div>
@@ -663,7 +667,7 @@
   <div id="csvModalOverlay" class="confirm-overlay">
     <div class="csv-modal-card">
       <div class="csv-modal-header">
-        <div class="csv-modal-icon">📄</div>
+        <div class="csv-modal-icon">ðŸ“„</div>
         <div>
           <h3 class="csv-modal-title">CSV-Sicherung</h3>
           <p class="csv-modal-filename" id="csvModalFilename"></p>
@@ -671,7 +675,7 @@
       </div>
       <textarea id="csvModalText" class="csv-modal-textarea" readonly spellcheck="false"></textarea>
       <div class="csv-modal-actions">
-        <button type="button" class="confirm-btn confirm-btn-cancel" id="csvModalCloseBtn">Schließen</button>
+        <button type="button" class="confirm-btn confirm-btn-cancel" id="csvModalCloseBtn">SchlieÃŸen</button>
         <button type="button" class="confirm-btn confirm-btn-primary" id="csvModalCopyBtn">Kopieren</button>
       </div>
     </div>
@@ -680,15 +684,15 @@
   <div id="csvImportModalOverlay" class="confirm-overlay">
     <div class="csv-modal-card">
       <div class="csv-modal-header">
-        <div class="csv-modal-icon">📥</div>
+        <div class="csv-modal-icon">ðŸ“¥</div>
         <div>
           <h3 class="csv-modal-title">CSV-Text wiederherstellen</h3>
-          <p class="csv-modal-filename">Kopierten Sicherungstext hier einfügen</p>
+          <p class="csv-modal-filename">Kopierten Sicherungstext hier einfÃ¼gen</p>
         </div>
       </div>
       <textarea id="csvImportModalText" class="csv-modal-textarea" spellcheck="false" placeholder="# TABLE:income
 id,name,amount
-…"></textarea>
+â€¦"></textarea>
       <div class="csv-modal-actions">
         <button type="button" class="confirm-btn confirm-btn-cancel" id="csvImportModalCloseBtn">Abbrechen</button>
         <button type="button" class="confirm-btn confirm-btn-primary" id="csvImportModalRestoreBtn">Wiederherstellen</button>
@@ -749,8 +753,8 @@ var nativeStorage = {
   "use strict";
 
   var STORAGE_KEY = 'household-data-v8';
-  var MONTH_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  var INTERVAL_LABELS = { monatlich:'Monatlich', vierteljaehrlich:'Vierteljährlich', halbjaehrlich:'Halbjährlich', jaehrlich:'Jährlich', zweijaehrlich:'Alle 2 Jahre' };
+  var MONTH_NAMES = ['Januar','Februar','MÃ¤rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  var INTERVAL_LABELS = { monatlich:'Monatlich', vierteljaehrlich:'VierteljÃ¤hrlich', halbjaehrlich:'HalbjÃ¤hrlich', jaehrlich:'JÃ¤hrlich', zweijaehrlich:'Alle 2 Jahre' };
   var THEME_KEY = 'household-theme';
 
   function applyTheme(theme){
@@ -774,7 +778,7 @@ var nativeStorage = {
     return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
 
-  // Liefert die gespeicherte Wahl: 'light', 'dark' oder 'system' (Standard, falls noch nichts gewählt wurde)
+  // Liefert die gespeicherte Wahl: 'light', 'dark' oder 'system' (Standard, falls noch nichts gewÃ¤hlt wurde)
   function getThemeChoice(){
     try{
       var v = nativeStorage.getItem(THEME_KEY);
@@ -856,7 +860,7 @@ var nativeStorage = {
   var sparYear = null;
 
   function todayISO(){ return new Date().toISOString().slice(0,10); }
-  function fmtEUR(n){ return (n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
+  function fmtEUR(n){ return (n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' â‚¬'; }
 
   // Robuste Betrags-Erkennung fuer Eingabefelder: interpretiert deutsche Schreibweise
   // (Punkt als Tausendertrennzeichen, Komma als Dezimaltrennzeichen) korrekt,
@@ -923,7 +927,7 @@ var nativeStorage = {
       html += '<div class="legend-row">'+
                 '<span class="cat-dot" style="background:'+s.color+'"></span>'+
                 '<span style="flex:1;">'+escapeHtml(s.label)+'</span>'+
-                '<span class="legend-amt">'+fmtEUR(s.value)+' · '+pct.toFixed(0)+'%</span>'+
+                '<span class="legend-amt">'+fmtEUR(s.value)+' Â· '+pct.toFixed(0)+'%</span>'+
               '</div>';
     });
     legendEl.innerHTML = html;
@@ -960,10 +964,10 @@ var nativeStorage = {
   function intervalLabel(interval, dueMonth){
     var monthName = MONTH_NAMES[(dueMonth||1)-1];
     if(interval === 'monatlich') return 'Monatlich';
-    if(interval === 'vierteljaehrlich') return 'Vierteljährlich (ab '+monthName+')';
-    if(interval === 'halbjaehrlich') return 'Halbjährlich (ab '+monthName+')';
+    if(interval === 'vierteljaehrlich') return 'VierteljÃ¤hrlich (ab '+monthName+')';
+    if(interval === 'halbjaehrlich') return 'HalbjÃ¤hrlich (ab '+monthName+')';
     if(interval === 'zweijaehrlich') return 'Alle 2 Jahre im '+monthName;
-    return 'Jährlich im '+monthName;
+    return 'JÃ¤hrlich im '+monthName;
   }
   function intervalMonths(interval){
     if(interval === 'monatlich') return 1;
@@ -973,11 +977,11 @@ var nativeStorage = {
     return 12;
   }
   function intervalGoalLabel(interval){
-    if(interval === 'monatlich') return 'Zielbetrag (1×)';
-    if(interval === 'vierteljaehrlich') return 'Zielbetrag (3×)';
-    if(interval === 'halbjaehrlich') return 'Zielbetrag (6×)';
-    if(interval === 'zweijaehrlich') return 'Zielbetrag (24×)';
-    return 'Zielbetrag (12×)';
+    if(interval === 'monatlich') return 'Zielbetrag (1Ã—)';
+    if(interval === 'vierteljaehrlich') return 'Zielbetrag (3Ã—)';
+    if(interval === 'halbjaehrlich') return 'Zielbetrag (6Ã—)';
+    if(interval === 'zweijaehrlich') return 'Zielbetrag (24Ã—)';
+    return 'Zielbetrag (12Ã—)';
   }
 
   function buildMonthlyPayments(loanId, amount, startY, startM, count){
@@ -1047,8 +1051,8 @@ var nativeStorage = {
       var okBtn = document.getElementById('confirmOkBtn');
       var cancelBtn = document.getElementById('confirmCancelBtn');
       msgEl.textContent = message;
-      iconEl.textContent = opts.icon || '🗑️';
-      okBtn.textContent = opts.confirmLabel || 'Löschen';
+      iconEl.textContent = opts.icon || 'ðŸ—‘ï¸';
+      okBtn.textContent = opts.confirmLabel || 'LÃ¶schen';
       overlay.classList.add('visible');
 
       function cleanup(result){
@@ -1078,14 +1082,14 @@ var nativeStorage = {
     }
   }
 
-  // Reagiert auf das tatsächliche Öffnen/Schließen der Tastatur (verlässlicher als ein fester Timer),
-  // da moderne Android-Browser die Tastatur oft nur überlagern statt den Viewport zu verkleinern.
+  // Reagiert auf das tatsÃ¤chliche Ã–ffnen/SchlieÃŸen der Tastatur (verlÃ¤sslicher als ein fester Timer),
+  // da moderne Android-Browser die Tastatur oft nur Ã¼berlagern statt den Viewport zu verkleinern.
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', scrollFocusedEditRowIntoView);
   }
 
-  // Springt sofort beim Antippen eines Feldes nach oben, statt nur auf die spätere
-  // Größenänderung durch die Tastatur zu warten – wirkt dadurch direkter beim Anklicken.
+  // Springt sofort beim Antippen eines Feldes nach oben, statt nur auf die spÃ¤tere
+  // GrÃ¶ÃŸenÃ¤nderung durch die Tastatur zu warten â€“ wirkt dadurch direkter beim Anklicken.
   document.addEventListener('focusin', function(e){
     var t = e.target;
     if(t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')){
@@ -1100,7 +1104,7 @@ var nativeStorage = {
       if(!el) return;
       var input = el.querySelector('input, select');
       if(input) input.focus();
-      // Fallback, falls visualViewport nicht unterstützt wird oder keine Größenänderung feuert
+      // Fallback, falls visualViewport nicht unterstÃ¼tzt wird oder keine GrÃ¶ÃŸenÃ¤nderung feuert
       setTimeout(scrollFocusedEditRowIntoView, 400);
       setTimeout(scrollFocusedEditRowIntoView, 700);
     }, 50);
@@ -1122,12 +1126,12 @@ var nativeStorage = {
   }
 
   /* ---------- Generic name+amount list (income / fixed) ---------- */
-  // Ordnet Fixkosten-Bezeichnungen ein passendes, generisches Symbol zu (Schlüsselwort-Suche, keine Marken-Logos)
+  // Ordnet Fixkosten-Bezeichnungen ein passendes, generisches Symbol zu (SchlÃ¼sselwort-Suche, keine Marken-Logos)
   var FIXED_EXPENSE_ICON_MAP = [
     {keywords:['miete','wohnung','nebenkosten','hausgeld'], icon:'house'},
     {keywords:['strom','energie','elektr'], icon:'bolt'},
     {keywords:['wasser'], icon:'drop'},
-    {keywords:['gas','heizung','fernwärme'], icon:'flame'},
+    {keywords:['gas','heizung','fernwÃ¤rme'], icon:'flame'},
     {keywords:['internet','wlan','dsl','glasfaser','fiber','router'], icon:'wifi'},
     {keywords:['handy','mobil','congstar','telekom','vodafone','o2','1&1','1und1','simyo','fonic','klarmobil','aldi talk','telefon'], icon:'phone'},
     {keywords:['versicherung','haftpflicht'], icon:'shield'},
@@ -1136,9 +1140,9 @@ var nativeStorage = {
     {keywords:['fitness','sport','gym','yoga'], icon:'dumbbell'},
     {keywords:['spotify','musik','deezer','apple music'], icon:'music'},
     {keywords:['netflix','disney','amazon prime','streaming','magenta tv','sky','dazn','wow','paramount'], icon:'film'},
-    {keywords:['auto','kfz','tüv','tuv'], icon:'car'},
-    {keywords:['sparkasse','bank','gebühr','kredit','darlehen'], icon:'card'},
-    {keywords:['sparen','spar','rücklage','ruecklage'], icon:'piggy'},
+    {keywords:['auto','kfz','tÃ¼v','tuv'], icon:'car'},
+    {keywords:['sparkasse','bank','gebÃ¼hr','kredit','darlehen'], icon:'card'},
+    {keywords:['sparen','spar','rÃ¼cklage','ruecklage'], icon:'piggy'},
     {keywords:['essen','lebensmittel','restaurant','supermarkt','einkauf','edeka','rewe','lidl','aldi'], icon:'food'},
     {keywords:['kleidung','klamotten','schuhe'], icon:'shirt'},
     {keywords:['freizeit','hobby','kino','konzert','event','ticket'], icon:'ticket'},
@@ -1237,7 +1241,7 @@ var nativeStorage = {
                   '</div>'+
                   '<div class="vc-actions">'+
                     '<button class="action-icon-btn neutral" data-action="edit" data-list="'+listKey+'" data-id="'+item.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                    '<button class="action-icon-btn danger" data-action="delete" data-list="'+listKey+'" data-id="'+item.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                    '<button class="action-icon-btn danger" data-action="delete" data-list="'+listKey+'" data-id="'+item.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                   '</div>'+
                 '</div>';
       }
@@ -1252,7 +1256,7 @@ var nativeStorage = {
       var action = btn.dataset.action;
       var id = btn.dataset.id;
       if(action === 'delete'){
-        if(!await confirmDialog('Diesen Eintrag wirklich löschen?')) return;
+        if(!await confirmDialog('Diesen Eintrag wirklich lÃ¶schen?')) return;
         var idx = list.findIndex(function(x){return x.id===id;});
         if(idx>-1) list.splice(idx,1);
         saveState(); rerenderFn();
@@ -1286,7 +1290,7 @@ var nativeStorage = {
     });
   }
 
-  /* ---------- Übersicht ---------- */
+  /* ---------- Ãœbersicht ---------- */
   function renderUebersicht(){
     var incomeTotal = sum(state.income,'amount');
     var fixedTotal = sum(state.fixedExpenses,'amount');
@@ -1297,10 +1301,10 @@ var nativeStorage = {
     var rest = incomeTotal - fixedTotal - openInvTotal - variableMonthly - loanMonthly;
     document.getElementById('balanceSummary').innerHTML =
       '<div class="summary-row"><span>Einnahmen</span><span class="val">'+fmtEUR(incomeTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Fixkosten</span><span class="val">−'+fmtEUR(fixedTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Offene Rechnungen</span><span class="val '+(openInv.length>0?'neg':'')+'">−'+fmtEUR(openInvTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Variable Kosten (Sparbeitrag)</span><span class="val">−'+fmtEUR(variableMonthly)+'</span></div>'+
-      '<div class="summary-row"><span>Kredite</span><span class="val">−'+fmtEUR(loanMonthly)+'</span></div>'+
+      '<div class="summary-row"><span>Fixkosten</span><span class="val">âˆ’'+fmtEUR(fixedTotal)+'</span></div>'+
+      '<div class="summary-row"><span>Offene Rechnungen</span><span class="val '+(openInv.length>0?'neg':'')+'">âˆ’'+fmtEUR(openInvTotal)+'</span></div>'+
+      '<div class="summary-row"><span>Variable Kosten (Sparbeitrag)</span><span class="val">âˆ’'+fmtEUR(variableMonthly)+'</span></div>'+
+      '<div class="summary-row"><span>Kredite</span><span class="val">âˆ’'+fmtEUR(loanMonthly)+'</span></div>'+
       '<div class="summary-row"><span>Monatlicher Rest</span><span class="val '+(rest>=0?'pos':'neg')+'">'+fmtEUR(rest)+'</span></div>';
 
     renderSimpleList(document.getElementById('incomeList'), state.income, 'income');
@@ -1319,7 +1323,7 @@ var nativeStorage = {
     var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
     document.getElementById('invoiceSummary').innerHTML =
       '<div class="summary-row"><span>Offene Rechnungen</span><span class="val">'+open.length+'</span></div>'+
-      '<div class="summary-row"><span>Davon überfällig</span><span class="val '+(overdue>0?'neg':'')+'">'+overdue+'</span></div>'+
+      '<div class="summary-row"><span>Davon Ã¼berfÃ¤llig</span><span class="val '+(overdue>0?'neg':'')+'">'+overdue+'</span></div>'+
       '<div class="summary-row"><span>Offener Betrag gesamt</span><span class="val neg">'+fmtEUR(openTotal)+'</span></div>';
 
     var container = document.getElementById('invoiceList');
@@ -1336,7 +1340,7 @@ var nativeStorage = {
       if(editing.invoice === inv.id){
         html += '<div class="edit-row" data-id="'+inv.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(inv.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="number" step="0.01" class="edit-amount" value="'+inv.amount+'" placeholder="Betrag (€)">'+
+                  '<input type="number" step="0.01" class="edit-amount" value="'+inv.amount+'" placeholder="Betrag (â‚¬)">'+
                   '<input type="date" class="edit-duedate" value="'+(inv.dueDate||'')+'">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-invoice">Abbrechen</button>'+
@@ -1350,15 +1354,15 @@ var nativeStorage = {
         html += '<div class="vc-card'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'">'+
                   '<div class="vc-card-top">'+
                     '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-                      '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren">✓</button>'+
+                      '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren">âœ“</button>'+
                       '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(inv.name)+'</span>'+
                     '</span>'+
                     '<span class="amount-prominent expense">'+fmtEUR(inv.amount)+'</span>'+
                   '</div>'+
-                  '<div class="vc-detail-row"><span>Status</span><span class="val'+(isOverdue?' vc-buffer neg':'')+'">'+(inv.paid ? 'Bezahlt' : (isOverdue ? 'Überfällig seit '+dateLabel : 'Fällig am '+dateLabel))+'</span></div>'+
+                  '<div class="vc-detail-row"><span>Status</span><span class="val'+(isOverdue?' vc-buffer neg':'')+'">'+(inv.paid ? 'Bezahlt' : (isOverdue ? 'ÃœberfÃ¤llig seit '+dateLabel : 'FÃ¤llig am '+dateLabel))+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<button class="action-icon-btn neutral" data-action="edit-invoice" data-id="'+inv.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                    '<button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                    '<button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                   '</div>'+
                 '</div>';
       }
@@ -1401,10 +1405,10 @@ var nativeStorage = {
         if(editing.vc === item.id){
           html += '<div class="edit-row" data-id="'+item.id+'">'+
                     '<input type="text" class="edit-name full" value="'+escapeHtml(item.name)+'" placeholder="Bezeichnung">'+
-                    '<input type="number" step="0.01" class="edit-monthly" value="'+item.monthlyAmount+'" placeholder="Monatlich (€)">'+
-                    '<input type="number" step="0.01" class="edit-actual" value="'+(item.actualAmount||0)+'" placeholder="Rechnung (€)">'+
+                    '<input type="number" step="0.01" class="edit-monthly" value="'+item.monthlyAmount+'" placeholder="Monatlich (â‚¬)">'+
+                    '<input type="number" step="0.01" class="edit-actual" value="'+(item.actualAmount||0)+'" placeholder="Rechnung (â‚¬)">'+
                     '<select class="edit-interval">'+
-                      Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fällig</option>'; }).join('')+
+                      Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fÃ¤llig</option>'; }).join('')+
                     '</select>'+
                     '<select class="edit-duemonth full">'+monthOptions(item.dueMonth)+'</select>'+
                     '<div class="edit-actions">'+
@@ -1417,14 +1421,14 @@ var nativeStorage = {
           var buffer = annualGoal - (item.actualAmount||0);
           html += '<div class="vc-card" data-id="'+item.id+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
-                    '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth)+'</span></div>'+
+                    '<div class="vc-detail-row"><span>FÃ¤lligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth)+'</span></div>'+
                     '<div class="vc-detail-row"><span>'+intervalGoalLabel(item.interval)+'</span><span class="val">'+fmtEUR(annualGoal)+'</span></div>'+
                     '<div class="vc-detail-row"><span>Letzte Rechnung</span><span class="val">'+fmtEUR(item.actualAmount||0)+'</span></div>'+
                     '<div class="vc-detail-row"><span>Puffer</span><span class="val vc-buffer '+(buffer>=0?'pos':'neg')+'">'+fmtEUR(buffer)+'</span></div>'+
                     '<div class="vc-actions">'+
                       '<button class="action-icon-btn neutral" data-action="edit-vc" data-id="'+item.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
                       '<button class="action-icon-btn" data-action="pay" data-id="'+item.id+'" aria-label="Als bezahlt buchen" title="Als bezahlt buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'+
-                      '<button class="action-icon-btn danger" data-action="delete-vc" data-id="'+item.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                      '<button class="action-icon-btn danger" data-action="delete-vc" data-id="'+item.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                     '</div>'+
                     (payingVc === item.id ? renderPayVcForm(item) : '')+
                   '</div>';
@@ -1455,7 +1459,7 @@ var nativeStorage = {
     var pinnedHtml = '';
     if(editingPotCarryover){
       pinnedHtml += '<div class="edit-row" data-id="carryover">'+
-                 '<input type="number" step="0.01" class="edit-carryover-amount full" value="'+(state.potCarryover||0)+'" placeholder="Betrag (€)">'+
+                 '<input type="number" step="0.01" class="edit-carryover-amount full" value="'+(state.potCarryover||0)+'" placeholder="Betrag (â‚¬)">'+
                  '<div class="edit-actions">'+
                    '<button type="button" class="btn-cancel" data-action="cancel-edit-carryover">Abbrechen</button>'+
                    '<button type="button" class="btn-save" data-action="save-edit-carryover">Speichern</button>'+
@@ -1464,7 +1468,7 @@ var nativeStorage = {
     } else {
       pinnedHtml += '<div class="vc-card">'+
                  '<div class="vc-card-top">'+
-                   '<span class="vc-name">Übertrag Vorjahr</span>'+
+                   '<span class="vc-name">Ãœbertrag Vorjahr</span>'+
                    '<span class="vc-monthly" style="color:'+((state.potCarryover||0)>=0?'var(--savings)':'var(--expense)')+';font-weight:700;">'+((state.potCarryover||0)>=0?'+':'')+fmtEUR(state.potCarryover||0)+'</span>'+
                  '</div>'+
                  '<div class="vc-actions">'+
@@ -1476,7 +1480,7 @@ var nativeStorage = {
     var html2 = '';
     if(carryover !== 0){
       html2 += '<div class="carryover-row">'+
-                 '<span class="row-desc">Übertrag aus Vorjahr'+(carryover>=0?'en':'')+'</span>'+
+                 '<span class="row-desc">Ãœbertrag aus Vorjahr'+(carryover>=0?'en':'')+'</span>'+
                  '<span class="row-leader"></span>'+
                  '<span class="row-amount">'+(carryover>=0?'+':'')+fmtEUR(carryover)+'</span>'+
                '</div>';
@@ -1507,7 +1511,7 @@ var nativeStorage = {
                      '<div class="vc-detail-row"><span>Datum</span><span class="val">'+dateLabel+'</span></div>'+
                      '<div class="vc-actions">'+
                        '<button class="action-icon-btn neutral" data-action="edit-tx" data-tx-type="'+t.type+'" data-id="'+t.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                       '<button class="action-icon-btn danger" data-action="delete-tx" data-tx-type="'+t.type+'" data-id="'+t.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                       '<button class="action-icon-btn danger" data-action="delete-tx" data-tx-type="'+t.type+'" data-id="'+t.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                      '</div>'+
                    '</div>';
         }
@@ -1577,12 +1581,12 @@ var nativeStorage = {
           html += '<div class="vc-card" data-id="'+t.id+'">'+
                      '<div class="vc-card-top">'+
                        '<span class="vc-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">'+(t.comment?escapeHtml(t.comment):(isExpense?'Ausgabe':'Sparen'))+'</span>'+
-                       '<span class="vc-monthly" style="color:'+(isExpense?'var(--expense)':'var(--savings)')+';font-weight:700;">'+(isExpense?'−':'+')+fmtEUR(t.amount)+'</span>'+
+                       '<span class="vc-monthly" style="color:'+(isExpense?'var(--expense)':'var(--savings)')+';font-weight:700;">'+(isExpense?'âˆ’':'+')+fmtEUR(t.amount)+'</span>'+
                      '</div>'+
                      '<div class="vc-detail-row"><span>Datum</span><span class="val">'+dateLabel+'</span></div>'+
                      '<div class="vc-actions">'+
                        '<button class="action-icon-btn neutral" data-action="edit-spar" data-id="'+t.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                       '<button class="action-icon-btn danger" data-action="delete-spar" data-id="'+t.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                       '<button class="action-icon-btn danger" data-action="delete-spar" data-id="'+t.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                      '</div>'+
                    '</div>';
         }
@@ -1604,9 +1608,30 @@ var nativeStorage = {
   }
 
   /* ---------- Kredite ---------- */
-  function formatRemainingTerm(remainingBalance, monthlyPayment){
+  function formatRemainingTerm(remainingBalance, monthlyPayment, endDate){
     if(remainingBalance <= 0) return 'Abbezahlt';
-    if(!monthlyPayment || monthlyPayment <= 0) return '–';
+
+    // Falls ein echtes Laufzeit-Ende aus dem Vertrag hinterlegt ist, dieses
+    // verwenden (genauer als die reine Rechnung, z.B. bei verzinsten Krediten) -
+    // sonst wie bisher aus Restschuld/Monatsrate hochrechnen.
+    if(endDate){
+      var end = new Date(endDate+'T00:00:00');
+      if(!isNaN(end.getTime())){
+        var now = new Date();
+        now.setHours(0,0,0,0);
+        var totalMonths = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
+        if(end.getDate() < now.getDate()) totalMonths--;
+        if(totalMonths <= 0) return 'LÃ¤uft in KÃ¼rze aus';
+        var y2 = Math.floor(totalMonths / 12);
+        var m2 = totalMonths % 12;
+        if(y2 === 0) return m2 + (m2 === 1 ? ' Monat' : ' Monate');
+        var yStr2 = y2 + (y2 === 1 ? ' Jahr' : ' Jahre');
+        if(m2 === 0) return yStr2;
+        return yStr2 + ', ' + m2 + (m2 === 1 ? ' Monat' : ' Monate');
+      }
+    }
+
+    if(!monthlyPayment || monthlyPayment <= 0) return 'â€“';
     // Kleine Toleranz (0.01 Cent) gegen Kommazahlen-Rundungsfehler, damit z.B.
     // exakt 12 Monate nicht durch einen winzigen Rest auf 13 aufgerundet werden.
     var months = Math.ceil((remainingBalance / monthlyPayment) - 0.0001);
@@ -1637,8 +1662,8 @@ var nativeStorage = {
       if(editing.loan === loan.id){
         html += '<div class="edit-row" data-id="'+loan.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(loan.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="number" step="0.01" class="edit-original" value="'+loan.originalAmount+'" placeholder="Kreditsumme (€)">'+
-                  '<input type="number" step="0.01" class="edit-monthly" value="'+loan.monthlyPayment+'" placeholder="Rate/Monat (€)">'+
+                  '<input type="number" step="0.01" class="edit-original" value="'+loan.originalAmount+'" placeholder="Kreditsumme (â‚¬)">'+
+                  '<input type="number" step="0.01" class="edit-monthly" value="'+loan.monthlyPayment+'" placeholder="Rate/Monat (â‚¬)">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-loan">Abbrechen</button>'+
                     '<button type="button" class="btn-save" data-action="save-edit-loan" data-id="'+loan.id+'">Speichern</button>'+
@@ -1649,12 +1674,12 @@ var nativeStorage = {
         html += '<div class="loan-card" data-id="'+loan.id+'">'+
                   '<div class="loan-top"><span class="loan-name" data-action="toggle-history" data-id="'+loan.id+'" style="cursor:pointer;"><button class="icon-btn info-btn'+(expandedLoans[loan.id]?' active':'')+'" data-action="toggle-history" data-id="'+loan.id+'" aria-label="Verlauf anzeigen" title="Verlauf anzeigen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
                   (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '<div class="loan-sub" style="margin-top:6px;"><span>Rate: '+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>')+
-                  '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan.remainingBalance, loan.monthlyPayment)+'</span></div>'+
+                  '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan.remainingBalance, loan.monthlyPayment, loan.endDate)+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                    '<button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Schulden erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>'+
+                    '<button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Schulden erhÃ¶hen" title="Schulden erhÃ¶hen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>'+
                     '<button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'+
-                    '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                    '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="LÃ¶schen" title="LÃ¶schen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                   '</div>'+
                   (expandedLoans[loan.id] ? renderLoanHistory(loan.id) : '')+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
@@ -1668,7 +1693,7 @@ var nativeStorage = {
   function renderPayLoanForm(loan){
     return '<div class="edit-row" data-id="'+loan.id+'">'+
              '<input type="date" class="pay-date" value="'+todayISO()+'">'+
-             '<input type="number" step="0.01" class="pay-amount" value="'+loan.monthlyPayment+'" placeholder="Betrag (€)">'+
+             '<input type="number" step="0.01" class="pay-amount" value="'+loan.monthlyPayment+'" placeholder="Betrag (â‚¬)">'+
              '<div class="edit-actions">'+
                '<button type="button" class="btn-cancel" data-action="cancel-pay-loan">Abbrechen</button>'+
                '<button type="button" class="btn-save" data-action="confirm-pay-loan" data-id="'+loan.id+'">Buchen</button>'+
@@ -1679,10 +1704,10 @@ var nativeStorage = {
   function renderIncreaseLoanForm(loan){
     return '<div class="edit-row" data-id="'+loan.id+'" style="background:var(--gold-soft);">'+
              '<input type="date" class="increase-date" value="'+todayISO()+'">'+
-             '<input type="number" step="0.01" class="increase-amount" placeholder="Betrag (€)">'+
+             '<input type="number" step="0.01" class="increase-amount" placeholder="Betrag (â‚¬)">'+
              '<div class="edit-actions">'+
                '<button type="button" class="btn-cancel" data-action="cancel-increase-loan">Abbrechen</button>'+
-               '<button type="button" class="btn-save" style="background:var(--gold);" data-action="confirm-increase-loan" data-id="'+loan.id+'">Erhöhen</button>'+
+               '<button type="button" class="btn-save" style="background:var(--gold);" data-action="confirm-increase-loan" data-id="'+loan.id+'">ErhÃ¶hen</button>'+
              '</div>'+
            '</div>';
   }
@@ -1690,7 +1715,7 @@ var nativeStorage = {
   function renderPayVcForm(item){
     return '<div class="edit-row" data-id="'+item.id+'">'+
              '<input type="date" class="pay-date" value="'+todayISO()+'">'+
-             '<input type="number" step="0.01" class="pay-amount" value="'+(item.actualAmount||0)+'" placeholder="Betrag (€)">'+
+             '<input type="number" step="0.01" class="pay-amount" value="'+(item.actualAmount||0)+'" placeholder="Betrag (â‚¬)">'+
              '<div class="edit-actions">'+
                '<button type="button" class="btn-cancel" data-action="cancel-pay-vc">Abbrechen</button>'+
                '<button type="button" class="btn-save" data-action="confirm-pay-vc" data-id="'+item.id+'">Buchen</button>'+
@@ -1710,12 +1735,12 @@ var nativeStorage = {
         var dateLabel = String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
         var isIncrease = p.type === 'increase';
         html += '<div class="ledger-row" data-id="'+p.id+'">'+
-                   '<span class="row-desc">'+(isIncrease?'Erhöhung':'Rate')+'</span>'+
+                   '<span class="row-desc">'+(isIncrease?'ErhÃ¶hung':'Rate')+'</span>'+
                    '<span class="row-leader"></span>'+
                    '<span class="row-sub">'+dateLabel+'</span>'+
-                   '<span class="row-amount" style="color:'+(isIncrease?'var(--gold)':'var(--expense)')+';">'+(isIncrease?'+':'−')+fmtEUR(p.amount)+'</span>'+
+                   '<span class="row-amount" style="color:'+(isIncrease?'var(--gold)':'var(--expense)')+';">'+(isIncrease?'+':'âˆ’')+fmtEUR(p.amount)+'</span>'+
                    '<span class="row-actions">'+
-                     '<button class="icon-btn delete-icon" data-action="delete-loan-payment" data-id="'+p.id+'" aria-label="Löschen">×</button>'+
+                     '<button class="icon-btn delete-icon" data-action="delete-loan-payment" data-id="'+p.id+'" aria-label="LÃ¶schen">Ã—</button>'+
                    '</span>'+
                  '</div>';
       });
@@ -1931,7 +1956,7 @@ var nativeStorage = {
     main.addEventListener('touchstart', function(e){
       if(e.touches.length !== 1) return;
       // Auf interaktiven Elementen (Eingabefelder, Diagramme) nicht als Wisch werten,
-      // damit normales Tippen/Ziehen dort nicht gestört wird.
+      // damit normales Tippen/Ziehen dort nicht gestÃ¶rt wird.
       if(e.target.closest('input, select, textarea, .bar-chart, .loan-bar, .goal-bar')){
         tracking = false;
         return;
@@ -2016,7 +2041,7 @@ var nativeStorage = {
         var inv = state.openInvoices.filter(function(x){return x.id===id;})[0];
         if(inv){ inv.paid = !inv.paid; saveState(); renderAll(); }
       } else if(action === 'delete-invoice'){
-        if(!await confirmDialog('Diese Rechnung wirklich löschen?')) return;
+        if(!await confirmDialog('Diese Rechnung wirklich lÃ¶schen?')) return;
         state.openInvoices = state.openInvoices.filter(function(x){return x.id!==id;});
         saveState(); renderAll();
       } else if(action === 'edit-invoice'){
@@ -2083,10 +2108,10 @@ var nativeStorage = {
       var action = btn.dataset.action;
       var id = btn.dataset.id;
       if(action === 'delete-vc'){
-        if(!await confirmDialog('Diese Kostenart wirklich löschen? Die bisherige Zahlungshistorie bleibt im Verlauf erhalten.')) return;
+        if(!await confirmDialog('Diese Kostenart wirklich lÃ¶schen? Die bisherige Zahlungshistorie bleibt im Verlauf erhalten.')) return;
         var deletedVc = state.variableCosts.filter(function(x){return x.id===id;})[0];
         if(deletedVc){
-          // Namen in die zugehörigen Buchungen übernehmen, damit der Verlauf auch nach dem Löschen lesbar bleibt
+          // Namen in die zugehÃ¶rigen Buchungen Ã¼bernehmen, damit der Verlauf auch nach dem LÃ¶schen lesbar bleibt
           state.variablePayments.forEach(function(p){
             if(p.itemId === id) p.itemName = deletedVc.name;
           });
@@ -2136,7 +2161,7 @@ var nativeStorage = {
       var id = btn.dataset.id;
       var txType = btn.dataset.txType;
       if(action === 'delete-tx'){
-        if(!await confirmDialog('Diese Buchung wirklich löschen?')) return;
+        if(!await confirmDialog('Diese Buchung wirklich lÃ¶schen?')) return;
         if(txType === 'contrib'){ state.variableContributions = state.variableContributions.filter(function(x){return x.id!==id;}); }
         else { state.variablePayments = state.variablePayments.filter(function(x){return x.id!==id;}); }
         saveState(); renderAll();
@@ -2211,7 +2236,7 @@ var nativeStorage = {
       var action = btn.dataset.action;
       var id = btn.dataset.id;
       if(action === 'delete-spar'){
-        if(!await confirmDialog('Diese Buchung wirklich löschen?')) return;
+        if(!await confirmDialog('Diese Buchung wirklich lÃ¶schen?')) return;
         state.savings = state.savings.filter(function(x){return x.id!==id;});
         saveState(); renderAll();
       } else if(action === 'edit-spar'){
@@ -2238,11 +2263,19 @@ var nativeStorage = {
       var name = document.getElementById('loanName').value.trim();
       var original = parseAmount(document.getElementById('loanOriginal').value);
       var monthly = parseAmount(document.getElementById('loanMonthly').value);
+      var termMonthsRaw = document.getElementById('loanTermMonths').value;
+      var termMonths = termMonthsRaw ? parseInt(termMonthsRaw, 10) : NaN;
+      var endDate = '';
+      if(!isNaN(termMonths) && termMonths > 0){
+        var d = new Date();
+        d.setMonth(d.getMonth() + termMonths);
+        endDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      }
       if(!name || isNaN(monthly)) return;
       original = isNaN(original) ? 0 : original;
-      state.loans.push({id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly});
+      state.loans.push({id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly, endDate:endDate});
       saveState();
-      document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanMonthly').value='';
+      document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanMonthly').value=''; document.getElementById('loanTermMonths').value='';
       renderAll();
       document.getElementById('addLoanOverlay').classList.remove('open');
     });
@@ -2252,7 +2285,7 @@ var nativeStorage = {
       var action = btn.dataset.action;
       var id = btn.dataset.id;
       if(action === 'delete-loan'){
-        if(!await confirmDialog('Diesen Kredit wirklich löschen? Die zugehörige Ratenhistorie wird ebenfalls entfernt.')) return;
+        if(!await confirmDialog('Diesen Kredit wirklich lÃ¶schen? Die zugehÃ¶rige Ratenhistorie wird ebenfalls entfernt.')) return;
         state.loans = state.loans.filter(function(x){return x.id!==id;});
         state.loanPayments = state.loanPayments.filter(function(x){return x.loanId!==id;});
         saveState(); renderAll();
@@ -2315,7 +2348,7 @@ var nativeStorage = {
         expandedLoans[id] = !expandedLoans[id];
         renderKredite();
       } else if(action === 'delete-loan-payment'){
-        if(!await confirmDialog('Diesen Eintrag wirklich löschen? Kreditsumme und Restschuld werden entsprechend zurückgerechnet.')) return;
+        if(!await confirmDialog('Diesen Eintrag wirklich lÃ¶schen? Kreditsumme und Restschuld werden entsprechend zurÃ¼ckgerechnet.')) return;
         var deletedPayment = state.loanPayments.filter(function(x){return x.id===id;})[0];
         state.loanPayments = state.loanPayments.filter(function(x){return x.id!==id;});
         if(deletedPayment){
@@ -2336,7 +2369,7 @@ var nativeStorage = {
 
   function setupReset(){
     document.getElementById('resetBtn').addEventListener('click', async function(){
-      var ok = await confirmDialog('Wirklich alle Einträge löschen? Das kann nicht rückgängig gemacht werden.', {icon:'⚠️', confirmLabel:'Alles löschen'});
+      var ok = await confirmDialog('Wirklich alle EintrÃ¤ge lÃ¶schen? Das kann nicht rÃ¼ckgÃ¤ngig gemacht werden.', {icon:'âš ï¸', confirmLabel:'Alles lÃ¶schen'});
       if(ok){
         state = seedState();
         editing = { income:null, fixed:null, vc:null, loan:null, tx:null, spar:null };
@@ -2352,7 +2385,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','endDate']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']}
   ];
@@ -2472,7 +2505,7 @@ var nativeStorage = {
 
   function copyCsvToClipboard(text, btn){
     function showSuccess(){
-      btn.textContent = 'Kopiert ✓';
+      btn.textContent = 'Kopiert âœ“';
       btn.classList.add('copied');
       setTimeout(function(){ btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1600);
     }
@@ -2493,7 +2526,7 @@ var nativeStorage = {
       var ok = document.execCommand('copy');
       if(ok && onSuccess) onSuccess();
     }catch(e){
-      alert('Kopieren nicht möglich. Bitte den Text im Feld manuell markieren und kopieren.');
+      alert('Kopieren nicht mÃ¶glich. Bitte den Text im Feld manuell markieren und kopieren.');
     }
   }
 
@@ -2501,7 +2534,7 @@ var nativeStorage = {
     var csvStr = buildCSV();
     var filename = 'haushaltsbuch-sicherung-'+todayISO()+'.csv';
 
-    // Weg 1: natives Teilen/Speichern-Menü (auf dem Handy meist am zuverlässigsten)
+    // Weg 1: natives Teilen/Speichern-MenÃ¼ (auf dem Handy meist am zuverlÃ¤ssigsten)
     try{
       if(navigator.canShare && typeof File !== 'undefined'){
         var file = new File([csvStr], filename, {type:'text/csv'});
@@ -2527,12 +2560,12 @@ var nativeStorage = {
       document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
     }catch(err){
-      alert('Automatischer Download nicht möglich. Nutze stattdessen "CSV-Sicherung als Text anzeigen" und kopiere den Inhalt manuell.');
+      alert('Automatischer Download nicht mÃ¶glich. Nutze stattdessen "CSV-Sicherung als Text anzeigen" und kopiere den Inhalt manuell.');
     }
   }
 
   // Fester Dateiname, immer per direktem Blob-Download (kein Share-Sheet),
-  // damit eine Sync-App wie FolderSync die Datei zuverlässig im Downloads-Ordner findet.
+  // damit eine Sync-App wie FolderSync die Datei zuverlÃ¤ssig im Downloads-Ordner findet.
   var SYNC_REMINDER_DAYS = 14;
   function getLastSyncExport(){
     try{
@@ -2564,13 +2597,13 @@ var nativeStorage = {
     if(!el) return;
     var last = getLastSyncExport();
     if(last === null){
-      el.textContent = '–';
+      el.textContent = 'â€“';
       el.style.color = 'var(--ink)';
       return;
     }
     var remainingDays = SYNC_REMINDER_DAYS - daysSince(last);
     if(remainingDays <= 0){
-      el.textContent = 'Überfällig';
+      el.textContent = 'ÃœberfÃ¤llig';
       el.style.color = 'var(--expense)';
       return;
     }
@@ -2601,14 +2634,14 @@ var nativeStorage = {
       document.getElementById('syncReminderOverlay').classList.remove('visible');
       renderSyncTimer();
     }catch(err){
-      alert('Export nicht möglich. Bitte stattdessen "CSV-Sicherung als Text anzeigen" nutzen und manuell speichern.');
+      alert('Export nicht mÃ¶glich. Bitte stattdessen "CSV-Sicherung als Text anzeigen" nutzen und manuell speichern.');
     }
   }
 
   async function restoreDatabaseFromText(text){
     var parsed;
     try{
-      // Abwärtskompatibilität: ältere Sicherungen waren JSON
+      // AbwÃ¤rtskompatibilitÃ¤t: Ã¤ltere Sicherungen waren JSON
       var maybeJson = JSON.parse(text);
       if(maybeJson && typeof maybeJson === 'object'){
         parsed = maybeJson;
@@ -2618,15 +2651,15 @@ var nativeStorage = {
       try{
         parsed = parseCSVDatabase(text);
       }catch(err2){
-        alert('Das ist keine gültige Sicherung.');
+        alert('Das ist keine gÃ¼ltige Sicherung.');
         return false;
       }
     }
     if(!parsed){
-      alert('Das ist keine gültige Sicherung.');
+      alert('Das ist keine gÃ¼ltige Sicherung.');
       return false;
     }
-    var ok = await confirmDialog('Aktuelle Daten durch die Sicherung ersetzen? Das kann nicht rückgängig gemacht werden.', {icon:'📥', confirmLabel:'Ersetzen'});
+    var ok = await confirmDialog('Aktuelle Daten durch die Sicherung ersetzen? Das kann nicht rÃ¼ckgÃ¤ngig gemacht werden.', {icon:'ðŸ“¥', confirmLabel:'Ersetzen'});
     if(!ok){
       return false;
     }
@@ -2688,18 +2721,18 @@ var nativeStorage = {
     var disableBtn = document.getElementById('autoBackupDisableBtn');
     if(!label || !chooseBtn || !disableBtn) return;
     if(!autoBackupAvailable()){
-      label.textContent = 'In dieser Umgebung nicht verfügbar (nur in der Android-App).';
+      label.textContent = 'In dieser Umgebung nicht verfÃ¼gbar (nur in der Android-App).';
       chooseBtn.disabled = true;
       return;
     }
     var folder = window.AndroidBridge.getBackupFolderName();
     if(folder && isAutoBackupEnabled()){
-      label.textContent = 'Aktiv: „' + folder + '“';
-      chooseBtn.textContent = 'Anderen Ordner wählen';
+      label.textContent = 'Aktiv: â€ž' + folder + 'â€œ';
+      chooseBtn.textContent = 'Anderen Ordner wÃ¤hlen';
       disableBtn.style.display = 'block';
     } else {
-      label.textContent = 'Noch kein Ordner gewählt';
-      chooseBtn.textContent = 'Ordner für automatisches Backup wählen';
+      label.textContent = 'Noch kein Ordner gewÃ¤hlt';
+      chooseBtn.textContent = 'Ordner fÃ¼r automatisches Backup wÃ¤hlen';
       disableBtn.style.display = 'none';
     }
   }
@@ -2771,7 +2804,7 @@ var nativeStorage = {
     });
     document.getElementById('csvImportModalRestoreBtn').addEventListener('click', async function(){
       var text = document.getElementById('csvImportModalText').value.trim();
-      if(!text){ alert('Bitte zuerst den Sicherungstext einfügen.'); return; }
+      if(!text){ alert('Bitte zuerst den Sicherungstext einfÃ¼gen.'); return; }
       document.getElementById('csvImportModalOverlay').classList.remove('visible');
       await restoreDatabaseFromText(text);
     });
@@ -2811,7 +2844,7 @@ var nativeStorage = {
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){ /* Offline-Funktion optional, kein Problem falls das fehlschlägt */ });
+    navigator.serviceWorker.register('sw.js').catch(function(){ /* Offline-Funktion optional, kein Problem falls das fehlschlÃ¤gt */ });
   });
 }
 
