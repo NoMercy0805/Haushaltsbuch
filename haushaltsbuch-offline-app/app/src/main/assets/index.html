@@ -1816,7 +1816,7 @@ var nativeStorage = {
                    '<span class="row-desc">'+(isIncrease?'Erhöhung':'Rate')+'</span>'+
                    '<span class="row-leader"></span>'+
                    '<span class="row-sub">'+dateLabel+'</span>'+
-                   '<span class="row-amount" style="color:'+(isIncrease?'var(--gold)':'var(--expense)')+';">'+(isIncrease?'+':'−')+fmtEUR(p.amount)+'</span>'+
+                   '<span class="row-amount" style="color:'+(isIncrease?'var(--expense)':'var(--savings)')+';">'+(isIncrease?'−':'+')+fmtEUR(p.amount)+'</span>'+
                    '<span class="row-actions">'+
                      '<button class="icon-btn delete-icon" data-action="delete-loan-payment" data-id="'+p.id+'" aria-label="Löschen">×</button>'+
                    '</span>'+
@@ -2957,4 +2957,4 @@ if('serviceWorker' in navigator){
   };
 </script>
 </body>
-    </html>
+  </html>
