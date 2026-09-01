@@ -191,6 +191,11 @@
   .cat-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}
   .legend-amt{font-family:var(--mono);font-size:14px;font-weight:700;min-width:78px;text-align:right;}
   .pie-chart{width:180px;height:180px;border-radius:50%;margin:6px auto 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.08);}
+  .bar-chart{background:var(--surface);border-radius:var(--radius);padding:18px 20px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 8px rgba(0,0,0,0.04);display:flex;align-items:flex-end;gap:10px;height:180px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bar-col .bar-value{font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;white-space:nowrap;}
+  .bar-col .bar-fill{width:100%;max-width:34px;background:var(--savings);border-radius:6px 6px 0 0;min-height:2px;transition:height .25s ease;}
+  .bar-col .bar-label{font-size:11px;color:var(--ink-soft);margin-top:6px;font-weight:600;}
 
   .reset-link{display:block;text-align:center;margin-top:28px;font-size:14px;color:var(--ink-soft);text-decoration:none;cursor:pointer;background:none;border:none;padding:10px;font-weight:600;}
   .settings-btn{display:block;width:100%;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;margin-bottom:20px;}
@@ -331,6 +336,9 @@
         <div class="summary-card" id="invoiceSummary"></div>
         <div id="invoiceList"></div>
 
+        <h2 class="section-title" id="paidInvoicesHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidInvoicesBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Verlauf: Bezahlte Rechnungen</h2>
+        <div id="paidInvoicesList"></div>
+
         <h2 class="section-title" id="incomeHeader" style="cursor:pointer;"><button class="icon-btn info-btn" id="toggleIncomeBtn" aria-label="Einnahmen ein-/ausblenden" title="Einnahmen ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Einnahmen</h2>
         <div id="incomeList"></div>
 
@@ -387,6 +395,9 @@
           <div id="loanPieChart" class="pie-chart"></div>
           <div id="loanPieLegend"></div>
         </div>
+
+        <h2 class="section-title">Bezahlte Rechnungen pro Monat</h2>
+        <div id="paidInvoicesBarChart" class="bar-chart"></div>
       </section>
 
     </main>
@@ -856,6 +867,7 @@ var nativeStorage = {
   var showIncomeList = loadBoolPref('household-show-income', true);
   var showFixedList = loadBoolPref('household-show-fixed', true);
   var showPaidLoansHistory = loadBoolPref('household-show-paid-loans', false);
+  var showPaidInvoicesHistory = loadBoolPref('household-show-paid-invoices', false);
   var showSparList = loadBoolPref('household-show-sparlist', true);
   function loadBoolPref(key, fallback){
     try{
@@ -966,6 +978,36 @@ var nativeStorage = {
       {label:'Bereits eingezahlt', value:totalPaidIn, color:'var(--savings)'},
       {label:'Restschuld', value:totalRemaining, color:'var(--expense)'}
     ]);
+
+    renderMonthlyPaidInvoicesBarChart();
+  }
+
+  function renderMonthlyPaidInvoicesBarChart(){
+    var container = document.getElementById('paidInvoicesBarChart');
+    var months = [];
+    var now = new Date();
+    for(var i=5;i>=0;i--){
+      var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      months.push({key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: MONTH_NAMES[d.getMonth()].slice(0,3)});
+    }
+    var totalsByMonth = {};
+    state.openInvoices.forEach(function(inv){
+      if(!inv.paid || !inv.paidDate) return;
+      var key = inv.paidDate.slice(0,7);
+      totalsByMonth[key] = (totalsByMonth[key]||0) + inv.amount;
+    });
+    var maxVal = Math.max.apply(null, months.map(function(m){ return totalsByMonth[m.key]||0; }).concat([0.01]));
+    var html = '';
+    months.forEach(function(m){
+      var val = totalsByMonth[m.key] || 0;
+      var heightPct = maxVal > 0 ? Math.max(2, (val/maxVal*100)) : 2;
+      html += '<div class="bar-col">'+
+                '<span class="bar-value">'+(val>0?fmtEUR(val):'')+'</span>'+
+                '<div class="bar-fill" style="height:'+heightPct+'%;"></div>'+
+                '<span class="bar-label">'+m.label+'</span>'+
+              '</div>';
+    });
+    container.innerHTML = html;
   }
 
   function monthOptions(selected){
@@ -1369,14 +1411,12 @@ var nativeStorage = {
       '<div class="summary-row"><span>Offener Betrag gesamt</span><span class="val neg">'+fmtEUR(openTotal)+'</span></div>';
 
     var container = document.getElementById('invoiceList');
-    var list = state.openInvoices.slice().sort(function(a,b){
-      if(!!a.paid !== !!b.paid) return a.paid ? 1 : -1;
+    var list = state.openInvoices.filter(function(i){ return !i.paid; }).slice().sort(function(a,b){
       return (a.dueDate||'').localeCompare(b.dueDate||'');
     });
     if(list.length === 0){
       container.innerHTML = '<div class="empty-state">Keine offenen Rechnungen eingetragen.</div>';
-      return;
-    }
+    } else {
     var html = '';
     list.forEach(function(inv){
       if(editing.invoice === inv.id){
@@ -1410,6 +1450,45 @@ var nativeStorage = {
       }
     });
     container.innerHTML = html;
+    }
+
+    renderPaidInvoicesHistory();
+  }
+
+  function renderPaidInvoicesHistory(){
+    document.getElementById('togglePaidInvoicesBtn').classList.toggle('active', showPaidInvoicesHistory);
+    var container = document.getElementById('paidInvoicesList');
+    if(!showPaidInvoicesHistory){
+      container.innerHTML = '';
+      return;
+    }
+    var paid = state.openInvoices.filter(function(i){ return i.paid; }).slice().sort(function(a,b){
+      return (b.paidDate||'').localeCompare(a.paidDate||'');
+    });
+    if(paid.length === 0){
+      container.innerHTML = '<div class="empty-state" style="padding:14px 4px;">Noch keine bezahlten Rechnungen.</div>';
+      return;
+    }
+    var html2 = '';
+    paid.forEach(function(inv){
+      var dateLabel = '–';
+      if(inv.paidDate){
+        var pd = parseISO(inv.paidDate);
+        dateLabel = String(pd.getDate()).padStart(2,'0')+'.'+String(pd.getMonth()+1).padStart(2,'0')+'.'+pd.getFullYear();
+      }
+      html2 += '<div class="vc-card" data-id="'+inv.id+'" style="opacity:0.85;">'+
+                '<div class="vc-card-top">'+
+                  '<span class="vc-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(inv.name)+'</span>'+
+                  '<span class="amount-prominent" style="color:var(--savings);">'+fmtEUR(inv.amount)+'</span>'+
+                '</div>'+
+                '<div class="vc-detail-row"><span>Bezahlt am</span><span class="val">'+dateLabel+'</span></div>'+
+                '<div class="vc-actions">'+
+                  '<button class="action-icon-btn neutral" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als offen markieren" title="Als offen markieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>'+
+                  '<button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                '</div>'+
+              '</div>';
+    });
+    container.innerHTML = html2;
   }
 
   /* ---------- Variable Kosten ---------- */
@@ -2104,6 +2183,12 @@ var nativeStorage = {
       renderKredite();
     });
 
+    document.getElementById('paidInvoicesHeader').addEventListener('click', function(){
+      showPaidInvoicesHistory = !showPaidInvoicesHistory;
+      saveBoolPref('household-show-paid-invoices', showPaidInvoicesHistory);
+      renderInvoices();
+    });
+
     document.getElementById('invoiceForm').addEventListener('submit', function(e){
       e.preventDefault();
       var name = document.getElementById('invName').value.trim();
@@ -2124,7 +2209,11 @@ var nativeStorage = {
       var id = btn.dataset.id;
       if(action === 'toggle-paid'){
         var inv = state.openInvoices.filter(function(x){return x.id===id;})[0];
-        if(inv){ inv.paid = !inv.paid; saveState(); renderAll(); }
+        if(inv){
+          inv.paid = !inv.paid;
+          inv.paidDate = inv.paid ? todayISO() : '';
+          saveState(); renderAll();
+        }
       } else if(action === 'delete-invoice'){
         if(!await confirmDialog('Diese Rechnung wirklich löschen?')) return;
         state.openInvoices = state.openInvoices.filter(function(x){return x.id!==id;});
@@ -2476,7 +2565,7 @@ var nativeStorage = {
   var CSV_TABLES = [
     {name:'income', columns:['id','name','amount']},
     {name:'fixedExpenses', columns:['id','name','amount','icon']},
-    {name:'openInvoices', columns:['id','name','amount','dueDate','paid']},
+    {name:'openInvoices', columns:['id','name','amount','dueDate','paid','paidDate']},
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
