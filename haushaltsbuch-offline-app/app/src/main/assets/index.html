@@ -336,7 +336,7 @@
         <div class="summary-card" id="invoiceSummary"></div>
         <div id="invoiceList"></div>
 
-        <h2 class="section-title" id="paidInvoicesHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidInvoicesBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Verlauf: Bezahlte Rechnungen</h2>
+        <h2 class="section-title" id="paidInvoicesHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidInvoicesBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Bezahlte Rechnungen</h2>
         <div id="paidInvoicesList"></div>
 
         <h2 class="section-title" id="incomeHeader" style="cursor:pointer;"><button class="icon-btn info-btn" id="toggleIncomeBtn" aria-label="Einnahmen ein-/ausblenden" title="Einnahmen ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Einnahmen</h2>
@@ -367,7 +367,7 @@
         <h2 class="section-title">Kredite</h2>
         <div id="loanList"></div>
 
-        <h2 class="section-title" id="paidLoansHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidLoansBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Verlauf: Abbezahlte Kredite</h2>
+        <h2 class="section-title" id="paidLoansHeader" style="cursor:pointer;margin-top:22px;"><button class="icon-btn info-btn" id="togglePaidLoansBtn" aria-label="Verlauf ein-/ausblenden" title="Verlauf ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Abbezahlte Kredite</h2>
         <div id="paidLoansList"></div>
       </section>
 
@@ -963,7 +963,7 @@ var nativeStorage = {
     var incomeTotal = sum(state.income,'amount');
     var fixedTotal = sum(state.fixedExpenses,'amount');
     var variableMonthly = sum(state.variableCosts,'monthlyAmount');
-    var loanMonthly = sum(state.loans,'monthlyPayment');
+    var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
     var openInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
     var expenseTotal = fixedTotal + variableMonthly + loanMonthly + openInvTotal;
     renderComparisonPie('incomeExpensePieChart', 'incomeExpensePieLegend', [
@@ -1201,7 +1201,7 @@ var nativeStorage = {
     var incomeTotal = sum(state.income,'amount');
     var fixedTotal = sum(state.fixedExpenses,'amount');
     var variableMonthly = sum(state.variableCosts,'monthlyAmount');
-    var loanMonthly = sum(state.loans,'monthlyPayment');
+    var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
     var openInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
     var rest = incomeTotal - fixedTotal - openInvTotal - variableMonthly - loanMonthly;
     document.getElementById('hdrIncome').textContent = fmtEUR(incomeTotal);
@@ -1379,7 +1379,7 @@ var nativeStorage = {
     var incomeTotal = sum(state.income,'amount');
     var fixedTotal = sum(state.fixedExpenses,'amount');
     var variableMonthly = sum(state.variableCosts,'monthlyAmount');
-    var loanMonthly = sum(state.loans,'monthlyPayment');
+    var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
     var openInv = state.openInvoices.filter(function(i){ return !i.paid; });
     var openInvTotal = sum(openInv, 'amount');
     var rest = incomeTotal - fixedTotal - openInvTotal - variableMonthly - loanMonthly;
@@ -2202,7 +2202,7 @@ var nativeStorage = {
       document.getElementById('addInvoiceOverlay').classList.remove('open');
     });
 
-    document.getElementById('invoiceList').addEventListener('click', async function(e){
+    async function handleInvoiceListClick(e){
       var btn = e.target.closest('button');
       if(!btn) return;
       var action = btn.dataset.action;
@@ -2233,7 +2233,9 @@ var nativeStorage = {
         }
         editing.invoice = null; saveState(); renderAll();
       }
-    });
+    }
+    document.getElementById('invoiceList').addEventListener('click', handleInvoiceListClick);
+    document.getElementById('paidInvoicesList').addEventListener('click', handleInvoiceListClick);
   }
 
   function setupVariableForms(){
@@ -2450,7 +2452,7 @@ var nativeStorage = {
       renderAll();
       document.getElementById('addLoanOverlay').classList.remove('open');
     });
-    document.getElementById('loanList').addEventListener('click', async function(e){
+    async function handleLoanListClick(e){
       var btn = e.target.closest('button, [data-action]');
       if(!btn) return;
       var action = btn.dataset.action;
@@ -2548,7 +2550,9 @@ var nativeStorage = {
         }
         saveState(); renderAll();
       }
-    });
+    }
+    document.getElementById('loanList').addEventListener('click', handleLoanListClick);
+    document.getElementById('paidLoansList').addEventListener('click', handleLoanListClick);
   }
 
   function setupReset(){
