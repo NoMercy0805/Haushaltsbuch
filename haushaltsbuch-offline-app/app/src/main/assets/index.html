@@ -334,8 +334,7 @@
     <main>
       <!-- ÜBERSICHT -->
       <section id="tab-uebersicht" class="tab-panel active">
-        <div class="summary-card" id="balanceSummary"></div>
-        <div id="overviewWidgets" style="margin-top:16px;"></div>
+        <div id="overviewWidgets"></div>
       </section>
 
       <!-- BUCHUNGEN -->
@@ -648,7 +647,7 @@
 
       <h2 class="section-title" id="settingsSecHead-widgets" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="widgets" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Übersicht-Anzeige</h2>
       <div id="settingsSecBody-widgets" style="display:none;">
-      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen zusätzlich zur Gesamt-Bilanz im Übersicht-Tab angezeigt werden?</p>
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen im Übersicht-Tab angezeigt werden?</p>
       <div class="summary-card" id="overviewWidgetList">
         <div class="tab-visibility-row">
           <span>Offene Rechnungen</span>
@@ -695,30 +694,24 @@
       </div>
       </div>
 
-      <h2 class="section-title" id="settingsSecHead-datenbank" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="datenbank" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Datenbank</h2>
-      <div id="settingsSecBody-datenbank" style="display:none;">
+      <h2 class="section-title" id="settingsSecHead-backup" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="backup" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Backup</h2>
+      <div id="settingsSecBody-backup" style="display:none;">
       <div class="summary-card">
         <p style="margin:0 0 4px;font-size:15px;">Alle deine Daten werden sicher direkt auf deinem Gerät gespeichert.</p>
       </div>
-      </div>
 
-      <h2 class="section-title" id="settingsSecHead-manuell" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="manuell" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Manuelles Backup</h2>
-      <div id="settingsSecBody-manuell" style="display:none;">
+      <p class="chooser-group-label" style="margin-top:16px;">Manuelles Backup</p>
       <button id="exportDownloadBtn" class="settings-btn">Jetzt sichern (Downloads-Ordner)</button>
-      </div>
 
-      <h2 class="section-title" id="settingsSecHead-auto" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="auto" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Automatisches Backup</h2>
-      <div id="settingsSecBody-auto" style="display:none;">
+      <p class="chooser-group-label" style="margin-top:16px;">Automatisches Backup</p>
       <div class="summary-card">
         <p style="margin:0 0 4px;font-size:15px;">Wähle einen Ordner (z. B. auf einer Cloud- oder NAS-verknüpften Speicherkarte). Die App sichert dort automatisch, solange die App geöffnet ist bzw. in den Hintergrund wechselt.</p>
         <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);" id="autoBackupFolderLabel">Noch kein Ordner gewählt</p>
       </div>
       <button id="autoBackupToggleBtn" class="settings-btn">Ordner für automatisches Backup wählen</button>
       <button id="autoBackupDisableBtn" class="settings-btn" style="display:none;background:var(--primary-soft);color:var(--primary);">Automatisches Backup deaktivieren</button>
-      </div>
 
-      <h2 class="section-title" id="settingsSecHead-restore" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="restore" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Wiederherstellen</h2>
-      <div id="settingsSecBody-restore" style="display:none;">
+      <p class="chooser-group-label" style="margin-top:16px;">Wiederherstellen</p>
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
       <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswählen…</button>
 
@@ -1470,20 +1463,6 @@ var nativeStorage = {
   /* ---------- Übersicht ---------- */
   function renderUebersicht(){
     renderOverviewWidgets();
-    var incomeTotal = sum(state.income,'amount');
-    var fixedTotal = sum(state.fixedExpenses,'amount');
-    var variableMonthly = sum(state.variableCosts,'monthlyAmount');
-    var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
-    var openInv = state.openInvoices.filter(function(i){ return !i.paid; });
-    var openInvTotal = sum(openInv, 'amount');
-    var rest = incomeTotal - fixedTotal - openInvTotal - variableMonthly - loanMonthly;
-    document.getElementById('balanceSummary').innerHTML =
-      '<div class="summary-row"><span>Einnahmen</span><span class="val">'+fmtEUR(incomeTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Fixkosten</span><span class="val">−'+fmtEUR(fixedTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Offene Rechnungen</span><span class="val '+(openInv.length>0?'neg':'')+'">−'+fmtEUR(openInvTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Variable Kosten (Sparbeitrag)</span><span class="val">−'+fmtEUR(variableMonthly)+'</span></div>'+
-      '<div class="summary-row"><span>Kredite</span><span class="val">−'+fmtEUR(loanMonthly)+'</span></div>'+
-      '<div class="summary-row"><span>Monatlicher Rest</span><span class="val '+(rest>=0?'pos':'neg')+'">'+fmtEUR(rest)+'</span></div>';
 
     renderSimpleList(document.getElementById('incomeList'), state.income, 'income');
     renderSimpleList(document.getElementById('fixedList'), state.fixedExpenses, 'fixed');
@@ -1502,7 +1481,7 @@ var nativeStorage = {
     document.getElementById('invoiceSummary').innerHTML =
       '<div class="summary-row"><span>Offene Rechnungen</span><span class="val">'+open.length+'</span></div>'+
       '<div class="summary-row"><span>Davon überfällig</span><span class="val '+(overdue>0?'neg':'')+'">'+overdue+'</span></div>'+
-      '<div class="summary-row"><span>Offener Betrag gesamt</span><span class="val neg">'+fmtEUR(openTotal)+'</span></div>';
+      '<div class="summary-row"><span>Offene Rechnungen gesamt</span><span class="val neg">'+fmtEUR(openTotal)+'</span></div>';
 
     var container = document.getElementById('invoiceList');
     var list = state.openInvoices.filter(function(i){ return !i.paid; }).slice().sort(function(a,b){
@@ -2110,46 +2089,76 @@ var nativeStorage = {
     if(!container) return;
     var cards = [];
 
+    var buchungenRows = [];
     if(overviewWidgetPrefs.invoices){
-      var openInv = state.openInvoices.filter(function(i){ return !i.paid; });
-      cards.push({
-        tab: 'buchungen', label: 'Offene Rechnungen',
-        value: openInv.length + (openInv.length===1?' Rechnung':' Rechnungen') + ' · ' + fmtEUR(sum(openInv,'amount'))
-      });
+      var open = state.openInvoices.filter(function(i){ return !i.paid; });
+      var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
+      buchungenRows.push({l:'Offene Rechnungen', v:String(open.length), cls:''});
+      buchungenRows.push({l:'Davon überfällig', v:String(overdue), cls: overdue>0?'neg':''});
+      buchungenRows.push({l:'Offene Rechnungen gesamt', v:fmtEUR(sum(open,'amount')), cls:'neg'});
     }
     if(overviewWidgetPrefs.income){
-      cards.push({ tab: 'buchungen', label: 'Einnahmen', value: fmtEUR(sum(state.income,'amount')) });
+      buchungenRows.push({l:'Einnahmen gesamt', v:fmtEUR(sum(state.income,'amount')), cls:'pos'});
     }
     if(overviewWidgetPrefs.fixed){
-      cards.push({ tab: 'buchungen', label: 'Fixkosten', value: fmtEUR(sum(state.fixedExpenses,'amount')) });
+      buchungenRows.push({l:'Fixkosten gesamt', v:fmtEUR(sum(state.fixedExpenses,'amount')), cls:'neg'});
     }
+    if(buchungenRows.length > 0){
+      cards.push({ tab: 'buchungen', label: 'Buchungen', rows: buchungenRows });
+    }
+
     if(overviewWidgetPrefs.variabel){
       var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
       var paymentTotal = sum(state.variablePayments,'amount');
       var potBalance = contribTotal - paymentTotal;
-      cards.push({ tab: 'variabel', label: 'Variable Kosten', value: 'Spartopf: ' + fmtEUR(potBalance) });
+      var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
+      cards.push({
+        tab: 'variabel', label: 'Variable Kosten',
+        rows: [
+          {l:'Eingezahlt (gesamt)', v:fmtEUR(contribTotal), cls:'pos'},
+          {l:'Bezahlt (gesamt)', v:fmtEUR(paymentTotal), cls:'neg'},
+          {l:'Rest im Spartopf', v:fmtEUR(potBalance), cls: potBalance>=0?'pos':'neg'},
+          {l:'Monatlicher Sparbedarf', v:fmtEUR(monthlyNeed), cls:''}
+        ]
+      });
     }
     if(overviewWidgetPrefs.kredite){
       var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
-      cards.push({ tab: 'kredite', label: 'Kredite', value: 'Restschuld: ' + fmtEUR(sum(activeLoans,'remainingBalance')) });
+      cards.push({
+        tab: 'kredite', label: 'Kredite',
+        rows: [
+          {l:'Restschuld gesamt', v:fmtEUR(sum(activeLoans,'remainingBalance')), cls:'neg'},
+          {l:'Kreditsumme gesamt', v:fmtEUR(sum(activeLoans,'originalAmount')), cls:''},
+          {l:'Monatliche Raten gesamt', v:fmtEUR(sum(activeLoans,'monthlyPayment')), cls:''}
+        ]
+      });
     }
     if(overviewWidgetPrefs.sparen){
       var deposits = state.savings.filter(function(s){ return s.type !== 'expense'; });
       var expenses = state.savings.filter(function(s){ return s.type === 'expense'; });
       var sparTotal = sum(deposits,'amount') - sum(expenses,'amount');
-      cards.push({ tab: 'sparen', label: 'Sparen', value: fmtEUR(sparTotal) });
+      var realYear = new Date().getFullYear();
+      var isThisYear = function(s){ return parseISO(s.date).getFullYear() === realYear; };
+      var yearTotal = sum(deposits.filter(isThisYear),'amount') - sum(expenses.filter(isThisYear),'amount');
+      cards.push({
+        tab: 'sparen', label: 'Sparen',
+        rows: [
+          {l:'Gespart (gesamt)', v:fmtEUR(sparTotal), cls:'pos'},
+          {l:'Gespart ('+realYear+')', v:fmtEUR(yearTotal), cls:'pos'}
+        ]
+      });
     }
 
     if(cards.length === 0){ container.innerHTML = ''; return; }
 
     var html = '';
     cards.forEach(function(c){
-      html += '<div class="summary-card overview-widget-card" data-jump-tab="'+c.tab+'" style="margin-bottom:10px;cursor:pointer;">'+
-                '<div class="summary-row" style="margin:0;">'+
-                  '<span>'+c.label+'</span>'+
-                  '<span class="val">'+c.value+'</span>'+
-                '</div>'+
-              '</div>';
+      html += '<h2 class="section-title" style="margin-top:20px;">'+c.label+'</h2>';
+      html += '<div class="summary-card overview-widget-card" data-jump-tab="'+c.tab+'" style="cursor:pointer;">';
+      c.rows.forEach(function(r){
+        html += '<div class="summary-row"><span>'+r.l+'</span><span class="val '+r.cls+'">'+r.v+'</span></div>';
+      });
+      html += '</div>';
     });
     container.innerHTML = html;
 
@@ -2158,7 +2167,7 @@ var nativeStorage = {
     });
   }
 
-  var SETTINGS_SECTIONS = ['darstellung', 'bereiche', 'widgets', 'datenbank', 'manuell', 'auto', 'restore', 'reset'];
+  var SETTINGS_SECTIONS = ['darstellung', 'bereiche', 'widgets', 'backup', 'reset'];
 
   function setupCollapsibleSettingsSections(){
     SETTINGS_SECTIONS.forEach(function(key){
