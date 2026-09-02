@@ -309,6 +309,10 @@
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
         <span>Übersicht</span>
       </button>
+      <button data-tab="buchungen" class="tab">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h5"/></svg>
+        <span>Buchungen</span>
+      </button>
       <button data-tab="variabel" class="tab">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/></svg>
         <span>Variable Kosten</span>
@@ -331,8 +335,12 @@
       <!-- ÜBERSICHT -->
       <section id="tab-uebersicht" class="tab-panel active">
         <div class="summary-card" id="balanceSummary"></div>
+        <div id="overviewWidgets" style="margin-top:16px;"></div>
+      </section>
 
-        <h2 class="section-title">Offene Rechnungen</h2>
+      <!-- BUCHUNGEN -->
+      <section id="tab-buchungen" class="tab-panel">
+        <h2 class="section-title" style="margin-top:0;">Offene Rechnungen</h2>
         <div class="summary-card" id="invoiceSummary"></div>
         <div id="invoiceList"></div>
 
@@ -415,8 +423,8 @@
         <button class="settings-close-btn" id="addChooserCloseBtn" aria-label="Schließen">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-        <div data-tab-group="uebersicht">
-          <p class="chooser-group-label">Übersicht</p>
+        <div data-tab-group="buchungen">
+          <p class="chooser-group-label">Buchungen</p>
           <button type="button" class="settings-btn" style="margin-bottom:0;" data-open-form="addInvoiceOverlay">Offene Rechnung</button>
           <button type="button" class="settings-btn" style="margin-bottom:0;margin-top:6px;" data-open-form="addIncomeOverlay">Einnahme</button>
           <button type="button" class="settings-btn" style="margin-bottom:0;margin-top:6px;" data-open-form="addFixedOverlay">Fixkosten</button>
@@ -579,7 +587,8 @@
         <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
       </div>
 
-      <h2 class="section-title" style="margin-top:0;">Darstellung</h2>
+      <h2 class="section-title" id="settingsSecHead-darstellung" style="margin-top:0;cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="darstellung" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Darstellung</h2>
+      <div id="settingsSecBody-darstellung" style="display:none;">
       <div class="summary-card">
         <div class="theme-select-row">
           <button type="button" class="theme-option" data-theme-choice="light">Hell</button>
@@ -587,13 +596,22 @@
           <button type="button" class="theme-option" data-theme-choice="system">System</button>
         </div>
       </div>
+      </div>
 
-      <h2 class="section-title">Sichtbare Bereiche</h2>
+      <h2 class="section-title" id="settingsSecHead-bereiche" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="bereiche" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Sichtbare Bereiche</h2>
+      <div id="settingsSecBody-bereiche" style="display:none;">
       <div class="summary-card" id="tabVisibilityList">
         <div class="tab-visibility-row">
           <span>Übersicht</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="uebersicht">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Buchungen</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-tab-toggle="buchungen">
             <span class="track"></span><span class="thumb"></span>
           </label>
         </div>
@@ -626,24 +644,81 @@
           </label>
         </div>
       </div>
+      </div>
 
-      <h2 class="section-title">Datenbank</h2>
+      <h2 class="section-title" id="settingsSecHead-widgets" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="widgets" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Übersicht-Anzeige</h2>
+      <div id="settingsSecBody-widgets" style="display:none;">
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen zusätzlich zur Gesamt-Bilanz im Übersicht-Tab angezeigt werden?</p>
+      <div class="summary-card" id="overviewWidgetList">
+        <div class="tab-visibility-row">
+          <span>Offene Rechnungen</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="invoices">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Einnahmen</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="income">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Fixkosten</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="fixed">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Variable Kosten</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="variabel">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Kredite</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="kredite">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Sparen</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="sparen">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+      </div>
+
+      <h2 class="section-title" id="settingsSecHead-datenbank" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="datenbank" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Datenbank</h2>
+      <div id="settingsSecBody-datenbank" style="display:none;">
       <div class="summary-card">
         <p style="margin:0 0 4px;font-size:15px;">Alle deine Daten werden sicher direkt auf deinem Gerät gespeichert.</p>
       </div>
+      </div>
 
-      <h2 class="section-title">Manuelles Backup</h2>
+      <h2 class="section-title" id="settingsSecHead-manuell" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="manuell" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Manuelles Backup</h2>
+      <div id="settingsSecBody-manuell" style="display:none;">
       <button id="exportDownloadBtn" class="settings-btn">Jetzt sichern (Downloads-Ordner)</button>
+      </div>
 
-      <h2 class="section-title">Automatisches Backup</h2>
+      <h2 class="section-title" id="settingsSecHead-auto" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="auto" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Automatisches Backup</h2>
+      <div id="settingsSecBody-auto" style="display:none;">
       <div class="summary-card">
         <p style="margin:0 0 4px;font-size:15px;">Wähle einen Ordner (z. B. auf einer Cloud- oder NAS-verknüpften Speicherkarte). Die App sichert dort automatisch, solange die App geöffnet ist bzw. in den Hintergrund wechselt.</p>
         <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);" id="autoBackupFolderLabel">Noch kein Ordner gewählt</p>
       </div>
       <button id="autoBackupToggleBtn" class="settings-btn">Ordner für automatisches Backup wählen</button>
       <button id="autoBackupDisableBtn" class="settings-btn" style="display:none;background:var(--primary-soft);color:var(--primary);">Automatisches Backup deaktivieren</button>
+      </div>
 
-      <h2 class="section-title">Wiederherstellen</h2>
+      <h2 class="section-title" id="settingsSecHead-restore" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="restore" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Wiederherstellen</h2>
+      <div id="settingsSecBody-restore" style="display:none;">
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
       <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswählen…</button>
 
@@ -651,9 +726,12 @@
       <div id="syncTimerCard" style="display:none;"><p id="syncTimerValue"></p></div>
       <button id="exportSyncBtn" class="settings-btn" style="display:none;">Für Sync exportieren</button>
       <button id="importTextTriggerBtn" class="settings-btn" style="display:none;">CSV-Text wiederherstellen</button>
+      </div>
 
-      <h2 class="section-title">Zurücksetzen</h2>
+      <h2 class="section-title" id="settingsSecHead-reset" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="reset" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Zurücksetzen</h2>
+      <div id="settingsSecBody-reset" style="display:none;">
       <button class="settings-btn danger" id="resetBtn">Alle Daten löschen</button>
+      </div>
     </div>
   </div>
 
@@ -1391,6 +1469,7 @@ var nativeStorage = {
 
   /* ---------- Übersicht ---------- */
   function renderUebersicht(){
+    renderOverviewWidgets();
     var incomeTotal = sum(state.income,'amount');
     var fixedTotal = sum(state.fixedExpenses,'amount');
     var variableMonthly = sum(state.variableCosts,'monthlyAmount');
@@ -1932,7 +2011,7 @@ var nativeStorage = {
   }
 
   /* ---------- Events ---------- */
-  var TAB_ORDER = ['uebersicht', 'variabel', 'kredite', 'sparen', 'diagramm'];
+  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'sparen', 'diagramm'];
   var tabVisibility = loadTabVisibility();
 
   function loadTabVisibility(){
@@ -1993,6 +2072,108 @@ var nativeStorage = {
     });
   }
 
+  var OVERVIEW_WIDGET_KEYS = ['invoices', 'income', 'fixed', 'variabel', 'kredite', 'sparen'];
+
+  function loadOverviewWidgetPrefs(){
+    var result = {};
+    OVERVIEW_WIDGET_KEYS.forEach(function(k){ result[k] = true; });
+    try{
+      var raw = nativeStorage.getItem('household-overview-widgets');
+      if(raw){
+        var parsed = JSON.parse(raw);
+        OVERVIEW_WIDGET_KEYS.forEach(function(k){
+          if(typeof parsed[k] === 'boolean') result[k] = parsed[k];
+        });
+      }
+    }catch(err){}
+    return result;
+  }
+  var overviewWidgetPrefs = loadOverviewWidgetPrefs();
+
+  function saveOverviewWidgetPrefs(){
+    try{ nativeStorage.setItem('household-overview-widgets', JSON.stringify(overviewWidgetPrefs)); }catch(err){}
+  }
+
+  function setupOverviewWidgetToggles(){
+    document.querySelectorAll('input[data-widget-toggle]').forEach(function(cb){
+      cb.checked = overviewWidgetPrefs[cb.dataset.widgetToggle];
+      cb.addEventListener('change', function(){
+        overviewWidgetPrefs[cb.dataset.widgetToggle] = cb.checked;
+        saveOverviewWidgetPrefs();
+        renderOverviewWidgets();
+      });
+    });
+  }
+
+  function renderOverviewWidgets(){
+    var container = document.getElementById('overviewWidgets');
+    if(!container) return;
+    var cards = [];
+
+    if(overviewWidgetPrefs.invoices){
+      var openInv = state.openInvoices.filter(function(i){ return !i.paid; });
+      cards.push({
+        tab: 'buchungen', label: 'Offene Rechnungen',
+        value: openInv.length + (openInv.length===1?' Rechnung':' Rechnungen') + ' · ' + fmtEUR(sum(openInv,'amount'))
+      });
+    }
+    if(overviewWidgetPrefs.income){
+      cards.push({ tab: 'buchungen', label: 'Einnahmen', value: fmtEUR(sum(state.income,'amount')) });
+    }
+    if(overviewWidgetPrefs.fixed){
+      cards.push({ tab: 'buchungen', label: 'Fixkosten', value: fmtEUR(sum(state.fixedExpenses,'amount')) });
+    }
+    if(overviewWidgetPrefs.variabel){
+      var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
+      var paymentTotal = sum(state.variablePayments,'amount');
+      var potBalance = contribTotal - paymentTotal;
+      cards.push({ tab: 'variabel', label: 'Variable Kosten', value: 'Spartopf: ' + fmtEUR(potBalance) });
+    }
+    if(overviewWidgetPrefs.kredite){
+      var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+      cards.push({ tab: 'kredite', label: 'Kredite', value: 'Restschuld: ' + fmtEUR(sum(activeLoans,'remainingBalance')) });
+    }
+    if(overviewWidgetPrefs.sparen){
+      var deposits = state.savings.filter(function(s){ return s.type !== 'expense'; });
+      var expenses = state.savings.filter(function(s){ return s.type === 'expense'; });
+      var sparTotal = sum(deposits,'amount') - sum(expenses,'amount');
+      cards.push({ tab: 'sparen', label: 'Sparen', value: fmtEUR(sparTotal) });
+    }
+
+    if(cards.length === 0){ container.innerHTML = ''; return; }
+
+    var html = '';
+    cards.forEach(function(c){
+      html += '<div class="summary-card overview-widget-card" data-jump-tab="'+c.tab+'" style="margin-bottom:10px;cursor:pointer;">'+
+                '<div class="summary-row" style="margin:0;">'+
+                  '<span>'+c.label+'</span>'+
+                  '<span class="val">'+c.value+'</span>'+
+                '</div>'+
+              '</div>';
+    });
+    container.innerHTML = html;
+
+    container.querySelectorAll('[data-jump-tab]').forEach(function(card){
+      card.addEventListener('click', function(){ switchToTab(card.dataset.jumpTab); });
+    });
+  }
+
+  var SETTINGS_SECTIONS = ['darstellung', 'bereiche', 'widgets', 'datenbank', 'manuell', 'auto', 'restore', 'reset'];
+
+  function setupCollapsibleSettingsSections(){
+    SETTINGS_SECTIONS.forEach(function(key){
+      var head = document.getElementById('settingsSecHead-'+key);
+      var body = document.getElementById('settingsSecBody-'+key);
+      var btn = head ? head.querySelector('[data-settings-toggle]') : null;
+      if(!head || !body) return;
+      head.addEventListener('click', function(){
+        var isOpen = body.style.display !== 'none';
+        body.style.display = isOpen ? 'none' : '';
+        if(btn) btn.classList.toggle('active', !isOpen);
+      });
+    });
+  }
+
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
     var panel = document.getElementById('tab-'+tabName);
@@ -2012,6 +2193,8 @@ var nativeStorage = {
     setupAddEntryModals();
     setupSettingsModal();
     setupTabVisibilityToggles();
+    setupOverviewWidgetToggles();
+    setupCollapsibleSettingsSections();
     applyTabVisibility();
   }
 
