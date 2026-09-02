@@ -1032,6 +1032,21 @@ var nativeStorage = {
     if(interval === 'zweijaehrlich') return 24;
     return 12;
   }
+  // Berechnet, in wie vielen Monaten die naechste tatsaechliche Faelligkeit
+  // eintritt - beruecksichtigt dabei das Intervall (z.B. bei "vierteljaehrlich
+  // ab Maerz" ist es auch im Juni, September und Dezember faellig, nicht nur
+  // im Maerz). 0 bedeutet: diesen Monat faellig.
+  function monthsUntilNextDue(interval, dueMonth){
+    var cycle = intervalMonths(interval);
+    var anchor = dueMonth || 1;
+    var now = new Date();
+    var currentMonthAbs = now.getFullYear()*12 + now.getMonth();
+    var anchorMonthAbs = now.getFullYear()*12 + (anchor-1);
+    var diff = currentMonthAbs - anchorMonthAbs;
+    var k = Math.ceil(diff / cycle);
+    var nextDueAbs = anchorMonthAbs + k*cycle;
+    return nextDueAbs - currentMonthAbs;
+  }
   function intervalGoalLabel(interval){
     if(interval === 'monatlich') return 'Zielbetrag (1×)';
     if(interval === 'vierteljaehrlich') return 'Zielbetrag (3×)';
@@ -1521,7 +1536,7 @@ var nativeStorage = {
     } else {
       var html = '';
       state.variableCosts.slice().sort(function(a,b){
-        return (a.dueMonth||1) - (b.dueMonth||1);
+        return monthsUntilNextDue(a.interval, a.dueMonth) - monthsUntilNextDue(b.interval, b.dueMonth);
       }).forEach(function(item){
         if(editing.vc === item.id){
           html += '<div class="edit-row" data-id="'+item.id+'">'+
