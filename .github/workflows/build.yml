@@ -25,6 +25,19 @@ jobs:
           mkdir -p ~/.android
           echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
 
+      - name: Verify keystore fingerprint
+        run: |
+          FINGERPRINT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep "SHA1:" | awk '{print $2}')
+          echo "Gefundener Fingerabdruck: $FINGERPRINT"
+          EXPECTED="90:D7:94:A6:9C:A8:58:88:15:18:3E:FA:11:12:02:D6:54:A9:21:8C"
+          if [ "$FINGERPRINT" != "$EXPECTED" ]; then
+            echo "FEHLER: Der Schluessel stimmt nicht mit dem erwarteten ueberein!"
+            echo "Erwartet: $EXPECTED"
+            echo "Gefunden: $FINGERPRINT"
+            exit 1
+          fi
+          echo "Schluessel korrekt verifiziert."
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
