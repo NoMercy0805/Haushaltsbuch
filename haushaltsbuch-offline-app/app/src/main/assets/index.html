@@ -2883,6 +2883,7 @@ var nativeStorage = {
       return lines.join('\n');
     });
     sections.push(['# TABLE:settings', 'amount', csvEscape(state.potCarryover||0)].join('\n'));
+    sections.push(['# TABLE:appSettings', 'tabVisibilityJson', csvEscape(JSON.stringify(tabVisibility))].join('\n'));
     return sections.join('\n\n');
   }
 
@@ -2929,6 +2930,13 @@ var nativeStorage = {
         var settingsObj = {};
         currentColumns.forEach(function(col, idx){ settingsObj[col] = row[idx] !== undefined ? row[idx] : ''; });
         result.potCarryover = parseFloat(settingsObj.amount) || 0;
+        return;
+      }
+      if(currentTable === 'appSettings'){
+        if(!currentColumns){ currentColumns = row.map(function(c){ return c.trim(); }); return; }
+        var appSettingsObj = {};
+        currentColumns.forEach(function(col, idx){ appSettingsObj[col] = row[idx] !== undefined ? row[idx] : ''; });
+        try{ result.tabVisibility = JSON.parse(appSettingsObj.tabVisibilityJson); }catch(err){}
         return;
       }
       if(!currentTable || !result.hasOwnProperty(currentTable)) return;
@@ -3155,6 +3163,13 @@ var nativeStorage = {
     });
     state = parsed;
     editing = { income:null, fixed:null, vc:null, loan:null, tx:null, spar:null };
+    if(parsed.tabVisibility && typeof parsed.tabVisibility === 'object'){
+      TAB_ORDER.forEach(function(t){
+        if(typeof parsed.tabVisibility[t] === 'boolean') tabVisibility[t] = parsed.tabVisibility[t];
+      });
+      saveTabVisibility();
+      applyTabVisibility();
+    }
     saveState();
     renderAll();
     await showMessage('Datenbank erfolgreich wiederhergestellt.', {icon:'✅'});
