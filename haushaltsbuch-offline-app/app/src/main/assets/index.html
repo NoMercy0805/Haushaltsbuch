@@ -247,6 +247,15 @@
   .settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
   .settings-panel-head h2{font-family:var(--serif);font-size:19px;font-weight:800;color:var(--ink);margin:0;}
   .settings-close-btn{background:var(--paper);border:none;color:var(--ink-soft);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%;}
+  .settings-back-btn{background:var(--paper);border:none;color:var(--ink-soft);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%;flex-shrink:0;}
+  .settings-nav-list{margin-top:6px;}
+  .settings-nav-row{display:flex;align-items:center;width:100%;background:none;border:none;text-align:left;padding:13px 2px;cursor:pointer;gap:14px;border-bottom:1px solid var(--rule);}
+  .settings-nav-row:last-child{border-bottom:none;}
+  .settings-nav-icon{flex-shrink:0;width:30px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);}
+  .settings-nav-text{flex:1;display:flex;flex-direction:column;gap:2px;}
+  .settings-nav-title{font-size:16px;font-weight:700;color:var(--ink);}
+  .settings-nav-sub{font-size:13px;color:var(--ink-soft);}
+  .settings-nav-arrow{font-size:22px;color:var(--ink-soft);flex-shrink:0;}
   .settings-close-btn:hover{color:var(--ink);background:var(--rule);}
   .confirm-icon{
     width:56px;height:56px;border-radius:50%;background:var(--expense-soft);
@@ -586,8 +595,43 @@
         <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
       </div>
 
-      <h2 class="section-title" id="settingsSecHead-darstellung" style="margin-top:0;cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="darstellung" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Darstellung</h2>
-      <div id="settingsSecBody-darstellung" style="display:none;">
+      <div class="settings-nav-list">
+        <button type="button" class="settings-nav-row" data-open-settings="darstellung">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Darstellung</span><span class="settings-nav-sub">Hell, Dunkel, System</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+        <button type="button" class="settings-nav-row" data-open-settings="bereiche">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="9" width="20" height="6" rx="3"/><path d="M9 9v6M15 9v6"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Sichtbare Bereiche</span><span class="settings-nav-sub">Welche Tabs angezeigt werden</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+        <button type="button" class="settings-nav-row" data-open-settings="widgets">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Übersicht-Anzeige</span><span class="settings-nav-sub">Mini-Übersichten im Übersicht-Tab</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+        <button type="button" class="settings-nav-row" data-open-settings="backup">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17.5a4.5 4.5 0 0 1-.9-8.9A5.5 5.5 0 0 1 16.7 7 4.5 4.5 0 0 1 17.2 15.9"/><path d="M12 10.5v8M9 15.5l3 3 3-3"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Backup</span><span class="settings-nav-sub">Sichern, wiederherstellen, automatisch</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+        <button type="button" class="settings-nav-row" data-open-settings="reset">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Zurücksetzen</span><span class="settings-nav-sub">Alle Daten löschen</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsSubOverlay-darstellung" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück">←</button>
+        <h2>Darstellung</h2>
+        <span style="width:34px;"></span>
+      </div>
       <div class="summary-card">
         <div class="theme-select-row">
           <button type="button" class="theme-option" data-theme-choice="light">Hell</button>
@@ -595,10 +639,16 @@
           <button type="button" class="theme-option" data-theme-choice="system">System</button>
         </div>
       </div>
-      </div>
+    </div>
+  </div>
 
-      <h2 class="section-title" id="settingsSecHead-bereiche" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="bereiche" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Sichtbare Bereiche</h2>
-      <div id="settingsSecBody-bereiche" style="display:none;">
+  <div id="settingsSubOverlay-bereiche" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück">←</button>
+        <h2>Sichtbare Bereiche</h2>
+        <span style="width:34px;"></span>
+      </div>
       <div class="summary-card" id="tabVisibilityList">
         <div class="tab-visibility-row">
           <span>Übersicht</span>
@@ -643,10 +693,16 @@
           </label>
         </div>
       </div>
-      </div>
+    </div>
+  </div>
 
-      <h2 class="section-title" id="settingsSecHead-widgets" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="widgets" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Übersicht-Anzeige</h2>
-      <div id="settingsSecBody-widgets" style="display:none;">
+  <div id="settingsSubOverlay-widgets" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück">←</button>
+        <h2>Übersicht-Anzeige</h2>
+        <span style="width:34px;"></span>
+      </div>
       <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen im Übersicht-Tab angezeigt werden?</p>
       <div class="summary-card" id="overviewWidgetList">
         <div class="tab-visibility-row">
@@ -692,10 +748,16 @@
           </label>
         </div>
       </div>
-      </div>
+    </div>
+  </div>
 
-      <h2 class="section-title" id="settingsSecHead-backup" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="backup" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Backup</h2>
-      <div id="settingsSecBody-backup" style="display:none;">
+  <div id="settingsSubOverlay-backup" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück">←</button>
+        <h2>Backup</h2>
+        <span style="width:34px;"></span>
+      </div>
       <div class="summary-card">
         <p style="margin:0 0 4px;font-size:15px;">Alle deine Daten werden sicher direkt auf deinem Gerät gespeichert.</p>
       </div>
@@ -719,12 +781,17 @@
       <div id="syncTimerCard" style="display:none;"><p id="syncTimerValue"></p></div>
       <button id="exportSyncBtn" class="settings-btn" style="display:none;">Für Sync exportieren</button>
       <button id="importTextTriggerBtn" class="settings-btn" style="display:none;">CSV-Text wiederherstellen</button>
-      </div>
+    </div>
+  </div>
 
-      <h2 class="section-title" id="settingsSecHead-reset" style="cursor:pointer;"><button class="icon-btn info-btn" data-settings-toggle="reset" aria-label="Ein-/ausblenden"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>Zurücksetzen</h2>
-      <div id="settingsSecBody-reset" style="display:none;">
-      <button class="settings-btn danger" id="resetBtn">Alle Daten löschen</button>
+  <div id="settingsSubOverlay-reset" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück">←</button>
+        <h2>Zurücksetzen</h2>
+        <span style="width:34px;"></span>
       </div>
+      <button class="settings-btn danger" id="resetBtn">Alle Daten löschen</button>
     </div>
   </div>
 
@@ -2167,18 +2234,25 @@ var nativeStorage = {
     });
   }
 
-  var SETTINGS_SECTIONS = ['darstellung', 'bereiche', 'widgets', 'backup', 'reset'];
-
-  function setupCollapsibleSettingsSections(){
-    SETTINGS_SECTIONS.forEach(function(key){
-      var head = document.getElementById('settingsSecHead-'+key);
-      var body = document.getElementById('settingsSecBody-'+key);
-      var btn = head ? head.querySelector('[data-settings-toggle]') : null;
-      if(!head || !body) return;
-      head.addEventListener('click', function(){
-        var isOpen = body.style.display !== 'none';
-        body.style.display = isOpen ? 'none' : '';
-        if(btn) btn.classList.toggle('active', !isOpen);
+  function setupSettingsNavigation(){
+    document.querySelectorAll('[data-open-settings]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var key = btn.dataset.openSettings;
+        var sub = document.getElementById('settingsSubOverlay-'+key);
+        if(!sub) return;
+        document.getElementById('settingsOverlay').classList.remove('open');
+        sub.classList.add('open');
+      });
+    });
+    document.querySelectorAll('[data-back-settings]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.closest('.settings-overlay').classList.remove('open');
+        document.getElementById('settingsOverlay').classList.add('open');
+      });
+    });
+    document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(function(sub){
+      sub.addEventListener('click', function(e){
+        if(e.target === sub) sub.classList.remove('open');
       });
     });
   }
@@ -2203,7 +2277,7 @@ var nativeStorage = {
     setupSettingsModal();
     setupTabVisibilityToggles();
     setupOverviewWidgetToggles();
-    setupCollapsibleSettingsSections();
+    setupSettingsNavigation();
     applyTabVisibility();
   }
 
@@ -3257,4 +3331,4 @@ if('serviceWorker' in navigator){
   };
 </script>
 </body>
-  </html>
+</html>
