@@ -18,6 +18,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Exposed to the web app as "window.AndroidBridge".
@@ -172,6 +174,34 @@ public class WebAppInterface {
             }
         } catch (Exception e) {
             showToast("Automatisches Backup fehlgeschlagen: " + e.getMessage());
+        }
+    }
+
+    @JavascriptInterface
+    public String readFromBackupFolder(String filename) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String uriString = prefs.getString(KEY_TREE_URI, null);
+        if (uriString == null) return null;
+
+        try {
+            Uri treeUri = Uri.parse(uriString);
+            Uri docTreeUri = DocumentsContract.buildDocumentUriUsingTree(
+                    treeUri, DocumentsContract.getTreeDocumentId(treeUri));
+            Uri fileUri = findChildByName(docTreeUri, filename);
+            if (fileUri == null) return null;
+
+            try (InputStream in = context.getContentResolver().openInputStream(fileUri)) {
+                if (in == null) return null;
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+                return baos.toString("UTF-8");
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
 

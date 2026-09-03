@@ -3216,12 +3216,54 @@ var nativeStorage = {
       disableBtn.style.display = 'none';
     }
   }
+  var pendingFreshRestoreCheck = false;
+
+  async function maybeOfferFreshRestore(){
+    if(!autoBackupAvailable()) return;
+    var alreadyPrompted = false;
+    try{ alreadyPrompted = nativeStorage.getItem('household-fresh-restore-prompted') === '1'; }catch(e){}
+    if(alreadyPrompted) return;
+
+    var hasAnyData = (state.income.length + state.fixedExpenses.length + state.openInvoices.length +
+                       state.variableCosts.length + state.loans.length + state.savings.length) > 0;
+    if(hasAnyData) return;
+
+    try{ nativeStorage.setItem('household-fresh-restore-prompted', '1'); }catch(e){}
+
+    var wantsRestore = await confirmDialog(
+      'Falls du zuvor ein automatisches Backup eingerichtet hattest, kann ich jetzt danach suchen. Ordner auswählen?',
+      {icon:'📥', confirmLabel:'Ordner wählen'}
+    );
+    if(!wantsRestore) return;
+
+    pendingFreshRestoreCheck = true;
+    window.AndroidBridge.pickBackupFolder();
+  }
+
+  async function tryRestoreFromPickedFolder(){
+    var content = null;
+    try{ content = window.AndroidBridge.readFromBackupFolder(AUTO_BACKUP_FILENAME); }catch(e){}
+    if(!content){
+      await showMessage('In diesem Ordner wurde keine Sicherung gefunden.', {icon:'ℹ️'});
+      performAutoBackup();
+      return;
+    }
+    await restoreDatabaseFromText(content);
+    performAutoBackup();
+  }
+
   window.onBackupFolderPicked = function(success, folderName){
     if(success){
       setAutoBackupEnabled(true);
       refreshAutoBackupUI();
-      performAutoBackup();
+      if(pendingFreshRestoreCheck){
+        pendingFreshRestoreCheck = false;
+        tryRestoreFromPickedFolder();
+      } else {
+        performAutoBackup();
+      }
     } else {
+      pendingFreshRestoreCheck = false;
       refreshAutoBackupUI();
     }
   };
@@ -3317,6 +3359,7 @@ var nativeStorage = {
     setupThemeToggle();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
+    maybeOfferFreshRestore();
   }
 
   init();
