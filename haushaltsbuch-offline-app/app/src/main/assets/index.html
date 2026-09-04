@@ -167,6 +167,8 @@
   .vc-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:0;flex-wrap:wrap;max-height:0;overflow:hidden;opacity:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .vc-card.expanded > .vc-actions,
   .loan-card.expanded > .vc-actions{max-height:60px;opacity:1;margin-top:14px;}
+  .loan-history-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .25s ease, margin-top .25s ease;margin-top:0;}
+  .loan-card.expanded .loan-history-wrap{max-height:1000px;opacity:1;margin-top:6px;}
   .vc-card, .loan-card{cursor:pointer;}
   .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:64px;height:36px;padding:0 20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
   .action-icon-btn.danger{color:var(--expense);background:var(--expense-soft);}
@@ -1947,7 +1949,7 @@ var nativeStorage = {
         });
         var cardTint = paidThisMonth ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
         html += '<div class="loan-card" data-id="'+loan.id+'" style="'+cardTint+'">'+
-                  '<div class="loan-top"><span class="loan-name" data-action="toggle-history" data-id="'+loan.id+'" style="cursor:pointer;"><button class="icon-btn info-btn'+(expandedLoans[loan.id]?' active':'')+'" data-action="toggle-history" data-id="'+loan.id+'" aria-label="Verlauf anzeigen" title="Verlauf anzeigen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
+                  '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
                   (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '<div class="loan-sub" style="margin-top:6px;"><span>Rate: '+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>')+
                   '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
@@ -1956,7 +1958,7 @@ var nativeStorage = {
                     '<button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'+
                     '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                   '</div>'+
-                  (expandedLoans[loan.id] ? renderLoanHistory(loan.id) : '')+
+                  renderLoanHistory(loan.id)+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
                   (increasingLoan === loan.id ? renderIncreaseLoanForm(loan) : '')+
                 '</div>';
@@ -2035,7 +2037,7 @@ var nativeStorage = {
   function renderLoanHistory(loanId){
     var payments = state.loanPayments.filter(function(p){ return p.loanId === loanId; })
                                       .sort(function(a,b){ return b.date.localeCompare(a.date); });
-    var html = '<div class="loan-history">';
+    var html = '<div class="loan-history-wrap"><div class="loan-history">';
     if(payments.length === 0){
       html += '<div class="empty-state" style="padding:14px 4px;">Noch keine Ratenzahlungen gebucht.</div>';
     } else {
@@ -2056,6 +2058,7 @@ var nativeStorage = {
     }
     html += '</div>';
     html += '<button type="button" class="settings-btn" style="margin:12px 4px 0;background:var(--savings);" data-action="payoff-loan" data-id="'+loanId+'">Vorzeitig abbezahlt</button>';
+    html += '</div>';
     return html;
   }
 
