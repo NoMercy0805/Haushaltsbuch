@@ -551,6 +551,7 @@
           <option value="zweijaehrlich">Alle 2 Jahre fällig</option>
         </select>
         <select id="vcDueMonth" class="full"></select>
+        <input type="number" id="vcDueYear" placeholder="Startjahr (z. B. 2024)" class="full" style="display:none;">
         <button type="submit">Kostenart hinzufügen</button>
       </form>
     </div>
@@ -1158,8 +1159,8 @@ var nativeStorage = {
     });
     return html;
   }
-  function intervalLabel(interval, dueMonth){
-    var months = monthsUntilNextDue(interval, dueMonth);
+  function intervalLabel(interval, dueMonth, dueYear){
+    var months = monthsUntilNextDue(interval, dueMonth, dueYear);
     var now = new Date();
     var nextDate = new Date(now.getFullYear(), now.getMonth() + months, 1);
     var monthName = MONTH_NAMES[nextDate.getMonth()];
@@ -1180,12 +1181,17 @@ var nativeStorage = {
   // eintritt - beruecksichtigt dabei das Intervall (z.B. bei "vierteljaehrlich
   // ab Maerz" ist es auch im Juni, September und Dezember faellig, nicht nur
   // im Maerz). 0 bedeutet: diesen Monat faellig.
-  function monthsUntilNextDue(interval, dueMonth){
+  function monthsUntilNextDue(interval, dueMonth, dueYear){
     var cycle = intervalMonths(interval);
     var anchor = dueMonth || 1;
     var now = new Date();
     var currentMonthAbs = now.getFullYear()*12 + now.getMonth();
-    var anchorMonthAbs = now.getFullYear()*12 + (anchor-1);
+    // Bei "Alle 2 Jahre" braucht es einen echten Jahres-Ankerpunkt (sonst ist
+    // nicht eindeutig, ob z.B. 2024 oder 2025 gemeint war) - fehlt er (alte
+    // Kostenarten von vor dieser Funktion), wird notgedrungen das aktuelle
+    // Jahr als Basis genommen.
+    var anchorYear = (interval === 'zweijaehrlich' && dueYear) ? dueYear : now.getFullYear();
+    var anchorMonthAbs = anchorYear*12 + (anchor-1);
     var diff = currentMonthAbs - anchorMonthAbs;
     var k = Math.ceil(diff / cycle);
     var nextDueAbs = anchorMonthAbs + k*cycle;
@@ -1195,7 +1201,7 @@ var nativeStorage = {
   // Zahlung in diesem Monat erhalten hat - damit sie in der Liste nach unten
   // rutschen kann, statt weiter oben "erledigt" rumzuliegen.
   function isPaidThisCycle(item){
-    if(monthsUntilNextDue(item.interval, item.dueMonth) !== 0) return false;
+    if(monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) !== 0) return false;
     var thisMonthKey = todayISO().slice(0,7);
     return state.variablePayments.some(function(p){
       return p.itemId === item.id && p.date && p.date.slice(0,7) === thisMonthKey;
@@ -1685,7 +1691,7 @@ var nativeStorage = {
         var aPaid = isPaidThisCycle(a) ? 1 : 0;
         var bPaid = isPaidThisCycle(b) ? 1 : 0;
         if(aPaid !== bPaid) return aPaid - bPaid;
-        return monthsUntilNextDue(a.interval, a.dueMonth) - monthsUntilNextDue(b.interval, b.dueMonth);
+        return monthsUntilNextDue(a.interval, a.dueMonth, a.dueYear) - monthsUntilNextDue(b.interval, b.dueMonth, b.dueYear);
       }).forEach(function(item){
         if(editing.vc === item.id){
           html += '<div class="edit-row" data-id="'+item.id+'">'+
@@ -1696,6 +1702,7 @@ var nativeStorage = {
                       Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fällig</option>'; }).join('')+
                     '</select>'+
                     '<select class="edit-duemonth full">'+monthOptions(item.dueMonth)+'</select>'+
+                    '<input type="number" class="edit-dueyear full" value="'+(item.dueYear||'')+'" placeholder="Startjahr (z. B. 2024)" style="display:'+(item.interval==='zweijaehrlich'?'':'none')+';">'+
                     '<div class="edit-actions">'+
                       '<button type="button" class="btn-cancel" data-action="cancel-edit-vc">Abbrechen</button>'+
                       '<button type="button" class="btn-save" data-action="save-edit-vc" data-id="'+item.id+'">Speichern</button>'+
@@ -1704,12 +1711,12 @@ var nativeStorage = {
         } else {
           var annualGoal = item.monthlyAmount * intervalMonths(item.interval);
           var buffer = annualGoal - (item.actualAmount||0);
-          var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth) === 0;
+          var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
           var vcTint = '';
           if(dueThisMonth) vcTint = isPaidThisCycle(item) ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
           html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
-                    '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth)+'</span></div>'+
+                    '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
                     '<div class="vc-detail-row"><span>'+intervalGoalLabel(item.interval)+'</span><span class="val">'+fmtEUR(annualGoal)+'</span></div>'+
                     '<div class="vc-detail-row"><span>Letzte Rechnung</span><span class="val">'+fmtEUR(item.actualAmount||0)+'</span></div>'+
                     '<div class="vc-detail-row"><span>Puffer</span><span class="val vc-buffer '+(buffer>=0?'pos':'neg')+'">'+fmtEUR(buffer)+'</span></div>'+
@@ -2564,12 +2571,17 @@ var nativeStorage = {
       var actual = parseAmount(document.getElementById('vcActual').value);
       var interval = document.getElementById('vcInterval').value;
       var dueMonth = parseInt(document.getElementById('vcDueMonth').value, 10);
+      var dueYearRaw = document.getElementById('vcDueYear').value;
+      var dueYear = (interval === 'zweijaehrlich' && dueYearRaw) ? parseInt(dueYearRaw, 10) : null;
       if(!name || isNaN(monthly)) return;
-      state.variableCosts.push({id:genId(), name:name, monthlyAmount:monthly, actualAmount:isNaN(actual)?0:actual, interval:interval, dueMonth:dueMonth});
+      state.variableCosts.push({id:genId(), name:name, monthlyAmount:monthly, actualAmount:isNaN(actual)?0:actual, interval:interval, dueMonth:dueMonth, dueYear:dueYear});
       saveState();
-      document.getElementById('vcName').value=''; document.getElementById('vcMonthly').value=''; document.getElementById('vcActual').value='';
+      document.getElementById('vcName').value=''; document.getElementById('vcMonthly').value=''; document.getElementById('vcActual').value=''; document.getElementById('vcDueYear').value='';
       renderAll();
       document.getElementById('addVcOverlay').classList.remove('open');
+    });
+    document.getElementById('vcInterval').addEventListener('change', function(){
+      document.getElementById('vcDueYear').style.display = (this.value === 'zweijaehrlich') ? '' : 'none';
     });
     document.getElementById('vcHeader').addEventListener('click', function(){
       showVcList = !showVcList;
@@ -2580,6 +2592,12 @@ var nativeStorage = {
       showPotHistory = !showPotHistory;
       saveBoolPref('household-show-pothistory', showPotHistory);
       renderVariabel();
+    });
+    document.getElementById('vcList').addEventListener('change', function(e){
+      if(!e.target.classList.contains('edit-interval')) return;
+      var row = e.target.closest('.edit-row');
+      var yearField = row.querySelector('.edit-dueyear');
+      if(yearField) yearField.style.display = (e.target.value === 'zweijaehrlich') ? '' : 'none';
     });
     document.getElementById('vcList').addEventListener('click', async function(e){
       var btn = e.target.closest('button');
@@ -2610,9 +2628,11 @@ var nativeStorage = {
         var actual = parseAmount(row.querySelector('.edit-actual').value);
         var interval = row.querySelector('.edit-interval').value;
         var dueMonth = parseInt(row.querySelector('.edit-duemonth').value, 10);
+        var dueYearRaw = row.querySelector('.edit-dueyear').value;
         if(item && name && !isNaN(monthly)){
           item.name = name; item.monthlyAmount = monthly; item.actualAmount = isNaN(actual)?0:actual;
           item.interval = interval; item.dueMonth = dueMonth;
+          item.dueYear = (interval === 'zweijaehrlich' && dueYearRaw) ? parseInt(dueYearRaw, 10) : null;
         }
         editing.vc = null; saveState(); renderAll();
       } else if(action === 'pay'){
@@ -2874,7 +2894,7 @@ var nativeStorage = {
     {name:'income', columns:['id','name','amount']},
     {name:'fixedExpenses', columns:['id','name','amount','icon']},
     {name:'openInvoices', columns:['id','name','amount','dueDate','paid','paidDate']},
-    {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth']},
+    {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth','dueYear']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
     {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate']},
@@ -2967,6 +2987,8 @@ var nativeStorage = {
         obj.actualAmount = parseFloat(obj.actualAmount) || 0;
         obj.dueMonth = parseInt(obj.dueMonth,10) || 1;
         if(!obj.interval) obj.interval = 'jaehrlich';
+        var parsedDueYear = parseInt(obj.dueYear, 10);
+        obj.dueYear = (!isNaN(parsedDueYear) && parsedDueYear > 0) ? parsedDueYear : null;
       } else if(currentTable === 'variableContributions' || currentTable === 'variablePayments' || currentTable === 'loanPayments'){
         obj.amount = parseFloat(obj.amount) || 0;
         if(currentTable === 'loanPayments' && !obj.type) obj.type = 'payment';
