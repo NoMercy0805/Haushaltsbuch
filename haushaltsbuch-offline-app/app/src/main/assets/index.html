@@ -1704,7 +1704,10 @@ var nativeStorage = {
         } else {
           var annualGoal = item.monthlyAmount * intervalMonths(item.interval);
           var buffer = annualGoal - (item.actualAmount||0);
-          html += '<div class="vc-card" data-id="'+item.id+'">'+
+          var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth) === 0;
+          var vcTint = '';
+          if(dueThisMonth) vcTint = isPaidThisCycle(item) ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
+          html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth)+'</span></div>'+
                     '<div class="vc-detail-row"><span>'+intervalGoalLabel(item.interval)+'</span><span class="val">'+fmtEUR(annualGoal)+'</span></div>'+
