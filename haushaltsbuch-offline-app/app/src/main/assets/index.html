@@ -1159,12 +1159,15 @@ var nativeStorage = {
     return html;
   }
   function intervalLabel(interval, dueMonth){
-    var monthName = MONTH_NAMES[(dueMonth||1)-1];
+    var months = monthsUntilNextDue(interval, dueMonth);
+    var now = new Date();
+    var nextDate = new Date(now.getFullYear(), now.getMonth() + months, 1);
+    var monthName = MONTH_NAMES[nextDate.getMonth()];
     if(interval === 'monatlich') return 'Monatlich';
-    if(interval === 'vierteljaehrlich') return 'Vierteljährlich (ab '+monthName+')';
-    if(interval === 'halbjaehrlich') return 'Halbjährlich (ab '+monthName+')';
-    if(interval === 'zweijaehrlich') return 'Alle 2 Jahre im '+monthName;
-    return 'Jährlich im '+monthName;
+    if(interval === 'vierteljaehrlich') return 'Vierteljährlich · Fällig: '+monthName;
+    if(interval === 'halbjaehrlich') return 'Halbjährlich · Fällig: '+monthName;
+    if(interval === 'zweijaehrlich') return 'Alle 2 Jahre · Fällig: '+monthName+' '+nextDate.getFullYear();
+    return 'Jährlich · Fällig: '+monthName;
   }
   function intervalMonths(interval){
     if(interval === 'monatlich') return 1;
@@ -1187,6 +1190,16 @@ var nativeStorage = {
     var k = Math.ceil(diff / cycle);
     var nextDueAbs = anchorMonthAbs + k*cycle;
     return nextDueAbs - currentMonthAbs;
+  }
+  // Prueft, ob eine Kostenart, die DIESEN Monat faellig ist, bereits eine
+  // Zahlung in diesem Monat erhalten hat - damit sie in der Liste nach unten
+  // rutschen kann, statt weiter oben "erledigt" rumzuliegen.
+  function isPaidThisCycle(item){
+    if(monthsUntilNextDue(item.interval, item.dueMonth) !== 0) return false;
+    var thisMonthKey = todayISO().slice(0,7);
+    return state.variablePayments.some(function(p){
+      return p.itemId === item.id && p.date && p.date.slice(0,7) === thisMonthKey;
+    });
   }
   function intervalGoalLabel(interval){
     if(interval === 'monatlich') return 'Zielbetrag (1×)';
@@ -1669,6 +1682,9 @@ var nativeStorage = {
     } else {
       var html = '';
       state.variableCosts.slice().sort(function(a,b){
+        var aPaid = isPaidThisCycle(a) ? 1 : 0;
+        var bPaid = isPaidThisCycle(b) ? 1 : 0;
+        if(aPaid !== bPaid) return aPaid - bPaid;
         return monthsUntilNextDue(a.interval, a.dueMonth) - monthsUntilNextDue(b.interval, b.dueMonth);
       }).forEach(function(item){
         if(editing.vc === item.id){
