@@ -2036,7 +2036,7 @@ var nativeStorage = {
         var pay = Math.min(l.monthlyPayment, l.balance, budget);
         l.balance = Math.round((l.balance - pay)*100)/100;
         budget = Math.round((budget - pay)*100)/100;
-        detail.push({id:l.id, name:l.name, rate:pay, extra:0});
+        detail.push({id:l.id, name:l.name, rate:pay, extra:0, remainingAfter:l.balance});
       });
       while(budget > 0.005 && loans.some(function(l){ return l.balance > 0.005; })){
         var target = loans.filter(function(l){ return l.balance > 0.005; })
@@ -2045,8 +2045,9 @@ var nativeStorage = {
         target.balance = Math.round((target.balance - pay)*100)/100;
         budget = Math.round((budget - pay)*100)/100;
         var entry = detail.filter(function(d){ return d.id === target.id; })[0];
-        if(!entry){ entry = {id:target.id, name:target.name, rate:0, extra:0}; detail.push(entry); }
+        if(!entry){ entry = {id:target.id, name:target.name, rate:0, extra:0, remainingAfter:target.balance}; detail.push(entry); }
         entry.extra += pay;
+        entry.remainingAfter = target.balance;
       }
       var totalRemaining = loans.reduce(function(s,l){ return s+l.balance; }, 0);
       var refMonth = getTilgungCurrentMonth();
@@ -2134,12 +2135,12 @@ var nativeStorage = {
       var isCurrent = idx === 0;
       var loanRows = m.detail.filter(function(d){ return d.extra > 0.005; })
                               .map(function(d){
-                                return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(d.extra)+'</span></div>';
+                                return '<div class="ledger-row" style="padding:7px 0 2px;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(d.extra)+'</span></div>'+
+                                       '<div style="font-size:12px;color:var(--ink-soft);margin:0 0 6px 2px;">Restschuld danach: '+fmtEUR(d.remainingAfter)+'</div>';
                               }).join('');
       html += '<div class="vc-card" style="cursor:default;'+(isCurrent?'border:1.5px solid var(--primary);':'')+'">'+
                 '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+(isCurrent?' · aktuell':'')+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
                 loanRows+
-                '<div class="vc-detail-row"><span>Restschuld danach</span><span class="val">'+fmtEUR(m.totalRemaining)+'</span></div>'+
                 (isCurrent ? '<label class="tab-visibility-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--rule);cursor:pointer;"><span>Diesen Monat erledigt</span><input type="checkbox" id="tilgungConfirmCheck" style="width:22px;height:22px;"></label>' : '')+
               '</div>';
     });
