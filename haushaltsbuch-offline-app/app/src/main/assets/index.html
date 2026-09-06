@@ -1965,6 +1965,7 @@ var nativeStorage = {
 
   /* ---------- Tilgungsplan (Schneeball-Methode) ---------- */
   var TILGUNG_EXTRA_KEY = 'household-tilgung-extra';
+  var TILGUNG_CURRENT_MONTH_KEY = 'household-tilgung-current-month';
 
   function getTilgungExtra(){
     try{
@@ -1975,6 +1976,33 @@ var nativeStorage = {
   }
   function setTilgungExtra(v){
     try{ nativeStorage.setItem(TILGUNG_EXTRA_KEY, String(v)); }catch(e){}
+  }
+
+  // Der "aktuelle Monat" im Tilgungsplan zaehlt nur weiter, wenn er per
+  // Checkbox bestaetigt wurde - ist er noch nicht abgehakt und die echte Zeit
+  // laeuft weiter, rutscht er automatisch auf den echten aktuellen Monat nach
+  // (er "verschiebt sich"), statt als ueberfaellig liegen zu bleiben.
+  function getTilgungCurrentMonth(){
+    var now = new Date();
+    var realKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    var stored = null;
+    try{ stored = nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY); }catch(e){}
+    if(!stored || stored < realKey){
+      stored = realKey;
+      try{ nativeStorage.setItem(TILGUNG_CURRENT_MONTH_KEY, stored); }catch(e){}
+    }
+    var parts = stored.split('-');
+    return { year: parseInt(parts[0],10), month: parseInt(parts[1],10)-1 };
+  }
+  function advanceTilgungCurrentMonth(){
+    var cur = getTilgungCurrentMonth();
+    var next = new Date(cur.year, cur.month+1, 1);
+    var nextKey = next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');
+    try{ nativeStorage.setItem(TILGUNG_CURRENT_MONTH_KEY, nextKey); }catch(e){}
+  }
+
+  function monthAbbrevLabel(year, monthIndex){
+    return MONTH_NAMES[monthIndex].slice(0,3)+' '+year;
   }
 
   // Simuliert die Schneeball-Methode: Alle Kredite behalten ihre Mindestrate,
@@ -2013,10 +2041,10 @@ var nativeStorage = {
         entry.extra += pay;
       }
       var totalRemaining = loans.reduce(function(s,l){ return s+l.balance; }, 0);
-      var now = new Date();
-      var monthDate = new Date(now.getFullYear(), now.getMonth()+i, 1);
+      var refMonth = getTilgungCurrentMonth();
+      var monthDate = new Date(refMonth.year, refMonth.month + (i-1), 1);
       months.push({
-        month:i, monthLabel: MONTH_NAMES[monthDate.getMonth()].slice(0,3)+' '+monthDate.getFullYear(),
+        month:i, monthLabel: monthAbbrevLabel(monthDate.getFullYear(), monthDate.getMonth()),
         detail:detail, totalPaid: Math.round((totalBudget-budget)*100)/100,
         totalRemaining: Math.round(totalRemaining*100)/100
       });
@@ -2060,17 +2088,32 @@ var nativeStorage = {
       '<div class="summary-row"><span>Monatlicher Gesamtbetrag</span><span class="val">'+fmtEUR(totalMonthlyBudget)+'</span></div>';
 
     var html = '';
-    plan.forEach(function(m){
-      var detailText = m.detail.filter(function(d){ return d.extra > 0.005; })
-                                .map(function(d){ return escapeHtml(d.name)+': +'+fmtEUR(d.extra); })
-                                .join(' · ');
-      html += '<div class="vc-card" style="cursor:default;">'+
-                '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
-                (detailText ? '<div class="vc-detail-row"><span style="color:var(--savings);font-size:13px;">'+detailText+'</span></div>' : '')+
+    plan.forEach(function(m, idx){
+      var isCurrent = idx === 0;
+      var loanRows = m.detail.filter(function(d){ return d.extra > 0.005 || d.rate > 0.005; })
+                              .map(function(d){
+                                var parts = [];
+                                if(d.rate > 0.005) parts.push('Rate '+fmtEUR(d.rate));
+                                if(d.extra > 0.005) parts.push('Extra '+fmtEUR(d.extra));
+                                return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">'+parts.join(' + ')+'</span></div>';
+                              }).join('');
+      html += '<div class="vc-card" style="cursor:default;'+(isCurrent?'border:1.5px solid var(--primary);':'')+'">'+
+                '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+(isCurrent?' · aktuell':'')+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
+                loanRows+
                 '<div class="vc-detail-row"><span>Restschuld danach</span><span class="val">'+fmtEUR(m.totalRemaining)+'</span></div>'+
+                (isCurrent ? '<label class="tab-visibility-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--rule);cursor:pointer;"><span>Diesen Monat erledigt</span><input type="checkbox" id="tilgungConfirmCheck" style="width:22px;height:22px;"></label>' : '')+
               '</div>';
     });
     listEl.innerHTML = html;
+    var confirmCheck = document.getElementById('tilgungConfirmCheck');
+    if(confirmCheck){
+      confirmCheck.addEventListener('change', function(){
+        if(confirmCheck.checked){
+          advanceTilgungCurrentMonth();
+          renderTilgungsplan();
+        }
+      });
+    }
   }
 
   function renderKredite(){
