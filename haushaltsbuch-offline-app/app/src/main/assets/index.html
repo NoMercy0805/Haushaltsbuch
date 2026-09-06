@@ -3198,7 +3198,15 @@ var nativeStorage = {
       return lines.join('\n');
     });
     sections.push(['# TABLE:settings', 'amount', csvEscape(state.potCarryover||0)].join('\n'));
-    sections.push(['# TABLE:appSettings', 'tabVisibilityJson', csvEscape(JSON.stringify(tabVisibility))].join('\n'));
+    sections.push([
+      '# TABLE:appSettings',
+      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth',
+      [
+        csvEscape(JSON.stringify(tabVisibility)),
+        csvEscape(getTilgungExtra()),
+        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })())
+      ].join(',')
+    ].join('\n'));
     return sections.join('\n\n');
   }
 
@@ -3252,6 +3260,9 @@ var nativeStorage = {
         var appSettingsObj = {};
         currentColumns.forEach(function(col, idx){ appSettingsObj[col] = row[idx] !== undefined ? row[idx] : ''; });
         try{ result.tabVisibility = JSON.parse(appSettingsObj.tabVisibilityJson); }catch(err){}
+        var parsedExtra = parseFloat(appSettingsObj.tilgungExtra);
+        if(!isNaN(parsedExtra) && parsedExtra >= 0) result.tilgungExtra = parsedExtra;
+        if(appSettingsObj.tilgungCurrentMonth) result.tilgungCurrentMonth = appSettingsObj.tilgungCurrentMonth;
         return;
       }
       if(!currentTable || !result.hasOwnProperty(currentTable)) return;
@@ -3486,6 +3497,12 @@ var nativeStorage = {
       });
       saveTabVisibility();
       applyTabVisibility();
+    }
+    if(typeof parsed.tilgungExtra === 'number'){
+      setTilgungExtra(parsed.tilgungExtra);
+    }
+    if(parsed.tilgungCurrentMonth){
+      try{ nativeStorage.setItem(TILGUNG_CURRENT_MONTH_KEY, parsed.tilgungCurrentMonth); }catch(e){}
     }
     saveState();
     renderAll();
