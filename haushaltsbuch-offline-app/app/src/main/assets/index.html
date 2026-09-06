@@ -346,6 +346,10 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg>
         <span>Kredite</span>
       </button>
+      <button data-tab="tilgungsplan" class="tab">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/></svg>
+        <span>Tilgungsplan</span>
+      </button>
       <button data-tab="diagramm" class="tab" aria-label="Diagramm">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7 4"/></svg>
         <span>Diagramm</span>
@@ -419,6 +423,19 @@
           <svg class="section-toggle-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div id="paidLoansList"></div>
+      </section>
+
+      <!-- TILGUNGSPLAN -->
+      <section id="tab-tilgungsplan" class="tab-panel">
+        <div class="summary-card">
+          <label class="field-label" style="display:block;margin:0 0 8px 2px;">Zusätzlicher Betrag pro Monat</label>
+          <input type="number" id="tilgungExtraInput" min="0" step="5" style="font-family:var(--sans);font-size:16px;padding:14px 16px;border:none;border-radius:16px;background:var(--paper);color:var(--ink);width:100%;">
+          <p style="margin:10px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
+        </div>
+
+        <div class="summary-card" id="tilgungSummary"></div>
+
+        <div id="tilgungList"></div>
       </section>
 
       <!-- DIAGRAMM -->
@@ -693,6 +710,13 @@
           <span>Kredite</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="kredite">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Tilgungsplan</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-tab-toggle="tilgungsplan">
             <span class="track"></span><span class="thumb"></span>
           </label>
         </div>
@@ -1939,6 +1963,116 @@ var nativeStorage = {
     return yearsStr + ', ' + restMonths + (restMonths === 1 ? ' Monat' : ' Monate');
   }
 
+  /* ---------- Tilgungsplan (Schneeball-Methode) ---------- */
+  var TILGUNG_EXTRA_KEY = 'household-tilgung-extra';
+
+  function getTilgungExtra(){
+    try{
+      var v = parseFloat(nativeStorage.getItem(TILGUNG_EXTRA_KEY));
+      if(!isNaN(v) && v >= 0) return v;
+    }catch(e){}
+    return 100;
+  }
+  function setTilgungExtra(v){
+    try{ nativeStorage.setItem(TILGUNG_EXTRA_KEY, String(v)); }catch(e){}
+  }
+
+  // Simuliert die Schneeball-Methode: Alle Kredite behalten ihre Mindestrate,
+  // der gesamte monatliche Betrag (Summe aller Mindestraten + Extra) bleibt
+  // ueber die gesamte Laufzeit gleich - werden Kredite abbezahlt, fliesst ihre
+  // freigewordene Mindestrate automatisch als zusaetzliche Tilgung in den
+  // jeweils kleinsten noch offenen Kredit, notfalls kaskadierend im selben Monat.
+  function simulateSnowball(extraPerMonth, maxMonths){
+    var loans = state.loans.filter(function(l){ return l.remainingBalance > 0; })
+                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment}; });
+    if(loans.length === 0) return [];
+    var totalBudget = loans.reduce(function(s,l){ return s+l.monthlyPayment; }, 0) + extraPerMonth;
+    if(totalBudget <= 0) return [];
+    var months = [];
+    var i = 0;
+    var safetyLimit = maxMonths || 600;
+    while(loans.some(function(l){ return l.balance > 0.005; }) && i < safetyLimit){
+      i++;
+      var budget = totalBudget;
+      var detail = [];
+      loans.forEach(function(l){
+        if(l.balance <= 0.005) return;
+        var pay = Math.min(l.monthlyPayment, l.balance, budget);
+        l.balance = Math.round((l.balance - pay)*100)/100;
+        budget = Math.round((budget - pay)*100)/100;
+        detail.push({id:l.id, name:l.name, rate:pay, extra:0});
+      });
+      while(budget > 0.005 && loans.some(function(l){ return l.balance > 0.005; })){
+        var target = loans.filter(function(l){ return l.balance > 0.005; })
+                           .sort(function(a,b){ return a.balance - b.balance; })[0];
+        var pay = Math.min(budget, target.balance);
+        target.balance = Math.round((target.balance - pay)*100)/100;
+        budget = Math.round((budget - pay)*100)/100;
+        var entry = detail.filter(function(d){ return d.id === target.id; })[0];
+        if(!entry){ entry = {id:target.id, name:target.name, rate:0, extra:0}; detail.push(entry); }
+        entry.extra += pay;
+      }
+      var totalRemaining = loans.reduce(function(s,l){ return s+l.balance; }, 0);
+      var now = new Date();
+      var monthDate = new Date(now.getFullYear(), now.getMonth()+i, 1);
+      months.push({
+        month:i, monthLabel: MONTH_NAMES[monthDate.getMonth()].slice(0,3)+' '+monthDate.getFullYear(),
+        detail:detail, totalPaid: Math.round((totalBudget-budget)*100)/100,
+        totalRemaining: Math.round(totalRemaining*100)/100
+      });
+    }
+    return months;
+  }
+
+  function renderTilgungsplan(){
+    var extraInput = document.getElementById('tilgungExtraInput');
+    if(extraInput && document.activeElement !== extraInput){
+      extraInput.value = getTilgungExtra();
+    }
+    var extra = getTilgungExtra();
+    var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+    var summaryEl = document.getElementById('tilgungSummary');
+    var listEl = document.getElementById('tilgungList');
+
+    if(activeLoans.length === 0){
+      summaryEl.innerHTML = '<div class="empty-state" style="padding:6px 4px;">Keine laufenden Kredite - nichts zu tilgen. 🎉</div>';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    var plan = simulateSnowball(extra);
+    var totalMonthlyBudget = activeLoans.reduce(function(s,l){ return s+l.monthlyPayment; }, 0) + extra;
+
+    if(plan.length === 0){
+      summaryEl.innerHTML = '<div class="empty-state" style="padding:6px 4px;">Betrag zu niedrig, um die Kredite abzuzahlen.</div>';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    var lastMonth = plan[plan.length-1];
+    var years = Math.floor(lastMonth.month/12);
+    var restMonths = lastMonth.month % 12;
+    var durationLabel = (years>0 ? years+(years===1?' Jahr':' Jahre') : '') + (years>0 && restMonths>0 ? ', ' : '') + (restMonths>0 ? restMonths+(restMonths===1?' Monat':' Monate') : (years===0?'0 Monate':''));
+
+    summaryEl.innerHTML =
+      '<div class="summary-row"><span>Schuldenfrei in</span><span class="val">'+durationLabel+'</span></div>'+
+      '<div class="summary-row"><span>Voraussichtlich fertig</span><span class="val">'+lastMonth.monthLabel+'</span></div>'+
+      '<div class="summary-row"><span>Monatlicher Gesamtbetrag</span><span class="val">'+fmtEUR(totalMonthlyBudget)+'</span></div>';
+
+    var html = '';
+    plan.forEach(function(m){
+      var detailText = m.detail.filter(function(d){ return d.extra > 0.005; })
+                                .map(function(d){ return escapeHtml(d.name)+': +'+fmtEUR(d.extra); })
+                                .join(' · ');
+      html += '<div class="vc-card" style="cursor:default;">'+
+                '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
+                (detailText ? '<div class="vc-detail-row"><span style="color:var(--savings);font-size:13px;">'+detailText+'</span></div>' : '')+
+                '<div class="vc-detail-row"><span>Restschuld danach</span><span class="val">'+fmtEUR(m.totalRemaining)+'</span></div>'+
+              '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
   function renderKredite(){
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var paidLoans = state.loans.filter(function(l){ return l.remainingBalance <= 0; });
@@ -2096,12 +2230,13 @@ var nativeStorage = {
     renderUebersicht();
     renderVariabel();
     renderKredite();
+    renderTilgungsplan();
     renderSparen();
     renderDiagramme();
   }
 
   /* ---------- Events ---------- */
-  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'diagramm'];
+  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tilgungsplan', 'diagramm'];
   var tabVisibility = loadTabVisibility();
 
   function loadTabVisibility(){
@@ -2754,6 +2889,16 @@ var nativeStorage = {
         }
         editing.spar = null; saveState(); renderAll();
       }
+    });
+  }
+
+  function setupTilgungsplan(){
+    var input = document.getElementById('tilgungExtraInput');
+    if(!input) return;
+    input.addEventListener('change', function(){
+      var v = parseAmount(input.value);
+      setTilgungExtra(isNaN(v) || v < 0 ? 0 : v);
+      renderTilgungsplan();
     });
   }
 
@@ -3416,6 +3561,7 @@ var nativeStorage = {
     setupUebersichtForms();
     setupVariableForms();
     setupLoanForms();
+    setupTilgungsplan();
     setupSparForms();
     setupReset();
     setupBackup();
