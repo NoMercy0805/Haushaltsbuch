@@ -2104,10 +2104,17 @@ var nativeStorage = {
     listEl.innerHTML = html;
     var confirmCheck = document.getElementById('tilgungConfirmCheck');
     if(confirmCheck){
-      confirmCheck.addEventListener('change', function(){
-        if(confirmCheck.checked){
+      confirmCheck.addEventListener('change', async function(){
+        if(!confirmCheck.checked) return;
+        var reallyDone = await confirmDialog(
+          'Diesen Monat wirklich als erledigt markieren? Der Plan geht dann zum nächsten Monat weiter.',
+          {icon:'✅', confirmLabel:'Ja, erledigt'}
+        );
+        if(reallyDone){
           advanceTilgungCurrentMonth();
           renderTilgungsplan();
+        } else {
+          confirmCheck.checked = false;
         }
       });
     }
