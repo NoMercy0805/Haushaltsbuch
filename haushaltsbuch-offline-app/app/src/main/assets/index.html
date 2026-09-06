@@ -2932,6 +2932,20 @@ var nativeStorage = {
     });
   }
 
+  async function offerAddFreedRateToTilgung(loan){
+    if(!loan || loan.monthlyPayment <= 0) return;
+    var currentExtra = getTilgungExtra();
+    var newExtra = roundCents(currentExtra + loan.monthlyPayment);
+    var ok = await confirmDialog(
+      '„'+loan.name+'" ist jetzt abbezahlt! Soll die freigewordene Monatsrate ('+fmtEUR(loan.monthlyPayment)+') zum zusätzlichen Tilgungsbetrag dazugerechnet werden? Neuer Betrag: '+fmtEUR(currentExtra)+' + '+fmtEUR(loan.monthlyPayment)+' = '+fmtEUR(newExtra),
+      {icon:'🎉', confirmLabel:'Hinzufügen'}
+    );
+    if(ok){
+      setTilgungExtra(newExtra);
+      renderTilgungsplan();
+    }
+  }
+
   function setupTilgungsplan(){
     var input = document.getElementById('tilgungExtraInput');
     if(!input) return;
@@ -3008,11 +3022,13 @@ var nativeStorage = {
         var dateStr = payRow.querySelector('.pay-date').value;
         var amount = parseAmount(payRow.querySelector('.pay-amount').value);
         if(!dateStr || isNaN(amount) || amount<=0) return;
+        var wasActiveBeforePay = loan2.remainingBalance > 0;
         loan2.remainingBalance = roundCents(Math.max(0, loan2.remainingBalance - amount));
         if(loan2.remainingBalance <= 0 && !loan2.paidOffDate) loan2.paidOffDate = todayISO();
         state.loanPayments.push({id:genId(), loanId:id, date:dateStr, amount:amount, type:'payment'});
         payingLoan = null;
         saveState(); renderAll();
+        if(wasActiveBeforePay && loan2.remainingBalance <= 0) await offerAddFreedRateToTilgung(loan2);
       } else if(action === 'payoff-loan'){
         if(!await confirmDialog('Diesen Kredit wirklich als vorzeitig abbezahlt markieren? Die Restschuld wird auf 0 gesetzt.')) return;
         var payoffLoan = state.loans.filter(function(x){return x.id===id;})[0];
@@ -3022,6 +3038,7 @@ var nativeStorage = {
         }
         expandedLoans[id] = false;
         saveState(); renderAll();
+        if(payoffLoan) await offerAddFreedRateToTilgung(payoffLoan);
       } else if(action === 'increase-loan'){
         editing.loan = null; payingLoan = null;
         increasingLoan = id; renderKredite(); focusEditRow(id);
