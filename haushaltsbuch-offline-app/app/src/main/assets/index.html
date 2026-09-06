@@ -436,6 +436,13 @@
         <div class="summary-card" id="tilgungSummary"></div>
 
         <div id="tilgungList"></div>
+
+        <div class="section-toggle-row" id="tilgungHistoryHeader">
+          <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></div>
+          <div class="section-toggle-text"><div class="section-toggle-title">Verlauf</div><div class="section-toggle-sub" id="tilgungHistoryHeaderSub"></div></div>
+          <svg class="section-toggle-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="tilgungHistoryList"></div>
       </section>
 
       <!-- DIAGRAMM -->
@@ -1033,6 +1040,7 @@ var nativeStorage = {
   var showIncomeList = loadBoolPref('household-show-income', true);
   var showFixedList = loadBoolPref('household-show-fixed', true);
   var showPaidLoansHistory = loadBoolPref('household-show-paid-loans', false);
+  var showTilgungHistory = loadBoolPref('household-show-tilgung-history', false);
   var showPaidInvoicesHistory = loadBoolPref('household-show-paid-invoices', false);
   var showSparList = loadBoolPref('household-show-sparlist', true);
   function loadBoolPref(key, fallback){
@@ -2052,6 +2060,40 @@ var nativeStorage = {
     return months;
   }
 
+  // Ermittelt aus den TATSAECHLICH gebuchten Kredit-Zahlungen (nicht aus dem
+  // simulierten Plan), wie viel pro Monat und Kredit ueber die normale
+  // Mindestrate hinaus gezahlt wurde - erfasst also automatisch auch Extra-
+  // Zahlungen, die nach dem Abhaken eines Monats noch dazugekommen sind.
+  function computeTilgungHistory(){
+    var byMonth = {};
+    state.loanPayments.forEach(function(p){
+      if(p.type !== 'payment') return;
+      var monthKey = (p.date||'').slice(0,7);
+      if(!monthKey) return;
+      if(!byMonth[monthKey]) byMonth[monthKey] = {};
+      byMonth[monthKey][p.loanId] = (byMonth[monthKey][p.loanId]||0) + p.amount;
+    });
+    var months = Object.keys(byMonth).sort().reverse();
+    var result = [];
+    months.forEach(function(monthKey){
+      var entries = [];
+      Object.keys(byMonth[monthKey]).forEach(function(loanId){
+        var loan = state.loans.filter(function(l){ return l.id === loanId; })[0];
+        if(!loan) return;
+        var totalPaid = byMonth[monthKey][loanId];
+        var extra = roundCents(Math.max(0, totalPaid - loan.monthlyPayment));
+        if(extra > 0.005) entries.push({name: loan.name, extra: extra});
+      });
+      if(entries.length > 0){
+        var parts = monthKey.split('-');
+        var label = monthAbbrevLabel(parseInt(parts[0],10), parseInt(parts[1],10)-1);
+        var total = entries.reduce(function(s,e){ return s+e.extra; }, 0);
+        result.push({monthKey:monthKey, label:label, entries:entries, total: roundCents(total)});
+      }
+    });
+    return result;
+  }
+
   function renderTilgungsplan(){
     var extraInput = document.getElementById('tilgungExtraInput');
     if(extraInput && document.activeElement !== extraInput){
@@ -2117,6 +2159,29 @@ var nativeStorage = {
           confirmCheck.checked = false;
         }
       });
+    }
+
+    var history = computeTilgungHistory();
+    document.getElementById('tilgungHistoryHeader').classList.toggle('active', showTilgungHistory);
+    var historyCount = history.reduce(function(s,m){ return s+m.entries.length; }, 0);
+    document.getElementById('tilgungHistoryHeaderSub').textContent = historyCount + (historyCount===1?' Extra-Zahlung':' Extra-Zahlungen');
+    var historyEl = document.getElementById('tilgungHistoryList');
+    if(!showTilgungHistory){
+      historyEl.innerHTML = '';
+    } else if(history.length === 0){
+      historyEl.innerHTML = '<div class="empty-state" style="padding:14px 4px;">Noch keine Extra-Zahlungen gebucht.</div>';
+    } else {
+      var historyHtml = '';
+      history.forEach(function(m){
+        var loanRows = m.entries.map(function(e){
+          return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(e.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(e.extra)+'</span></div>';
+        }).join('');
+        historyHtml += '<div class="vc-card" style="cursor:default;">'+
+                  '<div class="vc-card-top"><span class="vc-name">'+m.label+'</span><span class="vc-monthly">'+fmtEUR(m.total)+'</span></div>'+
+                  loanRows+
+                '</div>';
+      });
+      historyEl.innerHTML = historyHtml;
     }
   }
 
@@ -2673,6 +2738,12 @@ var nativeStorage = {
       showPaidLoansHistory = !showPaidLoansHistory;
       saveBoolPref('household-show-paid-loans', showPaidLoansHistory);
       renderKredite();
+    });
+
+    document.getElementById('tilgungHistoryHeader').addEventListener('click', function(){
+      showTilgungHistory = !showTilgungHistory;
+      saveBoolPref('household-show-tilgung-history', showTilgungHistory);
+      renderTilgungsplan();
     });
 
     document.getElementById('paidInvoicesHeader').addEventListener('click', function(){
