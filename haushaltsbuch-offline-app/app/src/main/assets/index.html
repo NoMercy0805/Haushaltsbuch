@@ -2090,12 +2090,9 @@ var nativeStorage = {
     var html = '';
     plan.forEach(function(m, idx){
       var isCurrent = idx === 0;
-      var loanRows = m.detail.filter(function(d){ return d.extra > 0.005 || d.rate > 0.005; })
+      var loanRows = m.detail.filter(function(d){ return d.extra > 0.005; })
                               .map(function(d){
-                                var parts = [];
-                                if(d.rate > 0.005) parts.push('Rate '+fmtEUR(d.rate));
-                                if(d.extra > 0.005) parts.push('Extra '+fmtEUR(d.extra));
-                                return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">'+parts.join(' + ')+'</span></div>';
+                                return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(d.extra)+'</span></div>';
                               }).join('');
       html += '<div class="vc-card" style="cursor:default;'+(isCurrent?'border:1.5px solid var(--primary);':'')+'">'+
                 '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+(isCurrent?' · aktuell':'')+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
