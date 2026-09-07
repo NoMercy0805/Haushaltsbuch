@@ -434,6 +434,7 @@
         </div>
 
         <div class="summary-card" id="tilgungSummary"></div>
+        <div id="tilgungPerLoanSummary"></div>
 
         <div id="tilgungList"></div>
 
@@ -2108,6 +2109,7 @@ var nativeStorage = {
     if(activeLoans.length === 0){
       summaryEl.innerHTML = '<div class="empty-state" style="padding:6px 4px;">Keine laufenden Kredite - nichts zu tilgen. 🎉</div>';
       listEl.innerHTML = '';
+      if(document.getElementById('tilgungPerLoanSummary')) document.getElementById('tilgungPerLoanSummary').innerHTML = '';
       return;
     }
 
@@ -2117,6 +2119,7 @@ var nativeStorage = {
     if(plan.length === 0){
       summaryEl.innerHTML = '<div class="empty-state" style="padding:6px 4px;">Betrag zu niedrig, um die Kredite abzuzahlen.</div>';
       listEl.innerHTML = '';
+      if(document.getElementById('tilgungPerLoanSummary')) document.getElementById('tilgungPerLoanSummary').innerHTML = '';
       return;
     }
 
@@ -2129,6 +2132,32 @@ var nativeStorage = {
       '<div class="summary-row"><span>Schuldenfrei in</span><span class="val">'+durationLabel+'</span></div>'+
       '<div class="summary-row"><span>Voraussichtlich fertig</span><span class="val">'+lastMonth.monthLabel+'</span></div>'+
       '<div class="summary-row"><span>Monatlicher Gesamtbetrag</span><span class="val">'+fmtEUR(totalMonthlyBudget)+'</span></div>';
+
+    // Pro Kredit ermitteln, in welchem Monat er (durch die letzte Rate/Extra-
+    // Zahlung dieses Plans) auf 0 faellt.
+    var payoffByLoan = {};
+    plan.forEach(function(m){
+      m.detail.forEach(function(d){
+        if(d.remainingAfter <= 0.005) payoffByLoan[d.id] = { name: d.name, month: m.month, monthLabel: m.monthLabel };
+      });
+    });
+    var payoffList = Object.keys(payoffByLoan).map(function(id){ return payoffByLoan[id]; })
+                            .sort(function(a,b){ return a.month - b.month; });
+    var perLoanEl = document.getElementById('tilgungPerLoanSummary');
+    if(perLoanEl){
+      if(payoffList.length === 0){
+        perLoanEl.innerHTML = '';
+      } else {
+        var perLoanHtml = '<h2 class="section-title" style="margin-top:20px;">Wann welcher Kredit fertig ist</h2><div class="summary-card">';
+        payoffList.forEach(function(p){
+          var py = Math.floor(p.month/12), pm = p.month % 12;
+          var untilLabel = (py>0 ? py+(py===1?' Jahr':' Jahre') : '') + (py>0 && pm>0 ? ', ' : '') + (pm>0 ? pm+(pm===1?' Monat':' Monate') : (py===0?'diesen Monat':''));
+          perLoanHtml += '<div class="summary-row"><span>'+escapeHtml(p.name)+'</span><span class="val">in '+untilLabel+' · '+p.monthLabel+'</span></div>';
+        });
+        perLoanHtml += '</div>';
+        perLoanEl.innerHTML = perLoanHtml;
+      }
+    }
 
     var html = '';
     plan.forEach(function(m, idx){
