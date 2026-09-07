@@ -3112,6 +3112,10 @@ var nativeStorage = {
         if(!await confirmDialog('Diesen Kredit wirklich als vorzeitig abbezahlt markieren? Die Restschuld wird auf 0 gesetzt.')) return;
         var payoffLoan = state.loans.filter(function(x){return x.id===id;})[0];
         if(payoffLoan){
+          var payoffAmount = payoffLoan.remainingBalance;
+          if(payoffAmount > 0){
+            state.loanPayments.push({id:genId(), loanId:payoffLoan.id, date:todayISO(), amount:payoffAmount, type:'payment'});
+          }
           payoffLoan.remainingBalance = 0;
           if(!payoffLoan.paidOffDate) payoffLoan.paidOffDate = todayISO();
         }
