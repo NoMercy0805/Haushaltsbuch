@@ -29,6 +29,18 @@
     --primary:#1268FF;
     --primary-a:rgba(18,104,255,0.80);
     --primary-soft:#E3EDFF;
+    --hero-blue-grad:linear-gradient(145deg,#EAF1FF,#DCE9FF);
+    --hero-blue-text:#0D3C8C;
+    --hero-blue-sub:#4C7DC9;
+    --hero-gold-grad:linear-gradient(145deg,#FFF3DF,#FFE7C2);
+    --hero-gold-text:#8A5A00;
+    --hero-gold-sub:#B37D1F;
+    --hero-green-grad:linear-gradient(145deg,#E4F7EC,#D0F0DD);
+    --hero-green-text:#0A6B44;
+    --hero-green-sub:#3B9169;
+    --hero-red-grad:linear-gradient(145deg,#FDE9E5,#FBD9D2);
+    --hero-red-text:#A23A1D;
+    --hero-red-sub:#C25E3F;
     --radius:22px;
     --serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -51,6 +63,18 @@
     --primary:#5B9CFF;
     --primary-a:rgba(91,156,255,0.80);
     --primary-soft:#1B2A44;
+    --hero-blue-grad:linear-gradient(145deg,#1B2A4A,#14203A);
+    --hero-blue-text:#8FB4E8;
+    --hero-blue-sub:#B8C4D9;
+    --hero-gold-grad:linear-gradient(145deg,#3A2E1B,#2C2314);
+    --hero-gold-text:#F0C070;
+    --hero-gold-sub:#C9A870;
+    --hero-green-grad:linear-gradient(145deg,#1F3A2E,#162B22);
+    --hero-green-text:#6FE3AE;
+    --hero-green-sub:#8FC9AC;
+    --hero-red-grad:linear-gradient(145deg,#3A1F24,#2B1719);
+    --hero-red-text:#FF8A75;
+    --hero-red-sub:#D9998C;
   }
   html[data-theme="dark"] body{background:var(--paper);}
   *{box-sizing:border-box;}
@@ -105,6 +129,20 @@
   h2.section-title:first-child{margin-top:4px;}
 
   .summary-card{background:var(--surface);border:none;border-radius:var(--radius);padding:20px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 8px rgba(0,0,0,0.04);}
+  .hero-card{border-radius:22px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
+  .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
+  .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);}
+  .hero-card-sub-row{display:flex;gap:18px;}
+  .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
+  .hero-card-sub-value{font-size:14px;font-weight:700;color:var(--ink);}
+  .mini-hero-card{border-radius:20px;padding:16px 18px;margin-bottom:12px;}
+  .mini-hero-card-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .mini-hero-card-title{font-size:12.5px;}
+  .mini-hero-card-value{font-size:23px;font-weight:800;color:var(--ink);}
+  .mini-hero-blue{background:var(--hero-blue-grad);}
+  .mini-hero-gold{background:var(--hero-gold-grad);}
+  .mini-hero-green{background:var(--hero-green-grad);}
+  .mini-hero-red{background:var(--hero-red-grad);}
   .summary-row{display:flex;justify-content:space-between;padding:9px 0;font-size:15.5px;border-bottom:1px solid var(--rule);}
   .summary-row:last-child{border-bottom:none;font-weight:800;padding-top:13px;font-size:16.5px;}
   .summary-row .val{font-family:var(--mono);font-weight:600;}
@@ -359,6 +397,20 @@
     <main>
       <!-- ÜBERSICHT -->
       <section id="tab-uebersicht" class="tab-panel active">
+        <div class="hero-card" id="heroCard">
+          <div class="hero-card-label">Monatlicher Rest</div>
+          <div class="hero-card-value" id="heroCardValue"></div>
+          <div class="hero-card-sub-row">
+            <div>
+              <div class="hero-card-sub-label" style="color:var(--savings);">▲ Einnahmen</div>
+              <div class="hero-card-sub-value" id="heroCardIncome"></div>
+            </div>
+            <div>
+              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Fixkosten</div>
+              <div class="hero-card-sub-value" id="heroCardFixed"></div>
+            </div>
+          </div>
+        </div>
         <div id="overviewWidgets"></div>
       </section>
 
@@ -1584,6 +1636,16 @@ var nativeStorage = {
 
   /* ---------- Übersicht ---------- */
   function renderUebersicht(){
+    var heroIncomeTotal = sum(state.income,'amount');
+    var heroFixedTotal = sum(state.fixedExpenses,'amount');
+    var heroVariableMonthly = sum(state.variableCosts,'monthlyAmount');
+    var heroLoanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
+    var heroOpenInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
+    var heroRest = heroIncomeTotal - heroFixedTotal - heroOpenInvTotal - heroVariableMonthly - heroLoanMonthly;
+    document.getElementById('heroCardValue').textContent = fmtEUR(heroRest);
+    document.getElementById('heroCardIncome').textContent = fmtEUR(heroIncomeTotal);
+    document.getElementById('heroCardFixed').textContent = fmtEUR(heroFixedTotal);
+
     renderOverviewWidgets();
 
     renderSimpleList(document.getElementById('incomeList'), state.income, 'income');
@@ -2478,48 +2540,44 @@ var nativeStorage = {
     if(!container) return;
     var cards = [];
 
-    var buchungenRows = [];
     if(overviewWidgetPrefs.invoices){
       var open = state.openInvoices.filter(function(i){ return !i.paid; });
-      var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
-      buchungenRows.push({l:'Offene Rechnungen', v:String(open.length), cls:''});
-      buchungenRows.push({l:'Davon überfällig', v:String(overdue), cls: overdue>0?'neg':''});
-      buchungenRows.push({l:'Offene Rechnungen gesamt', v:fmtEUR(sum(open,'amount')), cls:'neg'});
+      cards.push({
+        tab:'buchungen', color:'gold', value: fmtEUR(sum(open,'amount')),
+        label:'Offene Rechnungen', sub: open.length + (open.length===1?' Rechnung':' Rechnungen'),
+        icon:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 17v.01M12 11v3"/>'
+      });
     }
     if(overviewWidgetPrefs.income){
-      buchungenRows.push({l:'Einnahmen gesamt', v:fmtEUR(sum(state.income,'amount')), cls:'pos'});
+      cards.push({
+        tab:'buchungen', color:'green', value: fmtEUR(sum(state.income,'amount')),
+        label:'Einnahmen', sub: state.income.length + (state.income.length===1?' Eintrag':' Einträge'),
+        icon:'<path d="M12 20V4M6 10l6-6 6 6"/>'
+      });
     }
     if(overviewWidgetPrefs.fixed){
-      buchungenRows.push({l:'Fixkosten gesamt', v:fmtEUR(sum(state.fixedExpenses,'amount')), cls:'neg'});
+      cards.push({
+        tab:'buchungen', color:'red', value: fmtEUR(sum(state.fixedExpenses,'amount')),
+        label:'Fixkosten', sub: state.fixedExpenses.length + (state.fixedExpenses.length===1?' Eintrag':' Einträge'),
+        icon:'<path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/>'
+      });
     }
-    if(buchungenRows.length > 0){
-      cards.push({ tab: 'buchungen', label: 'Buchungen', rows: buchungenRows });
-    }
-
     if(overviewWidgetPrefs.variabel){
       var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
       var paymentTotal = sum(state.variablePayments,'amount');
       var potBalance = contribTotal - paymentTotal;
-      var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
       cards.push({
-        tab: 'variabel', label: 'Variable Kosten',
-        rows: [
-          {l:'Eingezahlt (gesamt)', v:fmtEUR(contribTotal), cls:'pos'},
-          {l:'Bezahlt (gesamt)', v:fmtEUR(paymentTotal), cls:'neg'},
-          {l:'Rest im Spartopf', v:fmtEUR(potBalance), cls: potBalance>=0?'pos':'neg'},
-          {l:'Monatlicher Sparbedarf', v:fmtEUR(monthlyNeed), cls:''}
-        ]
+        tab:'variabel', color:'green', value: fmtEUR(potBalance),
+        label:'Variable Kosten', sub:'Rest im Spartopf',
+        icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
       });
     }
     if(overviewWidgetPrefs.kredite){
       var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
       cards.push({
-        tab: 'kredite', label: 'Kredite',
-        rows: [
-          {l:'Restschuld gesamt', v:fmtEUR(sum(activeLoans,'remainingBalance')), cls:'neg'},
-          {l:'Kreditsumme gesamt', v:fmtEUR(sum(activeLoans,'originalAmount')), cls:''},
-          {l:'Monatliche Raten gesamt', v:fmtEUR(sum(activeLoans,'monthlyPayment')), cls:''}
-        ]
+        tab:'kredite', color:'red', value: fmtEUR(sum(activeLoans,'remainingBalance')),
+        label:'Kredite', sub:'Restschuld gesamt',
+        icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>'
       });
     }
 
@@ -2527,12 +2585,14 @@ var nativeStorage = {
 
     var html = '';
     cards.forEach(function(c){
-      html += '<h2 class="section-title" style="margin-top:20px;">'+c.label+'</h2>';
-      html += '<div class="summary-card overview-widget-card" data-jump-tab="'+c.tab+'" style="cursor:pointer;">';
-      c.rows.forEach(function(r){
-        html += '<div class="summary-row"><span>'+r.l+'</span><span class="val '+r.cls+'">'+r.v+'</span></div>';
-      });
-      html += '</div>';
+      html += '<div class="mini-hero-card mini-hero-'+c.color+'" data-jump-tab="'+c.tab+'" style="cursor:pointer;">'+
+                '<div class="mini-hero-card-head">'+
+                  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--hero-'+c.color+'-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.icon+'</svg>'+
+                  '<span class="mini-hero-card-title" style="color:var(--hero-'+c.color+'-text);">'+c.label+'</span>'+
+                '</div>'+
+                '<div class="mini-hero-card-value">'+c.value+'</div>'+
+                '<div style="font-size:12px;margin-top:2px;color:var(--hero-'+c.color+'-sub);">'+c.sub+'</div>'+
+              '</div>';
     });
     container.innerHTML = html;
 
