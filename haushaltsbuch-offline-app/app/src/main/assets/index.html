@@ -130,6 +130,9 @@
 
   .summary-card{background:var(--surface);border:none;border-radius:var(--radius);padding:20px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 8px rgba(0,0,0,0.04);}
   .hero-card{border-radius:22px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
+  .hero-card.hero-gold{background:var(--hero-gold-grad);}
+  .hero-card.hero-green{background:var(--hero-green-grad);}
+  .hero-card.hero-red{background:var(--hero-red-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);}
   .hero-card-sub-row{display:flex;gap:18px;}
@@ -412,7 +415,7 @@
       <!-- BUCHUNGEN -->
       <section id="tab-buchungen" class="tab-panel">
         <h2 class="section-title" style="margin-top:0;">Offene Rechnungen</h2>
-        <div class="summary-card" id="invoiceSummary"></div>
+        <div class="hero-card hero-gold" id="invoiceSummary"></div>
         <div id="invoiceList"></div>
 
         <div class="section-toggle-row" id="paidInvoicesHeader" style="margin-top:22px;">
@@ -439,7 +442,7 @@
 
       <!-- VARIABLE KOSTEN -->
       <section id="tab-variabel" class="tab-panel">
-        <div class="summary-card" id="potSummary"></div>
+        <div class="hero-card hero-green" id="potSummary"></div>
 
         <div class="section-toggle-row" id="vcHeader">
           <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/></svg></div>
@@ -459,7 +462,7 @@
 
       <!-- KREDITE & RATEN -->
       <section id="tab-kredite" class="tab-panel">
-        <div class="summary-card" id="loanSummary"></div>
+        <div class="hero-card hero-red" id="loanSummary"></div>
 
         <h2 class="section-title">Kredite</h2>
         <div id="loanList"></div>
@@ -480,7 +483,7 @@
           <p style="margin:10px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
         </div>
 
-        <div class="summary-card" id="tilgungSummary"></div>
+        <div class="hero-card" id="tilgungSummary"></div>
         <div id="tilgungPerLoanSummary"></div>
 
         <div id="tilgungList"></div>
@@ -1634,9 +1637,12 @@ var nativeStorage = {
     var openTotal = sum(open, 'amount');
     var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
     document.getElementById('invoiceSummary').innerHTML =
-      '<div class="summary-row"><span>Offene Rechnungen</span><span class="val">'+open.length+'</span></div>'+
-      '<div class="summary-row"><span>Davon überfällig</span><span class="val '+(overdue>0?'neg':'')+'">'+overdue+'</span></div>'+
-      '<div class="summary-row"><span>Offene Rechnungen gesamt</span><span class="val neg">'+fmtEUR(openTotal)+'</span></div>';
+      '<div class="hero-card-label" style="color:var(--hero-gold-text);">Offene Rechnungen gesamt</div>'+
+      '<div class="hero-card-value">'+fmtEUR(openTotal)+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Rechnungen</div><div class="hero-card-sub-value">'+open.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
+      '</div>';
 
     var container = document.getElementById('invoiceList');
     var list = state.openInvoices.filter(function(i){ return !i.paid; }).slice().sort(function(a,b){
@@ -1728,10 +1734,12 @@ var nativeStorage = {
     var potBalance = contribTotal - paymentTotal;
     var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
     document.getElementById('potSummary').innerHTML =
-      '<div class="summary-row"><span>Eingezahlt (gesamt)</span><span class="val pos">'+fmtEUR(contribTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Bezahlt (gesamt)</span><span class="val neg">'+fmtEUR(paymentTotal)+'</span></div>'+
-      '<div class="summary-row"><span>Rest im Spartopf</span><span class="val '+(potBalance>=0?'pos':'neg')+'">'+fmtEUR(potBalance)+'</span></div>'+
-      '<div class="summary-row"><span>Monatlicher Sparbedarf</span><span class="val">'+fmtEUR(monthlyNeed)+'</span></div>';
+      '<div class="hero-card-label" style="color:var(--hero-green-text);">Rest im Spartopf</div>'+
+      '<div class="hero-card-value">'+fmtEUR(potBalance)+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Sparbedarf/Monat</div><div class="hero-card-sub-value">'+fmtEUR(monthlyNeed)+'</div></div>'+
+      '</div>';
 
     document.getElementById('contribDate').value = todayISO();
     var contribAmountEl = document.getElementById('contribAmount');
@@ -2160,9 +2168,12 @@ var nativeStorage = {
     var durationLabel = (years>0 ? years+(years===1?' Jahr':' Jahre') : '') + (years>0 && restMonths>0 ? ', ' : '') + (restMonths>0 ? restMonths+(restMonths===1?' Monat':' Monate') : (years===0?'0 Monate':''));
 
     summaryEl.innerHTML =
-      '<div class="summary-row"><span>Schuldenfrei in</span><span class="val">'+durationLabel+'</span></div>'+
-      '<div class="summary-row"><span>Voraussichtlich fertig</span><span class="val">'+lastMonth.monthLabel+'</span></div>'+
-      '<div class="summary-row"><span>Monatlicher Gesamtbetrag</span><span class="val">'+fmtEUR(totalMonthlyBudget)+'</span></div>';
+      '<div class="hero-card-label">Schuldenfrei in</div>'+
+      '<div class="hero-card-value">'+durationLabel+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
+      '</div>';
 
     // Pro Kredit ermitteln, in welchem Monat er (durch die letzte Rate/Extra-
     // Zahlung dieses Plans) auf 0 faellt.
@@ -2254,9 +2265,12 @@ var nativeStorage = {
     var totalOriginal = sum(activeLoans,'originalAmount');
     var totalMonthly = sum(activeLoans,'monthlyPayment');
     document.getElementById('loanSummary').innerHTML =
-      '<div class="summary-row"><span>Restschuld gesamt</span><span class="val neg">'+fmtEUR(totalRemaining)+'</span></div>'+
-      '<div class="summary-row"><span>Kreditsumme gesamt</span><span class="val">'+fmtEUR(totalOriginal)+'</span></div>'+
-      '<div class="summary-row"><span>Monatliche Raten gesamt</span><span class="val">'+fmtEUR(totalMonthly)+'</span></div>';
+      '<div class="hero-card-label" style="color:var(--hero-red-text);">Restschuld gesamt</div>'+
+      '<div class="hero-card-value">'+fmtEUR(totalRemaining)+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
+      '</div>';
 
     var container = document.getElementById('loanList');
     if(activeLoans.length === 0){
