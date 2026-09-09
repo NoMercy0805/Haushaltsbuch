@@ -360,11 +360,6 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
-      <div class="header-stats">
-        <div class="stat"><span class="stat-label">Einnahmen</span><span class="stat-value income-color" id="hdrIncome">0 €</span></div>
-        <div class="stat"><span class="stat-label">Fixkosten</span><span class="stat-value expense-color" id="hdrFixed">0 €</span></div>
-        <div class="stat"><span class="stat-label">Rest</span><span class="stat-value rest-color" id="hdrRest">0 €</span></div>
-      </div>
     </header>
 
     <nav class="tabs">
@@ -1443,18 +1438,6 @@ var nativeStorage = {
   function sum(list, field){ return list.reduce(function(a,x){ return a + (x[field]||0); }, 0); }
 
   /* ---------- Header ---------- */
-  function renderHeaderStats(){
-    var incomeTotal = sum(state.income,'amount');
-    var fixedTotal = sum(state.fixedExpenses,'amount');
-    var variableMonthly = sum(state.variableCosts,'monthlyAmount');
-    var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
-    var openInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
-    var rest = incomeTotal - fixedTotal - openInvTotal - variableMonthly - loanMonthly;
-    document.getElementById('hdrIncome').textContent = fmtEUR(incomeTotal);
-    document.getElementById('hdrFixed').textContent = fmtEUR(fixedTotal);
-    document.getElementById('hdrRest').textContent = fmtEUR(rest);
-  }
-
   /* ---------- Generic name+amount list (income / fixed) ---------- */
   // Ordnet Fixkosten-Bezeichnungen ein passendes, generisches Symbol zu (Schlüsselwort-Suche, keine Marken-Logos)
   var FIXED_EXPENSE_ICON_MAP = [
@@ -2417,7 +2400,6 @@ var nativeStorage = {
   }
 
   function renderAll(){
-    renderHeaderStats();
     renderUebersicht();
     renderVariabel();
     renderKredite();
