@@ -819,6 +819,13 @@
             <span class="track"></span><span class="thumb"></span>
           </label>
         </div>
+        <div class="tab-visibility-row">
+          <span>Tilgungsplan</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-widget-toggle="tilgungsplan">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -2484,7 +2491,7 @@ var nativeStorage = {
     });
   }
 
-  var OVERVIEW_WIDGET_KEYS = ['invoices', 'variabel', 'kredite'];
+  var OVERVIEW_WIDGET_KEYS = ['invoices', 'variabel', 'kredite', 'tilgungsplan'];
 
   function loadOverviewWidgetPrefs(){
     var result = {};
@@ -2524,9 +2531,11 @@ var nativeStorage = {
 
     if(overviewWidgetPrefs.invoices){
       var open = state.openInvoices.filter(function(i){ return !i.paid; });
+      var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
       cards.push({
         tab:'buchungen', color:'gold', value: fmtEUR(sum(open,'amount')),
-        label:'Offene Rechnungen', sub: open.length + (open.length===1?' Rechnung':' Rechnungen'),
+        label:'Offene Rechnungen gesamt',
+        subs: [ {l:'Rechnungen', v:String(open.length)}, {l:'Davon überfällig', v:String(overdue)} ],
         icon:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 17v.01M12 11v3"/>'
       });
     }
@@ -2534,9 +2543,11 @@ var nativeStorage = {
       var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
       var paymentTotal = sum(state.variablePayments,'amount');
       var potBalance = contribTotal - paymentTotal;
+      var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
       cards.push({
         tab:'variabel', color:'green', value: fmtEUR(potBalance),
-        label:'Variable Kosten', sub:'Rest im Spartopf',
+        label:'Rest im Spartopf',
+        subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Sparbedarf/Monat', v:fmtEUR(monthlyNeed)} ],
         icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
       });
     }
@@ -2544,22 +2555,41 @@ var nativeStorage = {
       var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
       cards.push({
         tab:'kredite', color:'red', value: fmtEUR(sum(activeLoans,'remainingBalance')),
-        label:'Kredite', sub:'Restschuld gesamt',
+        label:'Restschuld gesamt',
+        subs: [ {l:'Kreditsumme', v:fmtEUR(sum(activeLoans,'originalAmount'))}, {l:'Raten/Monat', v:fmtEUR(sum(activeLoans,'monthlyPayment'))} ],
         icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>'
       });
+    }
+    if(overviewWidgetPrefs.tilgungsplan){
+      var tilgungPlan = simulateSnowball(getTilgungExtra());
+      if(tilgungPlan.length > 0){
+        var tilgungLast = tilgungPlan[tilgungPlan.length-1];
+        var tY = Math.floor(tilgungLast.month/12), tM = tilgungLast.month % 12;
+        var tilgungDuration = (tY>0 ? tY+(tY===1?' Jahr':' Jahre') : '') + (tY>0 && tM>0 ? ', ' : '') + (tM>0 ? tM+(tM===1?' Monat':' Monate') : (tY===0?'0 Monate':''));
+        cards.push({
+          tab:'tilgungsplan', color:'blue', value: tilgungDuration,
+          label:'Schuldenfrei in',
+          subs: [ {l:'Voraussichtlich fertig', v:tilgungLast.monthLabel}, {l:'Betrag/Monat', v:fmtEUR(getTilgungExtra()+state.loans.filter(function(l){return l.remainingBalance>0;}).reduce(function(s,l){return s+l.monthlyPayment;},0))} ],
+          icon:'<path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/>'
+        });
+      }
     }
 
     if(cards.length === 0){ container.innerHTML = ''; return; }
 
     var html = '';
     cards.forEach(function(c){
-      html += '<div class="mini-hero-card mini-hero-'+c.color+'" data-jump-tab="'+c.tab+'" style="cursor:pointer;">'+
-                '<div class="mini-hero-card-head">'+
-                  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--hero-'+c.color+'-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.icon+'</svg>'+
-                  '<span class="mini-hero-card-title" style="color:var(--hero-'+c.color+'-text);">'+c.label+'</span>'+
+      html += '<div class="hero-card hero-'+c.color+'" data-jump-tab="'+c.tab+'" style="cursor:pointer;padding:20px 18px;">'+
+                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
+                  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--hero-'+c.color+'-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.icon+'</svg>'+
+                  '<span style="font-size:12.5px;color:var(--hero-'+c.color+'-text);">'+c.label+'</span>'+
                 '</div>'+
-                '<div class="mini-hero-card-value">'+c.value+'</div>'+
-                '<div style="font-size:12px;margin-top:2px;color:var(--hero-'+c.color+'-sub);">'+c.sub+'</div>'+
+                '<div style="font-size:28px;font-weight:800;color:var(--ink);margin-bottom:12px;">'+c.value+'</div>'+
+                '<div style="display:flex;gap:18px;">'+
+                  c.subs.map(function(s){
+                    return '<div><div style="font-size:11px;color:var(--hero-'+c.color+'-sub);">'+s.l+'</div><div style="font-size:13px;font-weight:700;color:var(--ink);">'+s.v+'</div></div>';
+                  }).join('')+
+                '</div>'+
               '</div>';
     });
     container.innerHTML = html;
