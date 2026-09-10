@@ -362,6 +362,8 @@
   .settings-btn.danger:hover{background:#FBD8D0;}
 
   .theme-select-row{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:4px;}
+  .tilgung-extra-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:9px 0;font-size:13px;font-family:var(--sans);cursor:pointer;}
+  .tilgung-extra-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
   .tab-visibility-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;font-size:15px;color:var(--ink);}
   .tab-visibility-row:not(:last-child){border-bottom:1px solid var(--rule);}
   .toggle-switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;}
@@ -583,13 +585,20 @@
 
       <!-- TILGUNGSPLAN -->
       <section id="tab-tilgungsplan" class="tab-panel">
+        <div class="hero-card hero-purple" id="tilgungSummary"></div>
+
         <div class="summary-card">
-          <label class="field-label" style="display:block;margin:0 0 8px 2px;">Zusätzlicher Betrag pro Monat</label>
-          <input type="number" id="tilgungExtraInput" min="0" step="5" style="font-family:var(--sans);font-size:16px;padding:14px 16px;border:none;border-radius:16px;background:var(--paper);color:var(--ink);width:100%;">
-          <p style="margin:10px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
+          <div style="color:var(--ink-soft);font-size:13px;margin-bottom:10px;">Zusätzlicher Betrag pro Monat</div>
+          <input type="text" inputmode="decimal" data-cent-input id="tilgungExtraInput" style="display:block;width:100%;text-align:center;background:none;border:none;border-bottom:2px solid var(--hero-purple-text);color:var(--ink);font-size:30px;font-weight:800;font-family:var(--sans);padding:0 0 6px;margin-bottom:14px;">
+          <div style="display:flex;gap:8px;" id="tilgungExtraChips">
+            <button type="button" class="tilgung-extra-chip" data-extra-value="50">50 €</button>
+            <button type="button" class="tilgung-extra-chip" data-extra-value="100">100 €</button>
+            <button type="button" class="tilgung-extra-chip" data-extra-value="150">150 €</button>
+            <button type="button" class="tilgung-extra-chip" data-extra-value="200">200 €</button>
+          </div>
+          <p style="margin:14px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
         </div>
 
-        <div class="hero-card hero-purple" id="tilgungSummary"></div>
         <div id="tilgungPerLoanSummary"></div>
 
         <div id="tilgungList"></div>
@@ -2370,9 +2379,12 @@ var nativeStorage = {
   function renderTilgungsplan(){
     var extraInput = document.getElementById('tilgungExtraInput');
     if(extraInput && document.activeElement !== extraInput){
-      extraInput.value = getTilgungExtra();
+      extraInput.value = formatCentsToStr(Math.round(getTilgungExtra()*100));
     }
     var extra = getTilgungExtra();
+    document.querySelectorAll('.tilgung-extra-chip').forEach(function(chip){
+      chip.classList.toggle('active', parseFloat(chip.dataset.extraValue) === extra);
+    });
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var summaryEl = document.getElementById('tilgungSummary');
     var listEl = document.getElementById('tilgungList');
@@ -3345,6 +3357,12 @@ var nativeStorage = {
       var v = parseAmount(input.value);
       setTilgungExtra(isNaN(v) || v < 0 ? 0 : v);
       renderTilgungsplan();
+    });
+    document.querySelectorAll('.tilgung-extra-chip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        setTilgungExtra(parseFloat(chip.dataset.extraValue));
+        renderTilgungsplan();
+      });
     });
   }
 
