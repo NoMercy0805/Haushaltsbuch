@@ -41,6 +41,9 @@
     --hero-red-grad:linear-gradient(145deg,#FBC9BE,#F7B3A3);
     --hero-red-text:#8F2E14;
     --hero-red-sub:#B04E30;
+    --hero-purple-grad:linear-gradient(145deg,#E5D4F5,#D4B8ED);
+    --hero-purple-text:#5B2E82;
+    --hero-purple-sub:#7A4AA0;
     --radius:22px;
     --serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -75,6 +78,9 @@
     --hero-red-grad:linear-gradient(145deg,#3A1F24,#2B1719);
     --hero-red-text:#FF8A75;
     --hero-red-sub:#D9998C;
+    --hero-purple-grad:linear-gradient(145deg,#332048,#251536);
+    --hero-purple-text:#C9A0E8;
+    --hero-purple-sub:#A87FC7;
   }
   html[data-theme="dark"] body{background:var(--paper);}
   *{box-sizing:border-box;}
@@ -136,6 +142,7 @@
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
   .hero-card.hero-red{background:var(--hero-red-grad);}
+  .hero-card.hero-purple{background:var(--hero-purple-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);}
   .hero-card-sub-row{display:flex;gap:18px;}
@@ -492,7 +499,7 @@
           <p style="margin:10px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
         </div>
 
-        <div class="hero-card" id="tilgungSummary"></div>
+        <div class="hero-card hero-purple" id="tilgungSummary"></div>
         <div id="tilgungPerLoanSummary"></div>
 
         <div id="tilgungList"></div>
@@ -2229,11 +2236,11 @@ var nativeStorage = {
     var durationLabel = (years>0 ? years+(years===1?' Jahr':' Jahre') : '') + (years>0 && restMonths>0 ? ', ' : '') + (restMonths>0 ? restMonths+(restMonths===1?' Monat':' Monate') : (years===0?'0 Monate':''));
 
     summaryEl.innerHTML =
-      '<div class="hero-card-label">Schuldenfrei in</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-purple-text);">Schuldenfrei in</div>'+
       '<div class="hero-card-value">'+durationLabel+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
       '</div>';
 
     // Pro Kredit ermitteln, in welchem Monat er (durch die letzte Rate/Extra-
@@ -2621,7 +2628,7 @@ var nativeStorage = {
         var tY = Math.floor(tilgungLast.month/12), tM = tilgungLast.month % 12;
         var tilgungDuration = (tY>0 ? tY+(tY===1?' Jahr':' Jahre') : '') + (tY>0 && tM>0 ? ', ' : '') + (tM>0 ? tM+(tM===1?' Monat':' Monate') : (tY===0?'0 Monate':''));
         cards.push({
-          tab:'tilgungsplan', color:'blue', value: tilgungDuration,
+          tab:'tilgungsplan', color:'purple', value: tilgungDuration,
           label:'Schuldenfrei in',
           subs: [ {l:'Voraussichtlich fertig', v:tilgungLast.monthLabel}, {l:'Betrag/Monat', v:fmtEUR(getTilgungExtra()+state.loans.filter(function(l){return l.remainingBalance>0;}).reduce(function(s,l){return s+l.monthlyPayment;},0))} ],
           icon:'<path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/>'
