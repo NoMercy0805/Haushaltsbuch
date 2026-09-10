@@ -588,7 +588,10 @@
         <div class="hero-card hero-purple" id="tilgungSummary"></div>
 
         <div class="summary-card">
-          <div style="color:var(--ink-soft);font-size:13px;margin-bottom:10px;">Zusätzlicher Betrag pro Monat</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="color:var(--ink-soft);font-size:13px;">Zusätzlicher Betrag pro Monat</span>
+            <button type="button" class="icon-btn info-btn" id="tilgungInfoBtn" aria-label="Info zur Methode" style="border-radius:50%;">i</button>
+          </div>
           <input type="text" inputmode="decimal" data-cent-input id="tilgungExtraInput" style="display:block;width:100%;text-align:center;background:none;border:none;border-bottom:2px solid var(--hero-purple-text);color:var(--ink);font-size:30px;font-weight:800;font-family:var(--sans);padding:0 0 6px;margin-bottom:14px;">
           <div style="display:flex;gap:8px;" id="tilgungExtraChips">
             <button type="button" class="tilgung-extra-chip" data-extra-value="50">50 €</button>
@@ -596,7 +599,6 @@
             <button type="button" class="tilgung-extra-chip" data-extra-value="150">150 €</button>
             <button type="button" class="tilgung-extra-chip" data-extra-value="200">200 €</button>
           </div>
-          <p style="margin:14px 2px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.</p>
         </div>
 
         <div id="tilgungPerLoanSummary"></div>
@@ -3364,6 +3366,12 @@ var nativeStorage = {
         renderTilgungsplan();
       });
     });
+    var infoBtn = document.getElementById('tilgungInfoBtn');
+    if(infoBtn){
+      infoBtn.addEventListener('click', function(){
+        showMessage('Methode: Schneeball (kleinste Restschuld zuerst). Werden Kredite freigewordene Mindestraten frei, fließen sie automatisch als zusätzliche Tilgung in den nächsten Kredit.', {icon:'ℹ️'});
+      });
+    }
   }
 
   function setupLoanForms(){
