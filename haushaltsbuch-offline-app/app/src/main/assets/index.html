@@ -345,6 +345,20 @@
   html[data-style="ios"] .settings-panel-head h2{
     font-size:19px;font-weight:800;letter-spacing:-0.01em;
   }
+
+  /* Icons runder und etwas kraeftiger, mit farbigen Kachel-Hintergruenden
+     wie bei der Apple-eigenen Einstellungen-App, statt reiner Umriss-Symbole. */
+  html[data-style="ios"] svg{stroke-linecap:round;stroke-linejoin:round;}
+  html[data-style="ios"] .settings-nav-icon svg,
+  html[data-style="ios"] .section-toggle-icon svg,
+  html[data-style="ios"] .mini-hero-card svg,
+  html[data-style="ios"] nav.tabs button svg{stroke-width:2.3;}
+  html[data-style="ios"] .settings-nav-icon{
+    background:var(--primary);color:#fff;border-radius:8px;width:32px;height:32px;
+  }
+  html[data-style="ios"] .section-toggle-icon{
+    background:var(--primary);color:#fff;border-radius:8px;
+  }
   .settings-btn.danger:hover{background:#FBD8D0;}
 
   .theme-select-row{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:4px;}
