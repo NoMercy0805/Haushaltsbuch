@@ -90,7 +90,6 @@
 
   header.ledger-header{background:var(--paper);color:var(--ink);padding:calc(env(safe-area-inset-top, 0px) + 38px) 20px 16px;border-bottom:none;position:sticky;top:0;z-index:100;overflow:hidden;}
   .settings-btn-wrap{position:relative;flex-shrink:0;}
-  .header-bg-plus{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:150px;font-weight:800;color:var(--surface);line-height:1;user-select:none;pointer-events:none;z-index:0;}
   .header-trend{display:block;margin-top:4px;}
   header.ledger-header h1{font-family:var(--serif);font-size:22px;font-weight:800;margin:0;text-align:left;letter-spacing:-0.02em;color:var(--ink);}
   .header-top-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;}
@@ -373,7 +372,6 @@
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap">
-          <span class="header-bg-plus" aria-hidden="true">+</span>
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
