@@ -1,4 +1,4 @@
-package com.example.haushaltsbuch;
+package com.schiwy.haushaltsbuch;
 
 import android.Manifest;
 import android.app.Activity;
