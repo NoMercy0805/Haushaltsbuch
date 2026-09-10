@@ -573,7 +573,7 @@
       </div>
       <form id="invoiceForm" class="entry-form">
         <input type="text" id="invName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="invAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="invAmount" placeholder="Betrag (€)" step="0.01" required>
         <input type="date" id="invDueDate" required>
         <button type="submit">Rechnung hinzufügen</button>
       </form>
@@ -588,7 +588,7 @@
       </div>
       <form id="incomeForm" class="entry-form">
         <input type="text" id="incName" placeholder="Bezeichnung" required>
-        <input type="number" id="incAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="incAmount" placeholder="Betrag (€)" step="0.01" required>
         <button type="submit">Hinzufügen</button>
       </form>
     </div>
@@ -602,7 +602,7 @@
       </div>
       <form id="fixedForm" class="entry-form">
         <input type="text" id="fxName" placeholder="Bezeichnung" required>
-        <input type="number" id="fxAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="fxAmount" placeholder="Betrag (€)" step="0.01" required>
         <button type="submit">Hinzufügen</button>
       </form>
     </div>
@@ -616,7 +616,7 @@
       </div>
       <form id="contribForm" class="entry-form">
         <input type="date" id="contribDate" required>
-        <input type="number" id="contribAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="contribAmount" placeholder="Betrag (€)" step="0.01" required>
         <button type="submit">Einzahlen</button>
       </form>
     </div>
@@ -630,8 +630,8 @@
       </div>
       <form id="vcForm" class="entry-form">
         <input type="text" id="vcName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="vcMonthly" placeholder="Monatlich (€)" step="0.01" required>
-        <input type="number" id="vcActual" placeholder="Rechnung (€, optional)" step="0.01">
+        <input type="text" inputmode="decimal" data-cent-input id="vcMonthly" placeholder="Monatlich (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="vcActual" placeholder="Rechnung (€, optional)" step="0.01">
         <select id="vcInterval">
           <option value="monatlich">Monatlich fällig</option>
           <option value="vierteljaehrlich">Vierteljährlich fällig</option>
@@ -654,8 +654,8 @@
       </div>
       <form id="loanForm" class="entry-form">
         <input type="text" id="loanName" placeholder="Bezeichnung" class="full" required>
-        <input type="number" id="loanOriginal" placeholder="Kreditsumme (€)" step="0.01" class="full">
-        <input type="number" id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" class="full" required>
+        <input type="text" inputmode="decimal" data-cent-input id="loanOriginal" placeholder="Kreditsumme (€)" step="0.01" class="full">
+        <input type="text" inputmode="decimal" data-cent-input id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" class="full" required>
         <div class="full">
           <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Gesamtlaufzeit in Monaten (optional, laut Vertrag)</label>
           <input type="number" id="loanTermMonths" placeholder="z. B. 36" min="1" step="1">
@@ -673,7 +673,7 @@
       </div>
       <form id="sparForm" class="entry-form">
         <input type="date" id="sparDate" required>
-        <input type="number" id="sparAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="sparAmount" placeholder="Betrag (€)" step="0.01" required>
         <input type="text" id="sparComment" placeholder="Kommentar" class="full">
         <button type="submit">Sparen</button>
       </form>
@@ -688,7 +688,7 @@
       </div>
       <form id="sparExpenseForm" class="entry-form">
         <input type="date" id="sparExpenseDate" required>
-        <input type="number" id="sparExpenseAmount" placeholder="Betrag (€)" step="0.01" required>
+        <input type="text" inputmode="decimal" data-cent-input id="sparExpenseAmount" placeholder="Betrag (€)" step="0.01" required>
         <input type="text" id="sparExpenseComment" placeholder="Kommentar" class="full">
         <button type="submit">Ausgabe</button>
       </form>
@@ -1123,6 +1123,29 @@ var nativeStorage = {
   // Robuste Betrags-Erkennung fuer Eingabefelder: interpretiert deutsche Schreibweise
   // (Punkt als Tausendertrennzeichen, Komma als Dezimaltrennzeichen) korrekt,
   // damit z.B. "15.000" nicht faelschlich als 15 statt 15000 gelesen wird.
+  /* ---------- Cent-Eingabe (wie bei Banking-Apps): Ziffern fuellen immer von
+     rechts, die letzten zwei sind automatisch die Nachkommastellen. ---------- */
+  function formatCentsToStr(cents){
+    cents = cents || 0;
+    var negative = cents < 0;
+    cents = Math.abs(cents);
+    var euros = Math.floor(cents / 100);
+    var rest = cents % 100;
+    var euroStr = String(euros).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (negative ? '-' : '') + euroStr + ',' + String(rest).padStart(2, '0');
+  }
+
+  function setupCentInputs(){
+    document.addEventListener('input', function(e){
+      var input = e.target;
+      if(!input.matches || !input.matches('[data-cent-input]')) return;
+      var digits = input.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+      if(digits.length > 9) digits = digits.slice(-9);
+      input.value = digits ? formatCentsToStr(parseInt(digits, 10)) : '';
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  }
+
   function parseAmount(str){
     if(str === null || str === undefined) return NaN;
     str = String(str).trim();
@@ -1560,7 +1583,7 @@ var nativeStorage = {
       if(editing[listKey] === item.id){
         html += '<div class="edit-row" data-id="'+item.id+'">'+
                   '<input type="text" class="edit-name" value="'+escapeHtml(item.name)+'">'+
-                  '<input type="number" step="0.01" class="edit-amount" value="'+item.amount+'">'+
+                  '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(item.amount*100))+'">'+
                   (listKey==='fixed' ? renderIconPicker(item) : '')+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit" data-list="'+listKey+'">Abbrechen</button>'+
@@ -1722,7 +1745,7 @@ var nativeStorage = {
       if(editing.invoice === inv.id){
         html += '<div class="edit-row" data-id="'+inv.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(inv.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="number" step="0.01" class="edit-amount" value="'+inv.amount+'" placeholder="Betrag (€)">'+
+                  '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(inv.amount*100))+'" placeholder="Betrag (€)">'+
                   '<input type="date" class="edit-duedate" value="'+(inv.dueDate||'')+'">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-invoice">Abbrechen</button>'+
@@ -1834,8 +1857,8 @@ var nativeStorage = {
         if(editing.vc === item.id){
           html += '<div class="edit-row" data-id="'+item.id+'">'+
                     '<input type="text" class="edit-name full" value="'+escapeHtml(item.name)+'" placeholder="Bezeichnung">'+
-                    '<input type="number" step="0.01" class="edit-monthly" value="'+item.monthlyAmount+'" placeholder="Monatlich (€)">'+
-                    '<input type="number" step="0.01" class="edit-actual" value="'+(item.actualAmount||0)+'" placeholder="Rechnung (€)">'+
+                    '<input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(item.monthlyAmount*100))+'" placeholder="Monatlich (€)">'+
+                    '<input type="text" inputmode="decimal" data-cent-input class="edit-actual" value="'+formatCentsToStr(Math.round((item.actualAmount||0)*100))+'" placeholder="Rechnung (€)">'+
                     '<select class="edit-interval">'+
                       Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fällig</option>'; }).join('')+
                     '</select>'+
@@ -1928,7 +1951,7 @@ var nativeStorage = {
         if(editing.tx === t.id){
           html2 += '<div class="edit-row" data-id="'+t.id+'" data-tx-type="'+t.type+'">'+
                      '<input type="date" class="edit-date" value="'+t.date+'">'+
-                     '<input type="number" step="0.01" class="edit-amount" value="'+Math.abs(t.amount)+'">'+
+                     '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(Math.abs(t.amount)*100))+'">'+
                      '<div class="edit-actions">'+
                        '<button type="button" class="btn-cancel" data-action="cancel-edit-tx">Abbrechen</button>'+
                        '<button type="button" class="btn-save" data-action="save-edit-tx" data-id="'+t.id+'" data-tx-type="'+t.type+'">Speichern</button>'+
@@ -2004,7 +2027,7 @@ var nativeStorage = {
         if(editing.spar === t.id){
           html += '<div class="edit-row" data-id="'+t.id+'">'+
                      '<input type="date" class="edit-date" value="'+t.date+'">'+
-                     '<input type="number" step="0.01" class="edit-amount" value="'+t.amount+'">'+
+                     '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(t.amount*100))+'">'+
                      '<input type="text" class="edit-comment full" value="'+escapeHtml(t.comment||'')+'" placeholder="Kommentar">'+
                      '<div class="edit-actions">'+
                        '<button type="button" class="btn-cancel" data-action="cancel-edit-spar">Abbrechen</button>'+
@@ -2348,8 +2371,8 @@ var nativeStorage = {
         var prefillMonths = loan.totalTermMonths || '';
         html += '<div class="edit-row" data-id="'+loan.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(loan.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="number" step="0.01" class="edit-original" value="'+loan.originalAmount+'" placeholder="Kreditsumme (€)">'+
-                  '<input type="number" step="0.01" class="edit-monthly" value="'+loan.monthlyPayment+'" placeholder="Rate/Monat (€)">'+
+                  '<input type="text" inputmode="decimal" data-cent-input class="edit-original" value="'+formatCentsToStr(Math.round(loan.originalAmount*100))+'" placeholder="Kreditsumme (€)">'+
+                  '<input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(loan.monthlyPayment*100))+'" placeholder="Rate/Monat (€)">'+
                   '<input type="number" step="1" min="1" class="edit-term-months full" value="'+prefillMonths+'" placeholder="Gesamtlaufzeit in Monaten (optional)">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-loan">Abbrechen</button>'+
@@ -3871,6 +3894,7 @@ var nativeStorage = {
     setupBackup();
     setupThemeToggle();
     setupCardExpandToggle();
+    setupCentInputs();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
