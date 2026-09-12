@@ -2485,7 +2485,7 @@ var nativeStorage = {
     var payoffByLoan = {};
     plan.forEach(function(m){
       m.detail.forEach(function(d){
-        if(d.remainingAfter <= 0.005) payoffByLoan[d.id] = { name: d.name, month: m.month, monthLabel: m.monthLabel };
+        if(d.remainingAfter <= 0.005) payoffByLoan[d.id] = { id: d.id, name: d.name, month: m.month, monthLabel: m.monthLabel };
       });
     });
     var payoffList = Object.keys(payoffByLoan).map(function(id){ return payoffByLoan[id]; })
@@ -2496,12 +2496,20 @@ var nativeStorage = {
         perLoanEl.innerHTML = '';
       } else {
         var perLoanHtml = '<h2 class="section-title" style="margin-top:20px;">Wann welcher Kredit fertig ist</h2><div class="summary-card">';
+        var carryoverPctForList = getTilgungCarryoverPct();
         payoffList.forEach(function(p){
           var py = Math.floor(p.month/12), pm = p.month % 12;
           var untilLabel = (py>0 ? py+(py===1?' Jahr':' Jahre') : '') + (py>0 && pm>0 ? ', ' : '') + (pm>0 ? pm+(pm===1?' Monat':' Monate') : (py===0?'diesen Monat':''));
+          var loanForFreed = state.loans.filter(function(l){ return l.id === p.id; })[0];
+          var freedLine = '';
+          if(loanForFreed && loanForFreed.monthlyPayment > 0){
+            var freedAmount = roundCents(loanForFreed.monthlyPayment * carryoverPctForList / 100);
+            freedLine = '<div style="font-size:13px;color:var(--savings);margin-top:2px;">+'+fmtEUR(freedAmount)+' zum Extra-Betrag'+(carryoverPctForList<100?' ('+carryoverPctForList+'%)':'')+'</div>';
+          }
           perLoanHtml += '<div style="padding:10px 0;border-bottom:1px solid var(--rule);">'+
                             '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+escapeHtml(p.name)+'</div>'+
                             '<div style="font-size:13.5px;color:var(--ink-soft);">in '+untilLabel+' · '+p.monthLabel+'</div>'+
+                            freedLine+
                           '</div>';
         });
         perLoanHtml += '</div>';
