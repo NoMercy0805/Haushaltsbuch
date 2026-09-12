@@ -1205,35 +1205,34 @@ var nativeStorage = {
     var initialHeight = window.innerHeight;
     var nav = document.querySelector('nav.tabs');
     var keyboardOpen = false;
-    var focusedEl = null;
 
+    // Tab-Leiste ausblenden: rein auf Groessenaenderung basierend, das
+    // Umschalten einer Klasse ist ungefaehrlich, auch wenn es mehrfach
+    // passiert (kein Sprung sichtbar).
     function checkKeyboard(){
       var currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       var isOpen = (initialHeight - currentHeight) > 120;
       if(isOpen !== keyboardOpen){
         keyboardOpen = isOpen;
         if(nav) nav.classList.toggle('keyboard-hidden', isOpen);
-        if(isOpen && focusedEl && document.activeElement === focusedEl){
-          focusedEl.scrollIntoView({block:'end', behavior:'smooth'});
-        }
       }
     }
-
     window.addEventListener('resize', checkKeyboard);
     if(window.visualViewport){
       window.visualViewport.addEventListener('resize', checkKeyboard);
     }
 
+    // Positionierung: komplett unabhaengig davon, ausschliesslich beim
+    // Antippen eines Felds ausgeloest, und dabei nur genau einmal - dadurch
+    // kann das Feld nicht mehr hin- und herspringen.
     document.addEventListener('focusin', function(e){
       var el = e.target;
       if(!el.matches || !el.matches('input, select, textarea')) return;
-      focusedEl = el;
-      setTimeout(checkKeyboard, 300);
-      setTimeout(checkKeyboard, 600);
-    });
-    document.addEventListener('focusout', function(){
-      focusedEl = null;
-      setTimeout(checkKeyboard, 300);
+      setTimeout(function(){
+        if(document.activeElement === el){
+          el.scrollIntoView({block:'end', behavior:'smooth'});
+        }
+      }, 400);
     });
   }
 
