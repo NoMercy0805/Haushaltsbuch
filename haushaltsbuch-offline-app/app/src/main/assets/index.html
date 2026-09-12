@@ -4110,6 +4110,15 @@ var nativeStorage = {
     }
     function applyState(){
       ticking = false;
+      // Waehrend ein Eingabefeld fokussiert ist (Tastatur wahrscheinlich
+      // offen), koennen Scroll-Ereignisse durch die Tastatur selbst
+      // ausgeloest werden, nicht durch absichtliches Scrollen - das darf
+      // das Ein-/Ausklappen der Karte nicht anstossen, sonst springt der
+      // Inhalt darunter (inkl. des gerade fokussierten Felds).
+      var active = document.activeElement;
+      if(active && active.matches && active.matches('input, select, textarea')){
+        return;
+      }
       var activePanel = document.querySelector('.tab-panel.active');
       var wrap = activePanel ? activePanel.querySelector('.hero-sticky-wrap') : null;
       if(!wrap){ return; }
