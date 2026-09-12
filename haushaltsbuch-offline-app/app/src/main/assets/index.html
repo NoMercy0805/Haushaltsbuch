@@ -138,7 +138,7 @@
 
   .summary-card{background:var(--surface);border:none;border-radius:var(--radius);padding:20px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 8px rgba(0,0,0,0.04);}
   .hero-card{border-radius:22px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
-  #heroCard, #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
+  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
     position:sticky;
     top:calc(env(safe-area-inset-top, 0px) + 100px);
     z-index:90;
@@ -2535,6 +2535,7 @@ var nativeStorage = {
         if(reallyDone){
           advanceTilgungCurrentMonth();
           renderTilgungsplan();
+          renderOverviewWidgets();
         } else {
           confirmCheck.checked = false;
         }
@@ -3415,6 +3416,7 @@ var nativeStorage = {
     if(ok){
       setTilgungExtra(newExtra);
       renderTilgungsplan();
+      renderOverviewWidgets();
     }
   }
 
@@ -3430,6 +3432,7 @@ var nativeStorage = {
       loan.carryoverPct = parseInt(chip.dataset.carryoverValue, 10);
       saveState();
       renderTilgungsplan();
+      renderOverviewWidgets();
     });
     var input = document.getElementById('tilgungExtraInput');
     if(!input) return;
@@ -3437,11 +3440,13 @@ var nativeStorage = {
       var v = parseAmount(input.value);
       setTilgungExtra(isNaN(v) || v < 0 ? 0 : v);
       renderTilgungsplan();
+      renderOverviewWidgets();
     });
     document.querySelectorAll('.tilgung-extra-chip[data-extra-value]').forEach(function(chip){
       chip.addEventListener('click', function(){
         setTilgungExtra(parseFloat(chip.dataset.extraValue));
         renderTilgungsplan();
+        renderOverviewWidgets();
       });
     });
     var infoBtn = document.getElementById('tilgungInfoBtn');
