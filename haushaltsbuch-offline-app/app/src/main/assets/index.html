@@ -138,6 +138,11 @@
 
   .summary-card{background:var(--surface);border:none;border-radius:var(--radius);padding:20px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 8px rgba(0,0,0,0.04);}
   .hero-card{border-radius:22px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
+  #heroCard, #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
+    position:sticky;
+    top:calc(env(safe-area-inset-top, 0px) + 100px);
+    z-index:90;
+  }
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
   .hero-card.hero-red{background:var(--hero-red-grad);}
