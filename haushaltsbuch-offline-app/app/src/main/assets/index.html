@@ -145,7 +145,12 @@
     position:sticky;
     top:calc(env(safe-area-inset-top, 0px) + 100px);
     z-index:90;
+    transition:opacity .2s ease, transform .2s ease;
   }
+  .hero-sticky-wrap.keyboard-hidden, #heroCard.keyboard-hidden{
+    opacity:0;transform:translateY(-16px);pointer-events:none;
+  }
+  #heroCard{transition:opacity .2s ease, transform .2s ease;}
   #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
     transition:padding .2s ease;
   }
@@ -1206,16 +1211,17 @@ var nativeStorage = {
     var nav = document.querySelector('nav.tabs');
     var keyboardOpen = false;
 
-    // Nur noch die Tab-Leiste ausblenden, solange die Tastatur offen ist.
-    // Die eigene Positionierung des fokussierten Felds wurde wieder
-    // entfernt, da sie zu Sprüngen und Ueberdeckungen fuehrte - das normale
-    // Verhalten des WebView uebernimmt das jetzt wieder von selbst.
+    // Blendet Tab-Leiste und die farbigen Karten aus, solange die Tastatur
+    // offen ist - so bleibt mehr Platz und nichts wird verdeckt.
     function checkKeyboard(){
       var currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       var isOpen = (initialHeight - currentHeight) > 120;
       if(isOpen !== keyboardOpen){
         keyboardOpen = isOpen;
         if(nav) nav.classList.toggle('keyboard-hidden', isOpen);
+        document.querySelectorAll('.hero-sticky-wrap, #heroCard').forEach(function(el){
+          el.classList.toggle('keyboard-hidden', isOpen);
+        });
       }
     }
     window.addEventListener('resize', checkKeyboard);
