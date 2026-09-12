@@ -1189,6 +1189,21 @@ var nativeStorage = {
     return (negative ? '-' : '') + euroStr + ',' + String(rest).padStart(2, '0');
   }
 
+  // Beim Fokussieren eines Felds scrollt Android manchmal, bevor die
+  // Tastatur fertig eingeblendet ist, wodurch das Feld zu weit oben landet.
+  // Nach kurzer Verzoegerung (Tastatur ist dann sichtbar) nochmal korrigieren.
+  function setupKeyboardAwareScroll(){
+    document.addEventListener('focusin', function(e){
+      var el = e.target;
+      if(!el.matches || !el.matches('input, select, textarea')) return;
+      setTimeout(function(){
+        if(document.activeElement === el){
+          el.scrollIntoView({block:'center', behavior:'smooth'});
+        }
+      }, 350);
+    });
+  }
+
   function setupCentInputs(){
     document.addEventListener('input', function(e){
       var input = e.target;
@@ -4041,6 +4056,7 @@ var nativeStorage = {
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardShrink();
+    setupKeyboardAwareScroll();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
