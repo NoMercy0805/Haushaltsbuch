@@ -227,6 +227,7 @@
   .carryover-row .row-amount{color:var(--primary);}
 
   .edit-row{background:var(--primary-soft);border:none;border-radius:18px;padding:16px;margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .edit-field-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin:0 4px 4px;}
   .edit-row input, .edit-row select{font-family:var(--sans);font-size:16px;padding:13px 14px;border:none;border-radius:14px;background:var(--surface);color:var(--ink);width:100%;}
   .edit-row .full{grid-column:1 / -1;}
   .edit-row .edit-actions{grid-column:1 / -1;display:flex;gap:10px;justify-content:flex-end;margin-top:2px;}
@@ -1922,8 +1923,8 @@ var nativeStorage = {
         if(editing.vc === item.id){
           html += '<div class="edit-row" data-id="'+item.id+'">'+
                     '<input type="text" class="edit-name full" value="'+escapeHtml(item.name)+'" placeholder="Bezeichnung">'+
-                    '<input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(item.monthlyAmount*100))+'" placeholder="Monatlich (€)">'+
-                    '<input type="text" inputmode="decimal" data-cent-input class="edit-actual" value="'+formatCentsToStr(Math.round((item.actualAmount||0)*100))+'" placeholder="Rechnung (€)">'+
+                    '<div><label class="edit-field-label">Monatlich zurücklegen</label><input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(item.monthlyAmount*100))+'" placeholder="Monatlich (€)"></div>'+
+                    '<div><label class="edit-field-label">Letzte Rechnung</label><input type="text" inputmode="decimal" data-cent-input class="edit-actual" value="'+formatCentsToStr(Math.round((item.actualAmount||0)*100))+'" placeholder="Rechnung (€)"></div>'+
                     '<select class="edit-interval">'+
                       Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fällig</option>'; }).join('')+
                     '</select>'+
@@ -2479,8 +2480,8 @@ var nativeStorage = {
         var prefillMonths = loan.totalTermMonths || '';
         html += '<div class="edit-row" data-id="'+loan.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(loan.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="text" inputmode="decimal" data-cent-input class="edit-original" value="'+formatCentsToStr(Math.round(loan.originalAmount*100))+'" placeholder="Kreditsumme (€)">'+
-                  '<input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(loan.monthlyPayment*100))+'" placeholder="Rate/Monat (€)">'+
+                  '<div><label class="edit-field-label">Kreditsumme</label><input type="text" inputmode="decimal" data-cent-input class="edit-original" value="'+formatCentsToStr(Math.round(loan.originalAmount*100))+'" placeholder="Kreditsumme (€)"></div>'+
+                  '<div><label class="edit-field-label">Rate pro Monat</label><input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(loan.monthlyPayment*100))+'" placeholder="Rate/Monat (€)"></div>'+
                   '<input type="number" step="1" min="1" class="edit-term-months full" value="'+prefillMonths+'" placeholder="Gesamtlaufzeit in Monaten (optional)">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-loan">Abbrechen</button>'+
