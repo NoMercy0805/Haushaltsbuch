@@ -4186,12 +4186,17 @@ var nativeStorage = {
 
   function setupHeroCardShrink(){
     var stickyIds = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
-    var threshold = 36;
+    var collapseAt = 60;
+    var expandAt = 20;
     var collapsed = false;
     var ticking = false;
     function applyState(){
-      var isCollapsed = window.scrollY > threshold;
+      var y = window.scrollY;
       ticking = false;
+      // Puffer zwischen Ein- und Ausklapp-Schwelle, damit die Karte bei
+      // langsamem Scrollen nicht staendig hin- und herspringt, waehrend die
+      // Animation noch laeuft.
+      var isCollapsed = collapsed ? (y > expandAt) : (y > collapseAt);
       if(isCollapsed === collapsed) return;
       collapsed = isCollapsed;
       stickyIds.forEach(function(id){
