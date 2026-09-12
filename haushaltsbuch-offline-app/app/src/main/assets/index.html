@@ -2959,6 +2959,7 @@ var nativeStorage = {
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
+    if(typeof resetHeroCardShrink === 'function') resetHeroCardShrink();
   }
 
   function setupTabs(){
@@ -4184,25 +4185,51 @@ var nativeStorage = {
     maybeOfferFreshRestore();
   }
 
+  var heroShrinkCollapsed = false;
+  var heroShrinkStuckAtScrollY = null;
+  function resetHeroCardShrink(){
+    heroShrinkCollapsed = false;
+    heroShrinkStuckAtScrollY = null;
+    ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.classList.remove('collapsed');
+    });
+  }
+
   function setupHeroCardShrink(){
     var stickyIds = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
-    var collapseAt = 60;
-    var expandAt = 20;
-    var collapsed = false;
     var ticking = false;
-    function applyState(){
-      var y = window.scrollY;
-      ticking = false;
-      // Puffer zwischen Ein- und Ausklapp-Schwelle, damit die Karte bei
-      // langsamem Scrollen nicht staendig hin- und herspringt, waehrend die
-      // Animation noch laeuft.
-      var isCollapsed = collapsed ? (y > expandAt) : (y > collapseAt);
-      if(isCollapsed === collapsed) return;
-      collapsed = isCollapsed;
+    function toggleAll(state){
       stickyIds.forEach(function(id){
         var el = document.getElementById(id);
-        if(el) el.classList.toggle('collapsed', collapsed);
+        if(el) el.classList.toggle('collapsed', state);
       });
+    }
+    function applyState(){
+      ticking = false;
+      var activePanel = document.querySelector('.tab-panel.active');
+      var wrap = activePanel ? activePanel.querySelector('.hero-sticky-wrap') : null;
+      if(!wrap){ return; }
+      var stickyTop = parseFloat(getComputedStyle(wrap).top) || 0;
+      var rect = wrap.getBoundingClientRect();
+      // Erst wenn die Karte tatsaechlich "klebt" (ihr oberer Rand die feste
+      // Position erreicht hat), faengt die Messung an - das passt sich
+      // automatisch daran an, wie viel Inhalt vor der Karte im jeweiligen
+      // Reiter steht, statt einen festen Scroll-Wert fuer alle Reiter zu
+      // erzwingen.
+      var isStuck = rect.top <= stickyTop + 1;
+      if(!isStuck){
+        heroShrinkStuckAtScrollY = null;
+        if(heroShrinkCollapsed){ heroShrinkCollapsed = false; toggleAll(false); }
+        return;
+      }
+      if(heroShrinkStuckAtScrollY === null) heroShrinkStuckAtScrollY = window.scrollY;
+      var scrolledSinceStuck = window.scrollY - heroShrinkStuckAtScrollY;
+      var isCollapsed = heroShrinkCollapsed ? (scrolledSinceStuck > 6) : (scrolledSinceStuck > 30);
+      if(isCollapsed !== heroShrinkCollapsed){
+        heroShrinkCollapsed = isCollapsed;
+        toggleAll(heroShrinkCollapsed);
+      }
     }
     function onScroll(){
       if(ticking) return;
