@@ -121,7 +121,9 @@
   nav.tabs{display:flex;background:var(--rule);border-radius:999px;border-bottom:none;overflow-x:auto;padding:6px;gap:2px;
     position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
     width:calc(100% - 40px);max-width:500px;z-index:60;
+    transition:transform .2s ease, opacity .2s ease;
     box-shadow:0 4px 16px rgba(0,0,0,0.12),0 1px 4px rgba(0,0,0,0.08);}
+  nav.tabs.keyboard-hidden{transform:translateX(-50%) translateY(140%);opacity:0;pointer-events:none;}
   nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;background:none;border:none;border-radius:20px;font-family:var(--serif);font-weight:700;font-size:10.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;border-bottom:none;transition:background .15s,color .15s;}
   nav.tabs button span{overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   nav.tabs button svg{flex-shrink:0;}
@@ -1202,6 +1204,20 @@ var nativeStorage = {
         }
       }, 350);
     });
+  }
+
+  // Blendet die Tab-Leiste unten aus, solange die Bildschirmtastatur offen
+  // ist (erkannt ueber die tatsaechlich sichtbare Fensterhoehe), damit sie
+  // nicht ueberdeckt wird oder unnoetig Platz wegnimmt.
+  function setupKeyboardAwareTabs(){
+    if(!window.visualViewport) return;
+    var nav = document.querySelector('nav.tabs');
+    if(!nav) return;
+    function onResize(){
+      var shrunk = (window.innerHeight - window.visualViewport.height) > 120;
+      nav.classList.toggle('keyboard-hidden', shrunk);
+    }
+    window.visualViewport.addEventListener('resize', onResize);
   }
 
   function setupCentInputs(){
@@ -4057,6 +4073,7 @@ var nativeStorage = {
     setupCentInputs();
     setupHeroCardShrink();
     setupKeyboardAwareScroll();
+    setupKeyboardAwareTabs();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
