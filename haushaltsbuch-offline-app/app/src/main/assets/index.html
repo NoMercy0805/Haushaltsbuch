@@ -148,30 +148,32 @@
   .hero-card.hero-red{background:var(--hero-red-grad);}
   .hero-card.hero-purple{background:var(--hero-purple-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
-  .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transition:font-size .2s ease, margin-bottom .2s ease;}
+  .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transform-origin:left center;transition:transform .2s ease, margin-bottom .2s ease;will-change:transform;}
   #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
     transition:padding .2s ease;
   }
   #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed{
     padding-top:10px;padding-bottom:10px;
   }
+  .hero-card-label{max-height:20px;opacity:1;overflow:hidden;transition:max-height .18s ease, opacity .12s ease, margin-bottom .18s ease;}
+  .hero-card-sub-row{max-height:40px;opacity:1;overflow:hidden;transition:max-height .18s ease, opacity .12s ease;}
   #invoiceSummary.collapsed .hero-card-label,
   #potSummary.collapsed .hero-card-label,
   #loanSummary.collapsed .hero-card-label,
   #tilgungSummary.collapsed .hero-card-label{
-    display:none;
+    max-height:0;opacity:0;margin-bottom:0;
   }
   #invoiceSummary.collapsed .hero-card-sub-row,
   #potSummary.collapsed .hero-card-sub-row,
   #loanSummary.collapsed .hero-card-sub-row,
   #tilgungSummary.collapsed .hero-card-sub-row{
-    display:none;
+    max-height:0;opacity:0;
   }
   #invoiceSummary.collapsed .hero-card-value,
   #potSummary.collapsed .hero-card-value,
   #loanSummary.collapsed .hero-card-value,
   #tilgungSummary.collapsed .hero-card-value{
-    font-size:19px;margin-bottom:0;
+    transform:scale(0.56);margin-bottom:0;
   }
   .hero-card-sub-row{display:flex;gap:18px;}
   .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
@@ -4186,14 +4188,21 @@ var nativeStorage = {
     var stickyIds = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
     var threshold = 36;
     var collapsed = false;
-    function onScroll(){
+    var ticking = false;
+    function applyState(){
       var isCollapsed = window.scrollY > threshold;
+      ticking = false;
       if(isCollapsed === collapsed) return;
       collapsed = isCollapsed;
       stickyIds.forEach(function(id){
         var el = document.getElementById(id);
         if(el) el.classList.toggle('collapsed', collapsed);
       });
+    }
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(applyState);
     }
     window.addEventListener('scroll', onScroll, {passive:true});
   }
