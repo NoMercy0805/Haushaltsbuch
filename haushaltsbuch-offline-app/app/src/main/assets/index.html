@@ -1206,9 +1206,10 @@ var nativeStorage = {
     var nav = document.querySelector('nav.tabs');
     var keyboardOpen = false;
 
-    // Tab-Leiste ausblenden: rein auf Groessenaenderung basierend, das
-    // Umschalten einer Klasse ist ungefaehrlich, auch wenn es mehrfach
-    // passiert (kein Sprung sichtbar).
+    // Nur noch die Tab-Leiste ausblenden, solange die Tastatur offen ist.
+    // Die eigene Positionierung des fokussierten Felds wurde wieder
+    // entfernt, da sie zu Sprüngen und Ueberdeckungen fuehrte - das normale
+    // Verhalten des WebView uebernimmt das jetzt wieder von selbst.
     function checkKeyboard(){
       var currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       var isOpen = (initialHeight - currentHeight) > 120;
@@ -1221,19 +1222,6 @@ var nativeStorage = {
     if(window.visualViewport){
       window.visualViewport.addEventListener('resize', checkKeyboard);
     }
-
-    // Positionierung: komplett unabhaengig davon, ausschliesslich beim
-    // Antippen eines Felds ausgeloest, und dabei nur genau einmal - dadurch
-    // kann das Feld nicht mehr hin- und herspringen.
-    document.addEventListener('focusin', function(e){
-      var el = e.target;
-      if(!el.matches || !el.matches('input, select, textarea')) return;
-      setTimeout(function(){
-        if(document.activeElement === el){
-          el.scrollIntoView({block:'end', behavior:'smooth'});
-        }
-      }, 400);
-    });
   }
 
   function setupCentInputs(){
