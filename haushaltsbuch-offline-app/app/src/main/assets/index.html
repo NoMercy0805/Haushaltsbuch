@@ -142,6 +142,10 @@
     position:sticky;
     top:calc(env(safe-area-inset-top, 0px) + 100px);
     z-index:90;
+    transition:padding .2s ease;
+    will-change:transform;
+    contain:layout paint;
+    backface-visibility:hidden;
   }
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
@@ -149,9 +153,6 @@
   .hero-card.hero-purple{background:var(--hero-purple-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transform-origin:left center;transition:transform .2s ease, margin-bottom .2s ease;will-change:transform;}
-  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
-    transition:padding .2s ease;
-  }
   #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed{
     padding-top:10px;padding-bottom:10px;
   }
