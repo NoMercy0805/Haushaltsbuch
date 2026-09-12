@@ -596,6 +596,15 @@
             <button type="button" class="tilgung-extra-chip" data-extra-value="150">150 €</button>
             <button type="button" class="tilgung-extra-chip" data-extra-value="200">200 €</button>
           </div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);">
+            <div style="color:var(--ink-soft);font-size:13px;margin-bottom:8px;">Anteil der freiwerdenden Rate bei Abbezahlung</div>
+            <div style="display:flex;gap:8px;" id="tilgungCarryoverChips">
+              <button type="button" class="tilgung-extra-chip" data-carryover-value="25">25%</button>
+              <button type="button" class="tilgung-extra-chip" data-carryover-value="50">50%</button>
+              <button type="button" class="tilgung-extra-chip" data-carryover-value="75">75%</button>
+              <button type="button" class="tilgung-extra-chip" data-carryover-value="100">100%</button>
+            </div>
+          </div>
         </div>
 
         <div id="tilgungPerLoanSummary"></div>
@@ -2285,6 +2294,19 @@ var nativeStorage = {
     try{ nativeStorage.setItem(TILGUNG_EXTRA_KEY, String(v)); }catch(e){}
   }
 
+  var TILGUNG_CARRYOVER_PCT_KEY = 'household-tilgung-carryover-pct';
+
+  function getTilgungCarryoverPct(){
+    try{
+      var v = parseInt(nativeStorage.getItem(TILGUNG_CARRYOVER_PCT_KEY), 10);
+      if(!isNaN(v) && v >= 0 && v <= 100) return v;
+    }catch(e){}
+    return 100;
+  }
+  function setTilgungCarryoverPct(v){
+    try{ nativeStorage.setItem(TILGUNG_CARRYOVER_PCT_KEY, String(v)); }catch(e){}
+  }
+
   // Der "aktuelle Monat" im Tilgungsplan zaehlt nur weiter, wenn er per
   // Checkbox bestaetigt wurde - ist er noch nicht abgehakt und die echte Zeit
   // laeuft weiter, rutscht er automatisch auf den echten aktuellen Monat nach
@@ -2400,8 +2422,12 @@ var nativeStorage = {
       extraInput.value = formatCentsToStr(Math.round(getTilgungExtra()*100));
     }
     var extra = getTilgungExtra();
-    document.querySelectorAll('.tilgung-extra-chip').forEach(function(chip){
+    document.querySelectorAll('.tilgung-extra-chip[data-extra-value]').forEach(function(chip){
       chip.classList.toggle('active', parseFloat(chip.dataset.extraValue) === extra);
+    });
+    var carryoverPct = getTilgungCarryoverPct();
+    document.querySelectorAll('.tilgung-extra-chip[data-carryover-value]').forEach(function(chip){
+      chip.classList.toggle('active', parseInt(chip.dataset.carryoverValue,10) === carryoverPct);
     });
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var summaryEl = document.getElementById('tilgungSummary');
@@ -3356,10 +3382,14 @@ var nativeStorage = {
 
   async function offerAddFreedRateToTilgung(loan){
     if(!loan || loan.monthlyPayment <= 0) return;
+    var pct = getTilgungCarryoverPct();
+    var freedAmount = roundCents(loan.monthlyPayment * pct / 100);
+    if(freedAmount <= 0) return;
     var currentExtra = getTilgungExtra();
-    var newExtra = roundCents(currentExtra + loan.monthlyPayment);
+    var newExtra = roundCents(currentExtra + freedAmount);
+    var pctNote = pct < 100 ? ' ('+pct+'% von '+fmtEUR(loan.monthlyPayment)+')' : '';
     var ok = await confirmDialog(
-      '„'+loan.name+'" ist jetzt abbezahlt! Soll die freigewordene Monatsrate ('+fmtEUR(loan.monthlyPayment)+') zum zusätzlichen Tilgungsbetrag dazugerechnet werden? Neuer Betrag: '+fmtEUR(currentExtra)+' + '+fmtEUR(loan.monthlyPayment)+' = '+fmtEUR(newExtra),
+      '„'+loan.name+'" ist jetzt abbezahlt! Soll die freigewordene Monatsrate'+pctNote+' zum zusätzlichen Tilgungsbetrag dazugerechnet werden? Neuer Betrag: '+fmtEUR(currentExtra)+' + '+fmtEUR(freedAmount)+' = '+fmtEUR(newExtra),
       {icon:'🎉', confirmLabel:'Hinzufügen'}
     );
     if(ok){
@@ -3376,9 +3406,15 @@ var nativeStorage = {
       setTilgungExtra(isNaN(v) || v < 0 ? 0 : v);
       renderTilgungsplan();
     });
-    document.querySelectorAll('.tilgung-extra-chip').forEach(function(chip){
+    document.querySelectorAll('.tilgung-extra-chip[data-extra-value]').forEach(function(chip){
       chip.addEventListener('click', function(){
         setTilgungExtra(parseFloat(chip.dataset.extraValue));
+        renderTilgungsplan();
+      });
+    });
+    document.querySelectorAll('.tilgung-extra-chip[data-carryover-value]').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        setTilgungCarryoverPct(parseInt(chip.dataset.carryoverValue,10));
         renderTilgungsplan();
       });
     });
@@ -3559,11 +3595,12 @@ var nativeStorage = {
     sections.push(['# TABLE:settings', 'amount', csvEscape(state.potCarryover||0)].join('\n'));
     sections.push([
       '# TABLE:appSettings',
-      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth',
+      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth,tilgungCarryoverPct',
       [
         csvEscape(JSON.stringify(tabVisibility)),
         csvEscape(getTilgungExtra()),
-        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })())
+        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })()),
+        csvEscape(getTilgungCarryoverPct())
       ].join(',')
     ].join('\n'));
     return sections.join('\n\n');
@@ -3622,6 +3659,8 @@ var nativeStorage = {
         var parsedExtra = parseFloat(appSettingsObj.tilgungExtra);
         if(!isNaN(parsedExtra) && parsedExtra >= 0) result.tilgungExtra = parsedExtra;
         if(appSettingsObj.tilgungCurrentMonth) result.tilgungCurrentMonth = appSettingsObj.tilgungCurrentMonth;
+        var parsedPct = parseInt(appSettingsObj.tilgungCarryoverPct, 10);
+        if(!isNaN(parsedPct) && parsedPct >= 0 && parsedPct <= 100) result.tilgungCarryoverPct = parsedPct;
         return;
       }
       if(!currentTable || !result.hasOwnProperty(currentTable)) return;
@@ -3862,6 +3901,9 @@ var nativeStorage = {
     }
     if(parsed.tilgungCurrentMonth){
       try{ nativeStorage.setItem(TILGUNG_CURRENT_MONTH_KEY, parsed.tilgungCurrentMonth); }catch(e){}
+    }
+    if(typeof parsed.tilgungCarryoverPct === 'number'){
+      setTilgungCarryoverPct(parsed.tilgungCarryoverPct);
     }
     saveState();
     renderAll();
