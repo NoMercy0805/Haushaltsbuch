@@ -297,96 +297,6 @@
   .reset-link{display:block;text-align:center;margin-top:28px;font-size:14px;color:var(--ink-soft);text-decoration:none;cursor:pointer;background:none;border:none;padding:10px;font-weight:600;}
   .settings-btn{display:block;width:100%;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;margin-bottom:20px;}
   .settings-btn:hover{background:#0F56D6;}
-  /* ---------- iOS-Design (alternative Design-Variante zur Standard-Ansicht) ---------- */
-  html[data-style="ios"] body{
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",Roboto,Helvetica,Arial,sans-serif;
-  }
-  html[data-style="ios"] h1,
-  html[data-style="ios"] h2.section-title,
-  html[data-style="ios"] .settings-panel-head h2,
-  html[data-style="ios"] .settings-nav-title,
-  html[data-style="ios"] .loan-name,
-  html[data-style="ios"] .vc-name{
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Roboto,Helvetica,Arial,sans-serif;
-  }
-  html[data-style="ios"] .summary-card,
-  html[data-style="ios"] .vc-card,
-  html[data-style="ios"] .loan-card,
-  html[data-style="ios"] .fristen-card,
-  html[data-style="ios"] .time-card,
-  html[data-style="ios"] .settings-panel,
-  html[data-style="ios"] .mini-hero-card{border-radius:14px;}
-  html[data-style="ios"] .hero-card{border-radius:16px;}
-  html[data-style="ios"] .section-toggle-row{border-radius:14px;}
-
-  html[data-style="ios"] .toggle-switch{width:51px;height:31px;}
-  html[data-style="ios"] .toggle-switch .track{border-radius:999px;}
-  html[data-style="ios"] .toggle-switch input:checked ~ .track{background:#34C759;}
-  html[data-style="ios"] .toggle-switch .thumb{width:27px;height:27px;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.35);}
-  html[data-style="ios"] .toggle-switch input:checked ~ .thumb{transform:translateX(20px);}
-
-  html[data-style="ios"] .settings-btn{
-    background:none;color:var(--primary);border-radius:0;padding:14px 0;
-    font-family:-apple-system,BlinkMacSystemFont,Roboto,sans-serif;font-weight:600;font-size:17px;
-    box-shadow:none;text-align:center;
-  }
-  html[data-style="ios"] .settings-btn.danger{background:none;color:#FF3B30;}
-  html[data-style="ios"] .theme-option{border-radius:10px;}
-
-  html[data-style="ios"] nav.tabs{border-radius:20px;background:var(--surface);box-shadow:0 4px 16px rgba(0,0,0,0.15);}
-  html[data-style="ios"] nav.tabs button{border-radius:14px;}
-  html[data-style="ios"] nav.tabs button.active{background:none;box-shadow:none;color:var(--primary);}
-  html[data-style="ios"] nav.tabs button.active svg{stroke-width:2.6;}
-
-  html[data-style="ios"] .settings-icon-btn,
-  html[data-style="ios"] .fab-add{border-radius:50%;}
-  html[data-style="ios"] .settings-close-btn,
-  html[data-style="ios"] .settings-back-btn{border-radius:50%;}
-
-  /* Echtes iOS-Systemblau statt App-Blau */
-  html[data-style="ios"]{
-    --primary:#007AFF;
-    --primary-a:rgba(0,122,255,0.90);
-  }
-  html[data-style="ios"][data-theme="dark"]{
-    --primary:#0A84FF;
-    --primary-a:rgba(10,132,255,0.90);
-  }
-
-  /* Deutlich flachere Karten statt schwebender Schatten */
-  html[data-style="ios"] .summary-card,
-  html[data-style="ios"] .vc-card,
-  html[data-style="ios"] .loan-card,
-  html[data-style="ios"] .fristen-card,
-  html[data-style="ios"] .time-card,
-  html[data-style="ios"] .mini-hero-card,
-  html[data-style="ios"] .settings-panel,
-  html[data-style="ios"] .hero-card{box-shadow:none;}
-  html[data-style="ios"] .section-toggle-row,
-  html[data-style="ios"] .settings-nav-row{box-shadow:none;border-radius:8px;}
-  html[data-style="ios"] nav.tabs{box-shadow:none;border-top:1px solid var(--rule);}
-
-  /* Grosse, fette Titel wie bei iOS-Navigationsleisten */
-  html[data-style="ios"] h2.section-title{
-    font-size:22px;font-weight:800;letter-spacing:-0.02em;
-  }
-  html[data-style="ios"] .settings-panel-head h2{
-    font-size:19px;font-weight:800;letter-spacing:-0.01em;
-  }
-
-  /* Icons runder und etwas kraeftiger, mit farbigen Kachel-Hintergruenden
-     wie bei der Apple-eigenen Einstellungen-App, statt reiner Umriss-Symbole. */
-  html[data-style="ios"] svg{stroke-linecap:round;stroke-linejoin:round;}
-  html[data-style="ios"] .settings-nav-icon svg,
-  html[data-style="ios"] .section-toggle-icon svg,
-  html[data-style="ios"] .mini-hero-card svg,
-  html[data-style="ios"] nav.tabs button svg{stroke-width:2.3;}
-  html[data-style="ios"] .settings-nav-icon{
-    background:var(--primary);color:#fff;border-radius:8px;width:32px;height:32px;
-  }
-  html[data-style="ios"] .section-toggle-icon{
-    background:var(--primary);color:#fff;border-radius:8px;
-  }
   .settings-btn.danger:hover{background:#FBD8D0;}
 
   .theme-select-row{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:4px;}
@@ -889,13 +799,6 @@
           <button type="button" class="theme-option" data-theme-choice="system">System</button>
         </div>
       </div>
-      <p class="chooser-group-label" style="margin-top:16px;">Design-Stil</p>
-      <div class="summary-card">
-        <div class="theme-select-row">
-          <button type="button" class="theme-option" data-style-choice="samsung">Samsung</button>
-          <button type="button" class="theme-option" data-style-choice="ios">iOS</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1235,50 +1138,6 @@ var nativeStorage = {
     buttons.forEach(function(btn){
       btn.addEventListener('click', function(){
         setThemeChoice(btn.dataset.themeChoice);
-      });
-    });
-  }
-
-  /* ---------- Design-Stil (Samsung/Material vs. iOS-Optik) ---------- */
-  var STYLE_KEY = 'household-design-style';
-
-  function getStyleChoice(){
-    try{
-      var v = nativeStorage.getItem(STYLE_KEY);
-      if(v === 'samsung' || v === 'ios') return v;
-    }catch(e){}
-    return 'samsung';
-  }
-
-  function applyDesignStyle(style){
-    if(style === 'ios'){
-      document.documentElement.setAttribute('data-style', 'ios');
-    } else {
-      document.documentElement.removeAttribute('data-style');
-    }
-  }
-
-  function setStyleChoice(style){
-    try{ nativeStorage.setItem(STYLE_KEY, style); }catch(e){}
-    applyDesignStyle(style);
-    updateStyleOptionButtons(style);
-  }
-
-  function updateStyleOptionButtons(style){
-    document.querySelectorAll('.theme-option[data-style-choice]').forEach(function(btn){
-      btn.classList.toggle('active', btn.dataset.styleChoice === style);
-    });
-  }
-
-  applyDesignStyle(getStyleChoice());
-
-  function setupStyleToggle(){
-    var buttons = document.querySelectorAll('.theme-option[data-style-choice]');
-    if(!buttons.length) return;
-    updateStyleOptionButtons(getStyleChoice());
-    buttons.forEach(function(btn){
-      btn.addEventListener('click', function(){
-        setStyleChoice(btn.dataset.styleChoice);
       });
     });
   }
@@ -4178,7 +4037,6 @@ var nativeStorage = {
     setupReset();
     setupBackup();
     setupThemeToggle();
-    setupStyleToggle();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardShrink();
