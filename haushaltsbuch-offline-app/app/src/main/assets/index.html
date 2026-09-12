@@ -2339,18 +2339,33 @@ var nativeStorage = {
   // ueber die gesamte Laufzeit gleich - werden Kredite abbezahlt, fliesst ihre
   // freigewordene Mindestrate automatisch als zusaetzliche Tilgung in den
   // jeweils kleinsten noch offenen Kredit, notfalls kaskadierend im selben Monat.
-  function simulateSnowball(extraPerMonth, maxMonths){
+  function simulateSnowball(extraPerMonth, maxMonths, carryoverPct){
+    carryoverPct = (typeof carryoverPct === 'number' && carryoverPct >= 0 && carryoverPct <= 100) ? carryoverPct : getTilgungCarryoverPct();
     var loans = state.loans.filter(function(l){ return l.remainingBalance > 0; })
-                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment}; });
+                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment, _counted:false}; });
     if(loans.length === 0) return [];
-    var totalBudget = loans.reduce(function(s,l){ return s+l.monthlyPayment; }, 0) + extraPerMonth;
-    if(totalBudget <= 0) return [];
+    // currentBudget ist der insgesamt pro Monat verfuegbare Betrag - wird ein
+    // Kredit abbezahlt, fliesst nur der eingestellte Prozentsatz seiner Rate
+    // weiter in dieses Budget, der Rest "verschwindet" (wird nicht mehr zur
+    // Tilgung genutzt), genau wie es in der Realitaet passieren wuerde.
+    var currentBudget = loans.reduce(function(s,l){ return s+l.monthlyPayment; }, 0) + extraPerMonth;
+    if(currentBudget <= 0) return [];
     var months = [];
     var i = 0;
     var safetyLimit = maxMonths || 600;
+
+    function markIfPaidOff(loan){
+      if(loan.balance <= 0.005 && !loan._counted){
+        loan._counted = true;
+        var lost = Math.round(loan.monthlyPayment * (100-carryoverPct)/100 * 100)/100;
+        currentBudget = Math.round((currentBudget - lost)*100)/100;
+      }
+    }
+
     while(loans.some(function(l){ return l.balance > 0.005; }) && i < safetyLimit){
       i++;
-      var budget = totalBudget;
+      var startBudget = currentBudget;
+      var budget = startBudget;
       var detail = [];
       loans.forEach(function(l){
         if(l.balance <= 0.005) return;
@@ -2358,6 +2373,7 @@ var nativeStorage = {
         l.balance = Math.round((l.balance - pay)*100)/100;
         budget = Math.round((budget - pay)*100)/100;
         detail.push({id:l.id, name:l.name, rate:pay, extra:0, remainingAfter:l.balance});
+        markIfPaidOff(l);
       });
       while(budget > 0.005 && loans.some(function(l){ return l.balance > 0.005; })){
         var target = loans.filter(function(l){ return l.balance > 0.005; })
@@ -2369,13 +2385,14 @@ var nativeStorage = {
         if(!entry){ entry = {id:target.id, name:target.name, rate:0, extra:0, remainingAfter:target.balance}; detail.push(entry); }
         entry.extra += pay;
         entry.remainingAfter = target.balance;
+        markIfPaidOff(target);
       }
       var totalRemaining = loans.reduce(function(s,l){ return s+l.balance; }, 0);
       var refMonth = getTilgungCurrentMonth();
       var monthDate = new Date(refMonth.year, refMonth.month + (i-1), 1);
       months.push({
         month:i, monthLabel: monthAbbrevLabel(monthDate.getFullYear(), monthDate.getMonth()),
-        detail:detail, totalPaid: Math.round((totalBudget-budget)*100)/100,
+        detail:detail, totalPaid: Math.round((startBudget-budget)*100)/100,
         totalRemaining: Math.round(totalRemaining*100)/100
       });
     }
