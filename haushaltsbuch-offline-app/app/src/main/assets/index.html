@@ -1195,30 +1195,46 @@ var nativeStorage = {
   // Beim Fokussieren eines Felds scrollt Android manchmal, bevor die
   // Tastatur fertig eingeblendet ist, wodurch das Feld zu weit oben landet.
   // Nach kurzer Verzoegerung (Tastatur ist dann sichtbar) nochmal korrigieren.
-  function setupKeyboardAwareScroll(){
+  // Erkennt, ob die Bildschirmtastatur offen ist, ueber mehrere Wege
+  // gleichzeitig (window-resize, visualViewport-resize, sowie direkt nach
+  // dem Fokussieren eines Felds) - damit es auch funktioniert, falls eine
+  // der beiden Programmierschnittstellen im WebView nicht zuverlaessig
+  // feuert. Blendet die Tab-Leiste aus und schiebt das fokussierte Feld
+  // naeher an die Tastatur heran.
+  function setupKeyboardAware(){
+    var initialHeight = window.innerHeight;
+    var nav = document.querySelector('nav.tabs');
+    var keyboardOpen = false;
+    var focusedEl = null;
+
+    function checkKeyboard(){
+      var currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      var isOpen = (initialHeight - currentHeight) > 120;
+      if(isOpen !== keyboardOpen){
+        keyboardOpen = isOpen;
+        if(nav) nav.classList.toggle('keyboard-hidden', isOpen);
+      }
+      if(isOpen && focusedEl && document.activeElement === focusedEl){
+        focusedEl.scrollIntoView({block:'end', behavior:'smooth'});
+      }
+    }
+
+    window.addEventListener('resize', checkKeyboard);
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize', checkKeyboard);
+    }
+
     document.addEventListener('focusin', function(e){
       var el = e.target;
       if(!el.matches || !el.matches('input, select, textarea')) return;
-      setTimeout(function(){
-        if(document.activeElement === el){
-          el.scrollIntoView({block:'end', behavior:'smooth'});
-        }
-      }, 350);
+      focusedEl = el;
+      setTimeout(checkKeyboard, 300);
+      setTimeout(checkKeyboard, 600);
     });
-  }
-
-  // Blendet die Tab-Leiste unten aus, solange die Bildschirmtastatur offen
-  // ist (erkannt ueber die tatsaechlich sichtbare Fensterhoehe), damit sie
-  // nicht ueberdeckt wird oder unnoetig Platz wegnimmt.
-  function setupKeyboardAwareTabs(){
-    if(!window.visualViewport) return;
-    var nav = document.querySelector('nav.tabs');
-    if(!nav) return;
-    function onResize(){
-      var shrunk = (window.innerHeight - window.visualViewport.height) > 120;
-      nav.classList.toggle('keyboard-hidden', shrunk);
-    }
-    window.visualViewport.addEventListener('resize', onResize);
+    document.addEventListener('focusout', function(){
+      focusedEl = null;
+      setTimeout(checkKeyboard, 300);
+    });
   }
 
   function setupCentInputs(){
@@ -4073,8 +4089,7 @@ var nativeStorage = {
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardShrink();
-    setupKeyboardAwareScroll();
-    setupKeyboardAwareTabs();
+    setupKeyboardAware();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
