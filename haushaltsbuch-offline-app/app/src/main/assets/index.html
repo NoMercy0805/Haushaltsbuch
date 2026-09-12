@@ -1382,7 +1382,8 @@ var nativeStorage = {
     return 'conic-gradient('+parts.join(',')+')';
   }
 
-  function renderComparisonRing(svgId, pctId, legendId, segments){
+  function renderComparisonRing(svgId, pctId, legendId, segments, backgroundColor){
+    backgroundColor = backgroundColor || 'var(--rule)';
     var svg = document.getElementById(svgId);
     var pctEl = document.getElementById(pctId);
     var legendEl = document.getElementById(legendId);
@@ -1397,7 +1398,7 @@ var nativeStorage = {
     var circumference = 2*Math.PI*50;
     var offset = circumference * (1 - mainPct/100);
     svg.innerHTML =
-      '<circle cx="60" cy="60" r="50" fill="none" stroke="var(--rule)" stroke-width="14"/>'+
+      '<circle cx="60" cy="60" r="50" fill="none" stroke="'+backgroundColor+'" stroke-width="14"/>'+
       '<circle cx="60" cy="60" r="50" fill="none" stroke="'+segments[0].color+'" stroke-width="14" '+
         'stroke-dasharray="'+circumference.toFixed(1)+'" stroke-dashoffset="'+offset.toFixed(1)+'" '+
         'stroke-linecap="round" transform="rotate(-90 60 60)"/>';
@@ -1423,7 +1424,7 @@ var nativeStorage = {
     renderComparisonRing('incomeExpenseRing', 'incomeExpensePct', 'incomeExpensePieLegend', [
       {label:'Einnahmen', value:incomeTotal, color:'var(--savings)'},
       {label:'Ausgaben', value:expenseTotal, color:'var(--expense)'}
-    ]);
+    ], 'var(--expense)');
 
     var totalOriginal = sum(state.loans,'originalAmount');
     var totalRemaining = sum(state.loans,'remainingBalance');
