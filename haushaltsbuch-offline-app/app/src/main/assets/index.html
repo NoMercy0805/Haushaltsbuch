@@ -2499,7 +2499,10 @@ var nativeStorage = {
         payoffList.forEach(function(p){
           var py = Math.floor(p.month/12), pm = p.month % 12;
           var untilLabel = (py>0 ? py+(py===1?' Jahr':' Jahre') : '') + (py>0 && pm>0 ? ', ' : '') + (pm>0 ? pm+(pm===1?' Monat':' Monate') : (py===0?'diesen Monat':''));
-          perLoanHtml += '<div class="summary-row"><span>'+escapeHtml(p.name)+'</span><span class="val">in '+untilLabel+' · '+p.monthLabel+'</span></div>';
+          perLoanHtml += '<div style="padding:10px 0;border-bottom:1px solid var(--rule);">'+
+                            '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+escapeHtml(p.name)+'</div>'+
+                            '<div style="font-size:13.5px;color:var(--ink-soft);">in '+untilLabel+' · '+p.monthLabel+'</div>'+
+                          '</div>';
         });
         perLoanHtml += '</div>';
         perLoanEl.innerHTML = perLoanHtml;
