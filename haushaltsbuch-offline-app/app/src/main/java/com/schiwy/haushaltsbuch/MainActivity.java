@@ -54,6 +54,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         webView = new WebView(this);
+        webView.setFitsSystemWindows(true);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
