@@ -1213,9 +1213,9 @@ var nativeStorage = {
       if(isOpen !== keyboardOpen){
         keyboardOpen = isOpen;
         if(nav) nav.classList.toggle('keyboard-hidden', isOpen);
-      }
-      if(isOpen && focusedEl && document.activeElement === focusedEl){
-        focusedEl.scrollIntoView({block:'end', behavior:'smooth'});
+        if(isOpen && focusedEl && document.activeElement === focusedEl){
+          focusedEl.scrollIntoView({block:'end', behavior:'smooth'});
+        }
       }
     }
 
