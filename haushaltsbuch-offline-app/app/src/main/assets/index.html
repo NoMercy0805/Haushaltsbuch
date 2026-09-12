@@ -361,6 +361,8 @@
   .theme-select-row{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:4px;}
   .tilgung-extra-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:9px 0;font-size:13px;font-family:var(--sans);cursor:pointer;}
   .tilgung-extra-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
+  .loan-carryover-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:6px 0;font-size:11.5px;font-family:var(--sans);cursor:pointer;}
+  .loan-carryover-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
   .tab-visibility-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;font-size:15px;color:var(--ink);}
   .tab-visibility-row:not(:last-child){border-bottom:1px solid var(--rule);}
   .toggle-switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;}
@@ -595,15 +597,6 @@
             <button type="button" class="tilgung-extra-chip" data-extra-value="100">100 €</button>
             <button type="button" class="tilgung-extra-chip" data-extra-value="150">150 €</button>
             <button type="button" class="tilgung-extra-chip" data-extra-value="200">200 €</button>
-          </div>
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);">
-            <div style="color:var(--ink-soft);font-size:13px;margin-bottom:8px;">Anteil der freiwerdenden Rate bei Abbezahlung</div>
-            <div style="display:flex;gap:8px;" id="tilgungCarryoverChips">
-              <button type="button" class="tilgung-extra-chip" data-carryover-value="25">25%</button>
-              <button type="button" class="tilgung-extra-chip" data-carryover-value="50">50%</button>
-              <button type="button" class="tilgung-extra-chip" data-carryover-value="75">75%</button>
-              <button type="button" class="tilgung-extra-chip" data-carryover-value="100">100%</button>
-            </div>
           </div>
         </div>
 
@@ -2294,19 +2287,6 @@ var nativeStorage = {
     try{ nativeStorage.setItem(TILGUNG_EXTRA_KEY, String(v)); }catch(e){}
   }
 
-  var TILGUNG_CARRYOVER_PCT_KEY = 'household-tilgung-carryover-pct';
-
-  function getTilgungCarryoverPct(){
-    try{
-      var v = parseInt(nativeStorage.getItem(TILGUNG_CARRYOVER_PCT_KEY), 10);
-      if(!isNaN(v) && v >= 0 && v <= 100) return v;
-    }catch(e){}
-    return 100;
-  }
-  function setTilgungCarryoverPct(v){
-    try{ nativeStorage.setItem(TILGUNG_CARRYOVER_PCT_KEY, String(v)); }catch(e){}
-  }
-
   // Der "aktuelle Monat" im Tilgungsplan zaehlt nur weiter, wenn er per
   // Checkbox bestaetigt wurde - ist er noch nicht abgehakt und die echte Zeit
   // laeuft weiter, rutscht er automatisch auf den echten aktuellen Monat nach
@@ -2339,15 +2319,20 @@ var nativeStorage = {
   // ueber die gesamte Laufzeit gleich - werden Kredite abbezahlt, fliesst ihre
   // freigewordene Mindestrate automatisch als zusaetzliche Tilgung in den
   // jeweils kleinsten noch offenen Kredit, notfalls kaskadierend im selben Monat.
-  function simulateSnowball(extraPerMonth, maxMonths, carryoverPct){
-    carryoverPct = (typeof carryoverPct === 'number' && carryoverPct >= 0 && carryoverPct <= 100) ? carryoverPct : getTilgungCarryoverPct();
+  function getLoanCarryoverPct(loan){
+    var v = loan && loan.carryoverPct;
+    return (typeof v === 'number' && v >= 0 && v <= 100) ? v : 100;
+  }
+
+  function simulateSnowball(extraPerMonth, maxMonths){
     var loans = state.loans.filter(function(l){ return l.remainingBalance > 0; })
-                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment, _counted:false}; });
+                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment, carryoverPct:getLoanCarryoverPct(l), _counted:false}; });
     if(loans.length === 0) return [];
     // currentBudget ist der insgesamt pro Monat verfuegbare Betrag - wird ein
-    // Kredit abbezahlt, fliesst nur der eingestellte Prozentsatz seiner Rate
-    // weiter in dieses Budget, der Rest "verschwindet" (wird nicht mehr zur
-    // Tilgung genutzt), genau wie es in der Realitaet passieren wuerde.
+    // Kredit abbezahlt, fliesst nur der bei diesem Kredit eingestellte
+    // Prozentsatz seiner Rate weiter in dieses Budget, der Rest "verschwindet"
+    // (wird nicht mehr zur Tilgung genutzt), genau wie es in der Realitaet
+    // passieren wuerde.
     var currentBudget = loans.reduce(function(s,l){ return s+l.monthlyPayment; }, 0) + extraPerMonth;
     if(currentBudget <= 0) return [];
     var months = [];
@@ -2357,7 +2342,7 @@ var nativeStorage = {
     function markIfPaidOff(loan){
       if(loan.balance <= 0.005 && !loan._counted){
         loan._counted = true;
-        var lost = Math.round(loan.monthlyPayment * (100-carryoverPct)/100 * 100)/100;
+        var lost = Math.round(loan.monthlyPayment * (100-loan.carryoverPct)/100 * 100)/100;
         currentBudget = Math.round((currentBudget - lost)*100)/100;
       }
     }
@@ -2442,10 +2427,6 @@ var nativeStorage = {
     document.querySelectorAll('.tilgung-extra-chip[data-extra-value]').forEach(function(chip){
       chip.classList.toggle('active', parseFloat(chip.dataset.extraValue) === extra);
     });
-    var carryoverPct = getTilgungCarryoverPct();
-    document.querySelectorAll('.tilgung-extra-chip[data-carryover-value]').forEach(function(chip){
-      chip.classList.toggle('active', parseInt(chip.dataset.carryoverValue,10) === carryoverPct);
-    });
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var summaryEl = document.getElementById('tilgungSummary');
     var listEl = document.getElementById('tilgungList');
@@ -2496,20 +2477,26 @@ var nativeStorage = {
         perLoanEl.innerHTML = '';
       } else {
         var perLoanHtml = '<h2 class="section-title" style="margin-top:20px;">Wann welcher Kredit fertig ist</h2><div class="summary-card">';
-        var carryoverPctForList = getTilgungCarryoverPct();
         payoffList.forEach(function(p){
           var py = Math.floor(p.month/12), pm = p.month % 12;
           var untilLabel = (py>0 ? py+(py===1?' Jahr':' Jahre') : '') + (py>0 && pm>0 ? ', ' : '') + (pm>0 ? pm+(pm===1?' Monat':' Monate') : (py===0?'diesen Monat':''));
           var loanForFreed = state.loans.filter(function(l){ return l.id === p.id; })[0];
-          var freedLine = '';
+          var freedLine = '', pctChipsLine = '';
           if(loanForFreed && loanForFreed.monthlyPayment > 0){
-            var freedAmount = roundCents(loanForFreed.monthlyPayment * carryoverPctForList / 100);
-            freedLine = '<div style="font-size:13px;color:var(--savings);margin-top:2px;">+'+fmtEUR(freedAmount)+' zum Extra-Betrag'+(carryoverPctForList<100?' ('+carryoverPctForList+'%)':'')+'</div>';
+            var loanPct = getLoanCarryoverPct(loanForFreed);
+            var freedAmount = roundCents(loanForFreed.monthlyPayment * loanPct / 100);
+            freedLine = '<div style="font-size:13px;color:var(--savings);margin-top:2px;">+'+fmtEUR(freedAmount)+' zum Extra-Betrag</div>';
+            pctChipsLine = '<div class="loan-carryover-chips" data-loan-id="'+loanForFreed.id+'" style="display:flex;gap:6px;margin-top:8px;">'+
+              [0,25,50,75,100].map(function(v){
+                return '<button type="button" class="loan-carryover-chip'+(v===loanPct?' active':'')+'" data-carryover-value="'+v+'">'+v+'%</button>';
+              }).join('')+
+              '</div>';
           }
           perLoanHtml += '<div style="padding:10px 0;border-bottom:1px solid var(--rule);">'+
                             '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px;">'+escapeHtml(p.name)+'</div>'+
                             '<div style="font-size:13.5px;color:var(--ink-soft);">in '+untilLabel+' · '+p.monthLabel+'</div>'+
                             freedLine+
+                            pctChipsLine+
                           '</div>';
         });
         perLoanHtml += '</div>';
@@ -3410,7 +3397,7 @@ var nativeStorage = {
 
   async function offerAddFreedRateToTilgung(loan){
     if(!loan || loan.monthlyPayment <= 0) return;
-    var pct = getTilgungCarryoverPct();
+    var pct = getLoanCarryoverPct(loan);
     var freedAmount = roundCents(loan.monthlyPayment * pct / 100);
     if(freedAmount <= 0) return;
     var currentExtra = getTilgungExtra();
@@ -3427,6 +3414,18 @@ var nativeStorage = {
   }
 
   function setupTilgungsplan(){
+    document.addEventListener('click', function(e){
+      var chip = e.target.closest('.loan-carryover-chip');
+      if(!chip) return;
+      var wrap = chip.closest('.loan-carryover-chips');
+      if(!wrap) return;
+      var loanId = wrap.dataset.loanId;
+      var loan = state.loans.filter(function(l){ return l.id === loanId; })[0];
+      if(!loan) return;
+      loan.carryoverPct = parseInt(chip.dataset.carryoverValue, 10);
+      saveState();
+      renderTilgungsplan();
+    });
     var input = document.getElementById('tilgungExtraInput');
     if(!input) return;
     input.addEventListener('change', function(){
@@ -3437,12 +3436,6 @@ var nativeStorage = {
     document.querySelectorAll('.tilgung-extra-chip[data-extra-value]').forEach(function(chip){
       chip.addEventListener('click', function(){
         setTilgungExtra(parseFloat(chip.dataset.extraValue));
-        renderTilgungsplan();
-      });
-    });
-    document.querySelectorAll('.tilgung-extra-chip[data-carryover-value]').forEach(function(chip){
-      chip.addEventListener('click', function(){
-        setTilgungCarryoverPct(parseInt(chip.dataset.carryoverValue,10));
         renderTilgungsplan();
       });
     });
@@ -3466,7 +3459,8 @@ var nativeStorage = {
       original = isNaN(original) ? 0 : original;
       state.loans.push({
         id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly,
-        totalTermMonths: (!isNaN(termMonths) && termMonths > 0) ? termMonths : null
+        totalTermMonths: (!isNaN(termMonths) && termMonths > 0) ? termMonths : null,
+        carryoverPct: 100
       });
       saveState();
       document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanMonthly').value=''; document.getElementById('loanTermMonths').value='';
@@ -3601,7 +3595,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth','dueYear']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']}
   ];
@@ -3623,12 +3617,11 @@ var nativeStorage = {
     sections.push(['# TABLE:settings', 'amount', csvEscape(state.potCarryover||0)].join('\n'));
     sections.push([
       '# TABLE:appSettings',
-      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth,tilgungCarryoverPct',
+      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth',
       [
         csvEscape(JSON.stringify(tabVisibility)),
         csvEscape(getTilgungExtra()),
-        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })()),
-        csvEscape(getTilgungCarryoverPct())
+        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })())
       ].join(',')
     ].join('\n'));
     return sections.join('\n\n');
@@ -3687,8 +3680,6 @@ var nativeStorage = {
         var parsedExtra = parseFloat(appSettingsObj.tilgungExtra);
         if(!isNaN(parsedExtra) && parsedExtra >= 0) result.tilgungExtra = parsedExtra;
         if(appSettingsObj.tilgungCurrentMonth) result.tilgungCurrentMonth = appSettingsObj.tilgungCurrentMonth;
-        var parsedPct = parseInt(appSettingsObj.tilgungCarryoverPct, 10);
-        if(!isNaN(parsedPct) && parsedPct >= 0 && parsedPct <= 100) result.tilgungCarryoverPct = parsedPct;
         return;
       }
       if(!currentTable || !result.hasOwnProperty(currentTable)) return;
@@ -3719,6 +3710,8 @@ var nativeStorage = {
         obj.monthlyPayment = parseFloat(obj.monthlyPayment) || 0;
         var parsedTerm = parseInt(obj.totalTermMonths, 10);
         obj.totalTermMonths = (!isNaN(parsedTerm) && parsedTerm > 0) ? parsedTerm : null;
+        var parsedCarryover = parseInt(obj.carryoverPct, 10);
+        obj.carryoverPct = (!isNaN(parsedCarryover) && parsedCarryover >= 0 && parsedCarryover <= 100) ? parsedCarryover : 100;
       }
       result[currentTable].push(obj);
     });
@@ -3929,9 +3922,6 @@ var nativeStorage = {
     }
     if(parsed.tilgungCurrentMonth){
       try{ nativeStorage.setItem(TILGUNG_CURRENT_MONTH_KEY, parsed.tilgungCurrentMonth); }catch(e){}
-    }
-    if(typeof parsed.tilgungCarryoverPct === 'number'){
-      setTilgungCarryoverPct(parsed.tilgungCarryoverPct);
     }
     saveState();
     renderAll();
