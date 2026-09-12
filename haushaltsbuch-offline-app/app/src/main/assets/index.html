@@ -148,7 +148,31 @@
   .hero-card.hero-red{background:var(--hero-red-grad);}
   .hero-card.hero-purple{background:var(--hero-purple-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
-  .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);}
+  .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transition:font-size .2s ease, margin-bottom .2s ease;}
+  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
+    transition:padding .2s ease;
+  }
+  #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed{
+    padding-top:10px;padding-bottom:10px;
+  }
+  #invoiceSummary.collapsed .hero-card-label,
+  #potSummary.collapsed .hero-card-label,
+  #loanSummary.collapsed .hero-card-label,
+  #tilgungSummary.collapsed .hero-card-label{
+    display:none;
+  }
+  #invoiceSummary.collapsed .hero-card-sub-row,
+  #potSummary.collapsed .hero-card-sub-row,
+  #loanSummary.collapsed .hero-card-sub-row,
+  #tilgungSummary.collapsed .hero-card-sub-row{
+    display:none;
+  }
+  #invoiceSummary.collapsed .hero-card-value,
+  #potSummary.collapsed .hero-card-value,
+  #loanSummary.collapsed .hero-card-value,
+  #tilgungSummary.collapsed .hero-card-value{
+    font-size:19px;margin-bottom:0;
+  }
   .hero-card-sub-row{display:flex;gap:18px;}
   .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
   .hero-card-sub-value{font-size:14px;font-weight:700;color:var(--ink);}
@@ -4151,9 +4175,26 @@ var nativeStorage = {
     setupStyleToggle();
     setupCardExpandToggle();
     setupCentInputs();
+    setupHeroCardShrink();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
+  }
+
+  function setupHeroCardShrink(){
+    var stickyIds = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
+    var threshold = 36;
+    var collapsed = false;
+    function onScroll(){
+      var isCollapsed = window.scrollY > threshold;
+      if(isCollapsed === collapsed) return;
+      collapsed = isCollapsed;
+      stickyIds.forEach(function(id){
+        var el = document.getElementById(id);
+        if(el) el.classList.toggle('collapsed', collapsed);
+      });
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
   }
 
   init();
