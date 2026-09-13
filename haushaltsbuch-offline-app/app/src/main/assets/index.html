@@ -1852,8 +1852,8 @@ var nativeStorage = {
       if(editing.invoice === inv.id){
         html += '<div class="edit-row" data-id="'+inv.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(inv.name)+'" placeholder="Bezeichnung">'+
-                  '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(inv.amount*100))+'" placeholder="Betrag (€)">'+
-                  '<input type="date" class="edit-duedate" value="'+(inv.dueDate||'')+'">'+
+                  '<div><label class="edit-field-label">Betrag</label><input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(inv.amount*100))+'" placeholder="Betrag (€)"></div>'+
+                  '<div><label class="edit-field-label">Fälligkeitsdatum</label><input type="date" class="edit-duedate" value="'+(inv.dueDate||'')+'"></div>'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-invoice">Abbrechen</button>'+
                     '<button type="button" class="btn-save" data-action="save-edit-invoice" data-id="'+inv.id+'">Speichern</button>'+
