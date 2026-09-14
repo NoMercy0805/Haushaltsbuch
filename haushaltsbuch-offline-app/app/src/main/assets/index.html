@@ -965,6 +965,17 @@
     </div>
   </div>
 
+  <div id="whatsNewOverlay" class="settings-overlay">
+    <div class="settings-panel" style="text-align:left;">
+      <div class="settings-panel-head" style="margin-bottom:14px;">
+        <h2>🎉 Neu in dieser Version</h2>
+        <button type="button" class="settings-close-btn" id="whatsNewCloseBtn">✕</button>
+      </div>
+      <ul id="whatsNewList" style="margin:0 0 20px;padding:0 0 0 20px;color:var(--ink);font-size:15px;line-height:1.7;"></ul>
+      <button type="button" class="settings-btn" id="whatsNewOkBtn" style="margin-bottom:0;">Verstanden</button>
+    </div>
+  </div>
+
   <div id="confirmOverlay" class="confirm-overlay">
     <div class="confirm-card">
       <div class="confirm-icon" id="confirmIcon">🗑️</div>
@@ -3941,6 +3952,48 @@ var nativeStorage = {
   }
   var pendingFreshRestoreCheck = false;
 
+  /* ---------- "Neu in dieser Version"-Hinweis nach einem Update ---------- */
+  // Diese Versions-Kennung und Liste bei kuenftigen spuerbaren Aenderungen
+  // von Hand aktualisieren - zeigt sich nur, wenn sich die Kennung seit dem
+  // letzten Start geaendert hat (nicht bei der allerersten Installation).
+  var APP_VERSION = '2026.09.14';
+  var WHATS_NEW_KEY = 'household-last-seen-version';
+  var WHATS_NEW_ITEMS = [
+    'Neuer Tilgungsplan-Reiter: Schneeball-Methode mit frei wählbarem Extra-Betrag und individueller Prozent-Auswahl pro Kredit',
+    'Beträge eintippen wie bei der Sparkasse – die letzten zwei Ziffern sind automatisch die Cent',
+    'Farbige Übersichtskarten in jedem Reiter, ein-/ausklappbar per Antippen',
+    'Diagramme überarbeitet: Ringe statt Kreisdiagramme, Balken mit Farbverlauf',
+    'Bearbeiten-Formulare zeigen jetzt klare Beschriftungen bei jedem Feld',
+    'Tab-Leiste blendet sich automatisch aus, solange die Tastatur offen ist'
+  ];
+
+  function showWhatsNewDialog(){
+    var overlay = document.getElementById('whatsNewOverlay');
+    var list = document.getElementById('whatsNewList');
+    if(!overlay || !list) return;
+    list.innerHTML = WHATS_NEW_ITEMS.map(function(item){
+      return '<li style="margin-bottom:8px;">'+escapeHtml(item)+'</li>';
+    }).join('');
+    overlay.classList.add('open');
+    function close(){ overlay.classList.remove('open'); }
+    document.getElementById('whatsNewOkBtn').onclick = close;
+    document.getElementById('whatsNewCloseBtn').onclick = close;
+  }
+
+  function maybeShowWhatsNew(){
+    var seen = null;
+    try{ seen = nativeStorage.getItem(WHATS_NEW_KEY); }catch(e){}
+    if(seen === null || seen === ''){
+      // Erste Installation - nur merken, nichts anzeigen.
+      try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
+      return;
+    }
+    if(seen !== APP_VERSION){
+      showWhatsNewDialog();
+      try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
+    }
+  }
+
   async function maybeOfferFreshRestore(){
     if(!autoBackupAvailable()) return;
     var alreadyPrompted = false;
@@ -4100,6 +4153,7 @@ var nativeStorage = {
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
+    maybeShowWhatsNew();
   }
 
   function toggleHeroCard(id){
