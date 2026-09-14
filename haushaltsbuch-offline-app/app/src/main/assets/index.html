@@ -153,6 +153,7 @@
   #heroCard{transition:opacity .2s ease, transform .2s ease;}
   #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
     transition:padding .2s ease;
+    cursor:pointer;
   }
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
@@ -4106,10 +4107,11 @@ var nativeStorage = {
     if(el) el.classList.toggle('collapsed');
   }
   function setupHeroCardToggle(){
+    var ids = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
     document.addEventListener('click', function(e){
-      var btn = e.target.closest('.hero-toggle-btn');
-      if(!btn) return;
-      toggleHeroCard(btn.dataset.heroToggle);
+      var card = e.target.closest('#invoiceSummary, #potSummary, #loanSummary, #tilgungSummary');
+      if(!card || ids.indexOf(card.id) === -1) return;
+      card.classList.toggle('collapsed');
     });
   }
 
