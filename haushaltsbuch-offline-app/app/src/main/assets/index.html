@@ -184,6 +184,9 @@
     transform:scale(0.56);margin-bottom:0;
   }
   .hero-card-sub-row{display:flex;gap:18px;}
+  .hero-toggle-btn{display:flex;align-items:center;justify-content:center;margin:6px auto 0;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.14);border:none;color:inherit;cursor:pointer;}
+  .hero-toggle-btn svg{transition:transform .2s ease;}
+  .collapsed .hero-toggle-btn svg{transform:rotate(180deg);}
   .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
   .hero-card-sub-value{font-size:14px;font-weight:700;color:var(--ink);}
   .mini-hero-card{border-radius:20px;padding:16px 18px;margin-bottom:12px;}
@@ -1182,6 +1185,12 @@ var nativeStorage = {
   function todayISO(){ return new Date().toISOString().slice(0,10); }
   function fmtEUR(n){ return (n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
 
+  function heroToggleButtonHTML(id){
+    return '<button type="button" class="hero-toggle-btn" data-hero-toggle="'+id+'" aria-label="Details ein-/ausblenden">'+
+             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'+
+           '</button>';
+  }
+
   // Robuste Betrags-Erkennung fuer Eingabefelder: interpretiert deutsche Schreibweise
   // (Punkt als Tausendertrennzeichen, Komma als Dezimaltrennzeichen) korrekt,
   // damit z.B. "15.000" nicht faelschlich als 15 statt 15000 gelesen wird.
@@ -1838,7 +1847,8 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Rechnungen</div><div class="hero-card-sub-value">'+open.length+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
-      '</div>';
+      '</div>'+
+      heroToggleButtonHTML('invoiceSummary');
 
     var container = document.getElementById('invoiceList');
     var list = state.openInvoices.filter(function(i){ return !i.paid; }).slice().sort(function(a,b){
@@ -1935,7 +1945,8 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Sparbedarf/Monat</div><div class="hero-card-sub-value">'+fmtEUR(monthlyNeed)+'</div></div>'+
-      '</div>';
+      '</div>'+
+      heroToggleButtonHTML('potSummary');
 
     document.getElementById('contribDate').value = todayISO();
     var contribAmountEl = document.getElementById('contribAmount');
@@ -2394,7 +2405,8 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
-      '</div>';
+      '</div>'+
+      heroToggleButtonHTML('tilgungSummary');
 
     // Pro Kredit ermitteln, in welchem Monat er (durch die letzte Rate/Extra-
     // Zahlung dieses Plans) auf 0 faellt.
@@ -2509,7 +2521,8 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
-      '</div>';
+      '</div>'+
+      heroToggleButtonHTML('loanSummary');
 
     var container = document.getElementById('loanList');
     if(activeLoans.length === 0){
@@ -2862,7 +2875,6 @@ var nativeStorage = {
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
-    if(typeof resetHeroCardShrink === 'function') resetHeroCardShrink();
   }
 
   function setupTabs(){
@@ -4081,74 +4093,23 @@ var nativeStorage = {
     setupThemeToggle();
     setupCardExpandToggle();
     setupCentInputs();
-    setupHeroCardShrink();
+    setupHeroCardToggle();
     setupKeyboardAware();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
   }
 
-  var heroShrinkCollapsed = false;
-  var heroShrinkStuckAtScrollY = null;
-  function resetHeroCardShrink(){
-    heroShrinkCollapsed = false;
-    heroShrinkStuckAtScrollY = null;
-    ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) el.classList.remove('collapsed');
-    });
+  function toggleHeroCard(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('collapsed');
   }
-
-  function setupHeroCardShrink(){
-    var stickyIds = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
-    var ticking = false;
-    function toggleAll(state){
-      stickyIds.forEach(function(id){
-        var el = document.getElementById(id);
-        if(el) el.classList.toggle('collapsed', state);
-      });
-    }
-    function applyState(){
-      ticking = false;
-      // Waehrend ein Eingabefeld fokussiert ist (Tastatur wahrscheinlich
-      // offen), koennen Scroll-Ereignisse durch die Tastatur selbst
-      // ausgeloest werden, nicht durch absichtliches Scrollen - das darf
-      // das Ein-/Ausklappen der Karte nicht anstossen, sonst springt der
-      // Inhalt darunter (inkl. des gerade fokussierten Felds).
-      var active = document.activeElement;
-      if(active && active.matches && active.matches('input, select, textarea')){
-        return;
-      }
-      var activePanel = document.querySelector('.tab-panel.active');
-      var wrap = activePanel ? activePanel.querySelector('.hero-sticky-wrap') : null;
-      if(!wrap){ return; }
-      var stickyTop = parseFloat(getComputedStyle(wrap).top) || 0;
-      var rect = wrap.getBoundingClientRect();
-      // Erst wenn die Karte tatsaechlich "klebt" (ihr oberer Rand die feste
-      // Position erreicht hat), faengt die Messung an - das passt sich
-      // automatisch daran an, wie viel Inhalt vor der Karte im jeweiligen
-      // Reiter steht, statt einen festen Scroll-Wert fuer alle Reiter zu
-      // erzwingen.
-      var isStuck = rect.top <= stickyTop + 1;
-      if(!isStuck){
-        heroShrinkStuckAtScrollY = null;
-        if(heroShrinkCollapsed){ heroShrinkCollapsed = false; toggleAll(false); }
-        return;
-      }
-      if(heroShrinkStuckAtScrollY === null) heroShrinkStuckAtScrollY = window.scrollY;
-      var scrolledSinceStuck = window.scrollY - heroShrinkStuckAtScrollY;
-      var isCollapsed = heroShrinkCollapsed ? (scrolledSinceStuck > 6) : (scrolledSinceStuck > 30);
-      if(isCollapsed !== heroShrinkCollapsed){
-        heroShrinkCollapsed = isCollapsed;
-        toggleAll(heroShrinkCollapsed);
-      }
-    }
-    function onScroll(){
-      if(ticking) return;
-      ticking = true;
-      requestAnimationFrame(applyState);
-    }
-    window.addEventListener('scroll', onScroll, {passive:true});
+  function setupHeroCardToggle(){
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('.hero-toggle-btn');
+      if(!btn) return;
+      toggleHeroCard(btn.dataset.heroToggle);
+    });
   }
 
   init();
