@@ -184,7 +184,8 @@
     transform:scale(0.56);margin-bottom:0;
   }
   .hero-card-sub-row{display:flex;gap:18px;}
-  .hero-toggle-btn{display:flex;align-items:center;justify-content:center;margin:6px auto 0;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.14);border:none;color:inherit;cursor:pointer;}
+  .hero-toggle-btn{display:flex;align-items:center;justify-content:center;margin:6px -20px -22px;padding:8px 20px 10px;width:calc(100% + 40px);background:none;border:none;color:inherit;cursor:pointer;}
+  .hero-toggle-btn svg{opacity:0.85;}
   .hero-toggle-btn svg{transition:transform .2s ease;}
   .collapsed .hero-toggle-btn svg{transform:rotate(180deg);}
   .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
@@ -1187,7 +1188,7 @@ var nativeStorage = {
 
   function heroToggleButtonHTML(id){
     return '<button type="button" class="hero-toggle-btn" data-hero-toggle="'+id+'" aria-label="Details ein-/ausblenden">'+
-             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'+
+             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>'+
            '</button>';
   }
 
