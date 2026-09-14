@@ -26,8 +26,8 @@
     --savings-soft:#DCF5EA;
     --gold:#FF9F0A;
     --gold-soft:#FFEFD6;
-    --primary:#007AFF;
-    --primary-a:rgba(0,122,255,0.90);
+    --primary:#1268FF;
+    --primary-a:rgba(18,104,255,0.80);
     --primary-soft:#E3EDFF;
     --hero-blue-grad:linear-gradient(145deg,#CFE0FF,#B8D2FF);
     --hero-blue-text:#0D3C8C;
@@ -63,8 +63,8 @@
     --savings-soft:#1B3A2C;
     --gold:#FFB03F;
     --gold-soft:#3B2E16;
-    --primary:#0A84FF;
-    --primary-a:rgba(10,132,255,0.90);
+    --primary:#5B9CFF;
+    --primary-a:rgba(91,156,255,0.80);
     --primary-soft:#1B2A44;
     --hero-blue-grad:linear-gradient(145deg,#1B2A4A,#14203A);
     --hero-blue-text:#8FB4E8;
@@ -333,7 +333,7 @@
   .toggle-switch input{opacity:0;width:100%;height:100%;margin:0;position:absolute;inset:0;z-index:2;cursor:pointer;}
   .toggle-switch .track{position:absolute;inset:0;background:var(--rule);border-radius:999px;transition:background .15s ease;pointer-events:none;}
   .toggle-switch .thumb{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);transition:transform .15s ease;pointer-events:none;}
-  .toggle-switch input:checked ~ .track{background:#34C759;}
+  .toggle-switch input:checked ~ .track{background:var(--primary);}
   .toggle-switch input:checked ~ .thumb{transform:translateX(20px);}
   .toggle-switch input:disabled ~ .track{opacity:0.5;}
   .theme-option{flex:1;padding:11px 8px;border:none;background:none;border-radius:999px;font-family:var(--serif);font-weight:700;font-size:14px;color:var(--ink-soft);cursor:pointer;transition:background .15s,color .15s;}
@@ -3965,16 +3965,13 @@ var nativeStorage = {
   // Diese Versions-Kennung und Liste bei kuenftigen spuerbaren Aenderungen
   // von Hand aktualisieren - zeigt sich nur, wenn sich die Kennung seit dem
   // letzten Start geaendert hat (nicht bei der allerersten Installation).
-  var APP_VERSION = '2026.09.15';
+  var APP_VERSION = '2026.09.16';
   var WHATS_NEW_KEY = 'household-last-seen-version';
   var WHATS_NEW_ITEMS = [
-    'Neuer Tilgungsplan-Reiter: Schneeball-Methode mit frei wählbarem Extra-Betrag und individueller Prozent-Auswahl pro Kredit',
-    'Beträge eintippen wie bei der Sparkasse – die letzten zwei Ziffern sind automatisch die Cent',
-    'Farbige Übersichtskarten in jedem Reiter, per Pfeil oder Antippen der ganzen Karte ein-/ausklappbar',
-    'Diagramme überarbeitet: Ringe statt Kreisdiagramme, Balken mit Farbverlauf',
-    'Bearbeiten-Formulare zeigen jetzt klare Beschriftungen bei jedem Feld',
-    'Tab-Leiste blendet sich automatisch aus, solange die Tastatur offen ist',
-    'Buttons und Karten geben jetzt beim Antippen ein spürbares, weicheres Feedback'
+    'Neues, moderneres Erscheinungsbild: flachere Karten ohne Schatten, dezentere Ecken-Rundung, größere Schalter',
+    'Farbige, abgerundete Icon-Kacheln in den Einstellungen statt grauer Kreise',
+    'Aktiver Reiter in der Tab-Leiste jetzt farbig hervorgehoben statt mit Hintergrund-Kachel',
+    'Alle Symbole mit runden Linienenden statt eckiger dargestellt'
   ];
 
   function showWhatsNewDialog(){
