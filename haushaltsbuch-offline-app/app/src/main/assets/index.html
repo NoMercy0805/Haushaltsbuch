@@ -475,7 +475,7 @@
               <div class="hero-card-sub-value" id="heroCardIncome"></div>
             </div>
             <div>
-              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Fixkosten</div>
+              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Ausgaben</div>
               <div class="hero-card-sub-value" id="heroCardFixed"></div>
             </div>
           </div>
@@ -1886,10 +1886,11 @@ var nativeStorage = {
     var heroLoanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
     var heroOpenInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
     var heroTilgungExtra = getTilgungExtra();
-    var heroRest = heroIncomeTotal - heroFixedTotal - heroOpenInvTotal - heroVariableMonthly - heroLoanMonthly - heroTilgungExtra;
+    var heroExpenseTotal = heroFixedTotal + heroOpenInvTotal + heroVariableMonthly + heroLoanMonthly + heroTilgungExtra;
+    var heroRest = heroIncomeTotal - heroExpenseTotal;
     document.getElementById('heroCardValue').textContent = fmtEUR(heroRest);
     document.getElementById('heroCardIncome').textContent = fmtEUR(heroIncomeTotal);
-    document.getElementById('heroCardFixed').textContent = fmtEUR(heroFixedTotal);
+    document.getElementById('heroCardFixed').textContent = fmtEUR(heroExpenseTotal);
     saveRestHistoryPoint(todayISO().slice(0,7), heroRest);
     renderHeaderTrend(getRestHistory());
 
