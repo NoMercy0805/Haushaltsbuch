@@ -1884,9 +1884,8 @@ var nativeStorage = {
     var heroFixedTotal = sum(state.fixedExpenses,'amount');
     var heroVariableMonthly = sum(state.variableCosts,'monthlyAmount');
     var heroLoanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
-    var heroOpenInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
     var heroTilgungExtra = getTilgungExtra();
-    var heroExpenseTotal = heroFixedTotal + heroOpenInvTotal + heroVariableMonthly + heroLoanMonthly + heroTilgungExtra;
+    var heroExpenseTotal = heroFixedTotal + heroVariableMonthly + heroLoanMonthly + heroTilgungExtra;
     var heroRest = heroIncomeTotal - heroExpenseTotal;
     document.getElementById('heroCardValue').textContent = fmtEUR(heroRest);
     document.getElementById('heroCardIncome').textContent = fmtEUR(heroIncomeTotal);
@@ -1903,6 +1902,7 @@ var nativeStorage = {
     document.getElementById('incomeHeader').classList.toggle('active', showIncomeList);
     document.getElementById('incomeHeaderSub').textContent = state.income.length + (state.income.length===1?' Eintrag':' Einträge')+' · '+fmtEUR(sum(state.income,'amount'));
     document.getElementById('fixedList').style.display = showFixedList ? '' : 'none';
+    document.getElementById('autoFixedList').style.display = showFixedList ? '' : 'none';
     document.getElementById('fixedHeader').classList.toggle('active', showFixedList);
     document.getElementById('fixedHeaderSub').textContent = state.fixedExpenses.length + (state.fixedExpenses.length===1?' Eintrag':' Einträge')+' · '+fmtEUR(sum(state.fixedExpenses,'amount'));
     renderInvoices();
