@@ -1760,6 +1760,7 @@ var nativeStorage = {
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var loanTotal = sum(activeLoans, 'monthlyPayment');
     var extraAmount = getTilgungExtra();
+    var vcMonthlyNeed = sum(state.variableCosts, 'monthlyAmount');
     var html = '';
     if(loanTotal > 0){
       html += '<div class="vc-card" style="opacity:0.85;">'+
@@ -1780,6 +1781,17 @@ var nativeStorage = {
                     '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Extra-Tilgung (Tilgungsplan)</span>'+
                   '</span>'+
                   '<span class="amount-prominent expense">'+fmtEUR(extraAmount)+'</span>'+
+                '</div>'+
+              '</div>';
+    }
+    if(vcMonthlyNeed > 0){
+      html += '<div class="vc-card" style="opacity:0.85;">'+
+                '<div class="vc-card-top">'+
+                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Sparbedarf (Variable Kosten)</span>'+
+                  '</span>'+
+                  '<span class="amount-prominent expense">'+fmtEUR(vcMonthlyNeed)+'</span>'+
                 '</div>'+
               '</div>';
     }
