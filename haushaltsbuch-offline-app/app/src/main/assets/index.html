@@ -509,6 +509,7 @@
           <svg class="section-toggle-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div id="fixedList"></div>
+        <div id="autoFixedList"></div>
       </section>
 
       <!-- VARIABLE KOSTEN -->
@@ -1747,6 +1748,44 @@ var nativeStorage = {
     container.innerHTML = html;
   }
 
+  // Zeigt unter den Fixkosten zwei automatisch berechnete, nicht bearbeit-
+  // oder loeschbare Eintraege: die gesamte monatliche Kreditrate und den
+  // zusaetzlichen Tilgungsplan-Betrag - passen sich von selbst an, sobald
+  // sich Kredite oder der Extra-Betrag aendern.
+  var AUTO_LOCK_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+  function renderAutoFixedEntries(){
+    var container = document.getElementById('autoFixedList');
+    if(!container) return;
+    var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+    var loanTotal = sum(activeLoans, 'monthlyPayment');
+    var extraAmount = getTilgungExtra();
+    var html = '';
+    if(loanTotal > 0){
+      html += '<div class="vc-card" style="opacity:0.85;">'+
+                '<div class="vc-card-top">'+
+                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Kreditraten gesamt</span>'+
+                  '</span>'+
+                  '<span class="amount-prominent expense">'+fmtEUR(loanTotal)+'</span>'+
+                '</div>'+
+              '</div>';
+    }
+    if(extraAmount > 0){
+      html += '<div class="vc-card" style="opacity:0.85;">'+
+                '<div class="vc-card-top">'+
+                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Extra-Tilgung (Tilgungsplan)</span>'+
+                  '</span>'+
+                  '<span class="amount-prominent expense">'+fmtEUR(extraAmount)+'</span>'+
+                '</div>'+
+              '</div>';
+    }
+    container.innerHTML = html;
+  }
+
   function setupSimpleListEvents(container, list, listKey, rerenderFn){
     container.addEventListener('click', async function(e){
       var btn = e.target.closest('button');
@@ -1849,6 +1888,7 @@ var nativeStorage = {
 
     renderSimpleList(document.getElementById('incomeList'), state.income, 'income');
     renderSimpleList(document.getElementById('fixedList'), state.fixedExpenses, 'fixed');
+    renderAutoFixedEntries();
     document.getElementById('incomeList').style.display = showIncomeList ? '' : 'none';
     document.getElementById('incomeHeader').classList.toggle('active', showIncomeList);
     document.getElementById('incomeHeaderSub').textContent = state.income.length + (state.income.length===1?' Eintrag':' Einträge')+' · '+fmtEUR(sum(state.income,'amount'));
