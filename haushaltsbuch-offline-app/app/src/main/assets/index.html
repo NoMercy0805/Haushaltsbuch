@@ -981,7 +981,7 @@
         <h2>🎉 Neu in dieser Version</h2>
         <button type="button" class="settings-close-btn" id="whatsNewCloseBtn">✕</button>
       </div>
-      <ul id="whatsNewList" style="margin:0 0 20px;padding:0 0 0 20px;color:var(--ink);font-size:15px;line-height:1.7;"></ul>
+      <div id="whatsNewList" style="margin:0 0 20px;color:var(--ink);font-size:15px;line-height:1.7;"></div>
       <button type="button" class="settings-btn" id="whatsNewOkBtn" style="margin-bottom:0;">Verstanden</button>
     </div>
   </div>
@@ -4012,24 +4012,56 @@ var nativeStorage = {
   var pendingFreshRestoreCheck = false;
 
   /* ---------- "Neu in dieser Version"-Hinweis nach einem Update ---------- */
-  // Diese Versions-Kennung und Liste bei kuenftigen spuerbaren Aenderungen
-  // von Hand aktualisieren - zeigt sich nur, wenn sich die Kennung seit dem
-  // letzten Start geaendert hat (nicht bei der allerersten Installation).
-  var APP_VERSION = '2026.09.17';
+  // Bei kuenftigen spuerbaren Aenderungen einen neuen Eintrag am ENDE dieser
+  // Liste ergaenzen (Versionskennung als Datum, aufsteigend). Werden mehrere
+  // Versionen uebersprungen (z.B. Update nach laengerer Pause), zeigt der
+  // Dialog automatisch die Aenderungen ALLER seither erschienenen Versionen
+  // zusammen an, nicht nur die der neuesten.
   var WHATS_NEW_KEY = 'household-last-seen-version';
-  var WHATS_NEW_ITEMS = [
-    'Fixkosten zeigt jetzt automatisch berechnete Einträge für Kreditraten, Tilgungsplan-Extra und Sparbedarf (Variable Kosten) – fließen auch korrekt in den Monatlichen Rest mit ein',
-    'Hero-Karte in der Übersicht zeigt jetzt "Ausgaben" statt nur "Fixkosten" – die komplette Summe aller monatlichen Ausgaben auf einen Blick',
-    'Fixkosten-Symbole jetzt in kräftigen, bunten Farben je Kategorie dargestellt'
+  var CHANGELOG = [
+    { version:'2026.09.14', items:[
+      'Neuer Tilgungsplan-Reiter: Schneeball-Methode mit frei wählbarem Extra-Betrag und individueller Prozent-Auswahl pro Kredit',
+      'Beträge eintippen wie bei der Sparkasse – die letzten zwei Ziffern sind automatisch die Cent',
+      'Farbige Übersichtskarten in jedem Reiter, ein-/ausklappbar per Antippen',
+      'Diagramme überarbeitet: Ringe statt Kreisdiagramme, Balken mit Farbverlauf',
+      'Bearbeiten-Formulare zeigen jetzt klare Beschriftungen bei jedem Feld',
+      'Tab-Leiste blendet sich automatisch aus, solange die Tastatur offen ist'
+    ]},
+    { version:'2026.09.15', items:[
+      'Farbige Übersichtskarten jetzt auch per Antippen der ganzen Karte ein-/ausklappbar (nicht nur per Pfeil)',
+      'Buttons und Karten geben jetzt beim Antippen ein spürbares, weicheres Feedback'
+    ]},
+    { version:'2026.09.16', items:[
+      'Neues, moderneres Erscheinungsbild: flachere Karten ohne Schatten, dezentere Ecken-Rundung, größere Schalter',
+      'Farbige, abgerundete Icon-Kacheln in den Einstellungen statt grauer Kreise',
+      'Aktiver Reiter in der Tab-Leiste jetzt farbig hervorgehoben statt mit Hintergrund-Kachel',
+      'Alle Symbole mit runden Linienenden statt eckiger dargestellt'
+    ]},
+    { version:'2026.09.17', items:[
+      'Fixkosten zeigt jetzt automatisch berechnete Einträge für Kreditraten, Tilgungsplan-Extra und Sparbedarf (Variable Kosten) – fließen auch korrekt in den Monatlichen Rest mit ein',
+      'Hero-Karte in der Übersicht zeigt jetzt "Ausgaben" statt nur "Fixkosten" – die komplette Summe aller monatlichen Ausgaben auf einen Blick',
+      'Fixkosten-Symbole jetzt in kräftigen, bunten Farben je Kategorie dargestellt'
+    ]}
   ];
+  var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
 
-  function showWhatsNewDialog(){
+  function showWhatsNewDialog(entries){
     var overlay = document.getElementById('whatsNewOverlay');
     var list = document.getElementById('whatsNewList');
     if(!overlay || !list) return;
-    list.innerHTML = WHATS_NEW_ITEMS.map(function(item){
-      return '<li style="margin-bottom:8px;">'+escapeHtml(item)+'</li>';
-    }).join('');
+    var html = '';
+    var showVersionLabels = entries.length > 1;
+    entries.forEach(function(entry){
+      if(showVersionLabels){
+        html += '<div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 6px;">'+entry.version+'</div>';
+      }
+      entry.items.forEach(function(item){
+        html += '<div style="padding-left:16px;position:relative;margin-bottom:8px;">'+
+                  '<span style="position:absolute;left:0;">•</span>'+escapeHtml(item)+
+                '</div>';
+      });
+    });
+    list.innerHTML = html;
     overlay.classList.add('open');
     function close(){ overlay.classList.remove('open'); }
     document.getElementById('whatsNewOkBtn').onclick = close;
@@ -4044,8 +4076,9 @@ var nativeStorage = {
       try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
       return;
     }
-    if(seen !== APP_VERSION){
-      showWhatsNewDialog();
+    var unseen = CHANGELOG.filter(function(entry){ return entry.version > seen; });
+    if(unseen.length > 0){
+      showWhatsNewDialog(unseen);
       try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
     }
   }
