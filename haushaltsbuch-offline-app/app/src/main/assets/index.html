@@ -1681,6 +1681,14 @@ var nativeStorage = {
   var ICON_PICKER_ORDER = ['auto','house','bolt','drop','flame','wifi','phone','shield','backpack','ballerina','dumbbell','music','film','car','card','piggy','food','shirt','ticket','heart','gift','suitcase','paw','tag'];
   var ICON_PICKER_LABELS = {auto:'Automatisch',house:'Haus',bolt:'Strom',drop:'Wasser',flame:'Gas',wifi:'Internet',phone:'Telefon',shield:'Versicherung',backpack:'Kita/Schule',ballerina:'Tanz',dumbbell:'Fitness',music:'Musik',film:'Streaming',car:'Auto',card:'Bank/Kredit',piggy:'Sparen',food:'Essen',shirt:'Kleidung',ticket:'Freizeit',heart:'Gesundheit',gift:'Geschenk',suitcase:'Reisen',paw:'Haustier',tag:'Sonstiges'};
 
+  var ICON_COLORS = {
+    auto:'#8E8E93', house:'#F5A623', bolt:'#FFCC00', drop:'#0A84FF', flame:'#FF6B35',
+    wifi:'#AF52DE', phone:'#30B0C7', shield:'#5E5CE6', backpack:'#FF375F', ballerina:'#FF2D78',
+    dumbbell:'#FF9500', music:'#BF5AF2', film:'#E63946', car:'#64B5F6', card:'#30D158',
+    piggy:'#FF6482', food:'#FF9F0A', shirt:'#64D2FF', ticket:'#AC8FFF', heart:'#FF453A',
+    gift:'#FF375F', suitcase:'#AC8E68', paw:'#A2845E', tag:'#8E8E93'
+  };
+
   function iconSvgMarkup(key){
     var inner = FIXED_EXPENSE_ICON_SVGS[key] || FIXED_EXPENSE_ICON_SVGS.tag;
     return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
@@ -1691,14 +1699,17 @@ var nativeStorage = {
   }
 
   function fixedExpenseIconBadge(item){
-    return '<span class="row-icon">'+iconSvgMarkup(fixedExpenseResolvedIcon(item))+'</span>';
+    var key = fixedExpenseResolvedIcon(item);
+    var color = ICON_COLORS[key] || ICON_COLORS.tag;
+    return '<span class="row-icon" style="background:'+color+';color:#fff;">'+iconSvgMarkup(key)+'</span>';
   }
 
   function renderIconPicker(item){
     var current = item.icon || 'auto';
     var html = '<div class="icon-picker full">';
     ICON_PICKER_ORDER.forEach(function(key){
-      html += '<button type="button" class="icon-picker-option'+(key===current?' selected':'')+'" data-action="select-icon" data-icon-key="'+key+'" title="'+ICON_PICKER_LABELS[key]+'" aria-label="'+ICON_PICKER_LABELS[key]+'">'+iconSvgMarkup(key)+'</button>';
+      var color = ICON_COLORS[key] || ICON_COLORS.tag;
+      html += '<button type="button" class="icon-picker-option'+(key===current?' selected':'')+'" data-action="select-icon" data-icon-key="'+key+'" title="'+ICON_PICKER_LABELS[key]+'" aria-label="'+ICON_PICKER_LABELS[key]+'" style="background:'+color+';color:#fff;">'+iconSvgMarkup(key)+'</button>';
     });
     html += '</div>';
     return html;
@@ -1761,39 +1772,24 @@ var nativeStorage = {
     var loanTotal = sum(activeLoans, 'monthlyPayment');
     var extraAmount = getTilgungExtra();
     var vcMonthlyNeed = sum(state.variableCosts, 'monthlyAmount');
+    var rows = '';
+    function autoRow(label, amount, bg, fg){
+      return '<div class="vc-card" style="opacity:0.9;border:1px dashed var(--rule);box-shadow:none;">'+
+                '<div class="vc-card-top">'+
+                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+                    '<span class="row-icon" style="background:'+bg+';color:'+fg+';">'+AUTO_LOCK_ICON+'</span>'+
+                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'+
+                  '</span>'+
+                  '<span class="amount-prominent expense">'+fmtEUR(amount)+'</span>'+
+                '</div>'+
+              '</div>';
+    }
+    if(loanTotal > 0) rows += autoRow('Kreditraten gesamt', loanTotal, 'var(--hero-red-grad)', 'var(--hero-red-text)');
+    if(extraAmount > 0) rows += autoRow('Extra-Tilgung (Tilgungsplan)', extraAmount, 'var(--hero-purple-grad)', 'var(--hero-purple-text)');
+    if(vcMonthlyNeed > 0) rows += autoRow('Sparbedarf (Variable Kosten)', vcMonthlyNeed, 'var(--hero-green-grad)', 'var(--hero-green-text)');
     var html = '';
-    if(loanTotal > 0){
-      html += '<div class="vc-card" style="opacity:0.85;">'+
-                '<div class="vc-card-top">'+
-                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
-                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Kreditraten gesamt</span>'+
-                  '</span>'+
-                  '<span class="amount-prominent expense">'+fmtEUR(loanTotal)+'</span>'+
-                '</div>'+
-              '</div>';
-    }
-    if(extraAmount > 0){
-      html += '<div class="vc-card" style="opacity:0.85;">'+
-                '<div class="vc-card-top">'+
-                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
-                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Extra-Tilgung (Tilgungsplan)</span>'+
-                  '</span>'+
-                  '<span class="amount-prominent expense">'+fmtEUR(extraAmount)+'</span>'+
-                '</div>'+
-              '</div>';
-    }
-    if(vcMonthlyNeed > 0){
-      html += '<div class="vc-card" style="opacity:0.85;">'+
-                '<div class="vc-card-top">'+
-                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-                    '<span class="row-icon">'+AUTO_LOCK_ICON+'</span>'+
-                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Sparbedarf (Variable Kosten)</span>'+
-                  '</span>'+
-                  '<span class="amount-prominent expense">'+fmtEUR(vcMonthlyNeed)+'</span>'+
-                '</div>'+
-              '</div>';
+    if(rows){
+      html = '<div style="color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin:14px 4px 8px;">Automatisch berechnet</div>' + rows;
     }
     container.innerHTML = html;
   }
