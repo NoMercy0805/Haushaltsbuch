@@ -805,6 +805,11 @@
           <span class="settings-nav-text"><span class="settings-nav-title">Zurücksetzen</span><span class="settings-nav-sub">Alle Daten löschen</span></span>
           <span class="settings-nav-arrow">›</span>
         </button>
+        <button type="button" class="settings-nav-row" data-open-settings="historie">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Update-Historie</span><span class="settings-nav-sub">Alle bisherigen Änderungen</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
       </div>
     </div>
   </div>
@@ -962,6 +967,17 @@
         <span style="width:34px;"></span>
       </div>
       <button class="settings-btn danger" id="resetBtn">Alle Daten löschen</button>
+    </div>
+  </div>
+
+  <div id="settingsSubOverlay-historie" class="settings-overlay">
+    <div class="settings-panel" style="text-align:left;">
+      <div class="settings-panel-head">
+        <button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <h2>Update-Historie</h2>
+        <span style="width:34px;"></span>
+      </div>
+      <div id="historieList" style="margin-top:8px;"></div>
     </div>
   </div>
 
@@ -4019,7 +4035,7 @@ var nativeStorage = {
   // zusammen an, nicht nur die der neuesten.
   var WHATS_NEW_KEY = 'household-last-seen-version';
   var CHANGELOG = [
-    { version:'2026.09.14', items:[
+    { version:1, date:'15.09.2026, 19:30 Uhr', items:[
       'Neuer Tilgungsplan-Reiter: Schneeball-Methode mit frei wählbarem Extra-Betrag und individueller Prozent-Auswahl pro Kredit',
       'Beträge eintippen wie bei der Sparkasse – die letzten zwei Ziffern sind automatisch die Cent',
       'Farbige Übersichtskarten in jedem Reiter, ein-/ausklappbar per Antippen',
@@ -4027,20 +4043,24 @@ var nativeStorage = {
       'Bearbeiten-Formulare zeigen jetzt klare Beschriftungen bei jedem Feld',
       'Tab-Leiste blendet sich automatisch aus, solange die Tastatur offen ist'
     ]},
-    { version:'2026.09.15', items:[
+    { version:2, date:'15.09.2026, 21:15 Uhr', items:[
       'Farbige Übersichtskarten jetzt auch per Antippen der ganzen Karte ein-/ausklappbar (nicht nur per Pfeil)',
       'Buttons und Karten geben jetzt beim Antippen ein spürbares, weicheres Feedback'
     ]},
-    { version:'2026.09.16', items:[
+    { version:3, date:'15.09.2026, 22:40 Uhr', items:[
       'Neues, moderneres Erscheinungsbild: flachere Karten ohne Schatten, dezentere Ecken-Rundung, größere Schalter',
       'Farbige, abgerundete Icon-Kacheln in den Einstellungen statt grauer Kreise',
       'Aktiver Reiter in der Tab-Leiste jetzt farbig hervorgehoben statt mit Hintergrund-Kachel',
       'Alle Symbole mit runden Linienenden statt eckiger dargestellt'
     ]},
-    { version:'2026.09.17', items:[
+    { version:4, date:'15.09.2026, 23:30 Uhr', items:[
       'Fixkosten zeigt jetzt automatisch berechnete Einträge für Kreditraten, Tilgungsplan-Extra und Sparbedarf (Variable Kosten) – fließen auch korrekt in den Monatlichen Rest mit ein',
       'Hero-Karte in der Übersicht zeigt jetzt "Ausgaben" statt nur "Fixkosten" – die komplette Summe aller monatlichen Ausgaben auf einen Blick',
       'Fixkosten-Symbole jetzt in kräftigen, bunten Farben je Kategorie dargestellt'
+    ]},
+    { version:5, date:'15.09.2026, 23:49 Uhr', items:[
+      'Neue Update-Historie in den Einstellungen: alle bisherigen Änderungen mit Datum und Uhrzeit nachlesbar',
+      '"Neu in dieser Version" zeigt jetzt alle übersprungenen Updates zusammen an, falls du mal länger nicht aktualisiert hast'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4053,7 +4073,7 @@ var nativeStorage = {
     var showVersionLabels = entries.length > 1;
     entries.forEach(function(entry){
       if(showVersionLabels){
-        html += '<div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 6px;">'+entry.version+'</div>';
+        html += '<div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 6px;">'+entry.date+'</div>';
       }
       entry.items.forEach(function(item){
         html += '<div style="padding-left:16px;position:relative;margin-bottom:8px;">'+
@@ -4068,18 +4088,37 @@ var nativeStorage = {
     document.getElementById('whatsNewCloseBtn').onclick = close;
   }
 
+  function renderUpdateHistorie(){
+    var container = document.getElementById('historieList');
+    if(!container) return;
+    var html = '';
+    for(var i = CHANGELOG.length - 1; i >= 0; i--){
+      var entry = CHANGELOG[i];
+      html += '<div style="margin-bottom:18px;">'+
+                '<div style="font-size:12.5px;font-weight:700;color:var(--primary);margin-bottom:6px;">'+entry.date+'</div>';
+      entry.items.forEach(function(item){
+        html += '<div style="padding-left:16px;position:relative;margin-bottom:6px;font-size:14px;color:var(--ink);line-height:1.45;">'+
+                  '<span style="position:absolute;left:0;">•</span>'+escapeHtml(item)+
+                '</div>';
+      });
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+
   function maybeShowWhatsNew(){
     var seen = null;
     try{ seen = nativeStorage.getItem(WHATS_NEW_KEY); }catch(e){}
     if(seen === null || seen === ''){
       // Erste Installation - nur merken, nichts anzeigen.
-      try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
+      try{ nativeStorage.setItem(WHATS_NEW_KEY, String(APP_VERSION)); }catch(e){}
       return;
     }
-    var unseen = CHANGELOG.filter(function(entry){ return entry.version > seen; });
+    var seenNum = parseInt(seen, 10) || 0;
+    var unseen = CHANGELOG.filter(function(entry){ return entry.version > seenNum; });
     if(unseen.length > 0){
       showWhatsNewDialog(unseen);
-      try{ nativeStorage.setItem(WHATS_NEW_KEY, APP_VERSION); }catch(e){}
+      try{ nativeStorage.setItem(WHATS_NEW_KEY, String(APP_VERSION)); }catch(e){}
     }
   }
 
@@ -4243,6 +4282,7 @@ var nativeStorage = {
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
     maybeShowWhatsNew();
+    renderUpdateHistorie();
   }
 
   function toggleHeroCard(id){
