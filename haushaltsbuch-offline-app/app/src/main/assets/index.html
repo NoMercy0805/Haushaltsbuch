@@ -4162,6 +4162,13 @@ var nativeStorage = {
       return;
     }
     var seenNum = parseInt(seen, 10) || 0;
+    // Migration: der alte Versions-Speicher enthielt Datums-Strings wie
+    // "2026.09.16" - parseInt liest daraus faelschlich 2026, was groesser
+    // ist als jede unserer neuen, kleinen Versionsnummern. Dadurch wuerde
+    // nie wieder etwas als "neu" erkannt. Unplausibel grosse Werte hier
+    // einmalig auf 0 zuruecksetzen, damit die Erkennung wieder korrekt
+    // funktioniert.
+    if(seenNum > 1000) seenNum = 0;
     var unseen = CHANGELOG.filter(function(entry){ return entry.version > seenNum; });
     if(unseen.length > 0){
       showWhatsNewDialog(unseen);
