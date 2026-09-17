@@ -115,6 +115,7 @@
   }
   .fab-add:active{transform:scale(0.94);}
   .fab-add.fab-hidden{opacity:0;transform:translateY(16px) scale(0.94);pointer-events:none;}
+  .fab-tab-hidden{display:none !important;}
   .fab-add svg{transition:transform .25s var(--ios-ease);}
   .fab-add.fab-open svg{transform:rotate(45deg);}
   .fab-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:190;pointer-events:none;transition:background .2s ease;}
@@ -985,6 +986,7 @@
         <h2>Update-Historie</h2>
         <span style="width:34px;"></span>
       </div>
+      <button type="button" class="settings-btn" id="showLatestWhatsNewBtn" style="margin-top:4px;">Letzte Neuerungen anzeigen</button>
       <div id="historieList" style="margin-top:8px;"></div>
     </div>
   </div>
@@ -2963,6 +2965,8 @@ var nativeStorage = {
     });
   }
 
+  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan', 'diagramm'];
+
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
     var panel = document.getElementById('tab-'+tabName);
@@ -2971,6 +2975,11 @@ var nativeStorage = {
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
+    var fab = document.getElementById('addEntryFab');
+    var speedDial = document.getElementById('fabSpeedDial');
+    var hideFab = FAB_HIDDEN_TABS.indexOf(tabName) !== -1;
+    if(fab) fab.classList.toggle('fab-tab-hidden', hideFab);
+    if(speedDial) speedDial.classList.toggle('fab-tab-hidden', hideFab);
   }
 
   function setupTabs(){
@@ -2985,6 +2994,8 @@ var nativeStorage = {
     setupOverviewWidgetToggles();
     setupSettingsNavigation();
     applyTabVisibility();
+    var initialActiveBtn = document.querySelector('nav.tabs button.active');
+    if(initialActiveBtn) switchToTab(initialActiveBtn.dataset.tab);
   }
 
   function setupAddEntryModals(){
@@ -4112,6 +4123,14 @@ var nativeStorage = {
   }
 
   function renderUpdateHistorie(){
+    var showBtn = document.getElementById('showLatestWhatsNewBtn');
+    if(showBtn && !showBtn.dataset.wired){
+      showBtn.dataset.wired = '1';
+      showBtn.addEventListener('click', function(){
+        document.getElementById('settingsSubOverlay-historie').classList.remove('open');
+        showWhatsNewDialog([CHANGELOG[CHANGELOG.length-1]]);
+      });
+    }
     var container = document.getElementById('historieList');
     if(!container) return;
     var html = '';
