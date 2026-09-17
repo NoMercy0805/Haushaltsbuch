@@ -2325,7 +2325,7 @@ var nativeStorage = {
       var v = parseFloat(nativeStorage.getItem(TILGUNG_EXTRA_KEY));
       if(!isNaN(v) && v >= 0) return v;
     }catch(e){}
-    return 100;
+    return 0;
   }
   function setTilgungExtra(v){
     try{ nativeStorage.setItem(TILGUNG_EXTRA_KEY, String(v)); }catch(e){}
