@@ -426,6 +426,78 @@
   }
   .csv-modal-actions{display:flex;gap:10px;}
   .csv-modal-actions .confirm-btn{flex:1;}
+  /* ---------- Windows XP Design-Stil ---------- */
+  html[data-style="xp"] body{
+    font-family:Tahoma,Verdana,sans-serif;
+    background:linear-gradient(180deg,#7DA2CE 0%,#A9C6E8 40%,#D6E4F5 100%) fixed;
+  }
+  html[data-style="xp"] h1, html[data-style="xp"] h2.section-title, html[data-style="xp"] .settings-panel-head h2{
+    font-family:Tahoma,Verdana,sans-serif;
+  }
+  html[data-style="xp"] header.ledger-header{
+    background:linear-gradient(180deg,#0058E6 0%,#3F8CF3 45%,#1D5FD1 100%);
+    border-radius:0 0 10px 10px;
+    border-bottom:2px solid #003C99;
+  }
+  html[data-style="xp"] header.ledger-header h1{ color:#fff !important; text-shadow:1px 1px 1px rgba(0,0,0,0.4); }
+  html[data-style="xp"] header.ledger-header .brand .plus-accent{ color:#FFD84D !important; }
+  html[data-style="xp"] .settings-icon-btn, html[data-style="xp"] .fab-add, html[data-style="xp"] .settings-btn, html[data-style="xp"] .btn-save, html[data-style="xp"] .confirm-btn-danger, html[data-style="xp"] .confirm-btn-primary{
+    background:linear-gradient(180deg,#FFFFFF 0%,#ECE9D8 45%,#D8D2B8 100%) !important;
+    color:#000 !important;
+    border:1px solid #7A96C8 !important;
+    border-radius:4px !important;
+    box-shadow:inset 0 1px 0 #fff;
+  }
+  html[data-style="xp"] .hero-card, html[data-style="xp"] .vc-card, html[data-style="xp"] .loan-card, html[data-style="xp"] .summary-card, html[data-style="xp"] .settings-panel, html[data-style="xp"] .confirm-card, html[data-style="xp"] .fristen-card, html[data-style="xp"] .time-card, html[data-style="xp"] .set-item{
+    background:linear-gradient(180deg,#FFFFFF 0%,#ECE9D8 100%) !important;
+    border:1px solid #ACA899 !important;
+    border-radius:5px !important;
+    box-shadow:1px 1px 3px rgba(0,0,0,0.25) !important;
+  }
+  html[data-style="xp"] nav.tabs{
+    background:linear-gradient(180deg,#ECE9D8,#D8D2B8) !important;
+    border-radius:4px !important;
+    border:1px solid #7A96C8;
+  }
+  html[data-style="xp"] nav.tabs button.active{ background:#3F8CF3 !important; color:#fff !important; border-radius:3px !important; }
+  html[data-style="xp"] :root, html[data-style="xp"]{ --primary:#0054E3; --radius:5px; }
+
+  /* ---------- Windows Vista Design-Stil ---------- */
+  html[data-style="vista"] body{
+    font-family:"Segoe UI",Tahoma,sans-serif;
+    background:linear-gradient(180deg,#3A6EA5 0%,#8FB4DC 50%,#C9DCEF 100%) fixed;
+  }
+  html[data-style="vista"] header.ledger-header{
+    background:linear-gradient(180deg,rgba(160,200,240,0.85) 0%,rgba(90,150,210,0.75) 100%);
+    backdrop-filter:blur(6px);
+    border-radius:0 0 14px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.6);
+    box-shadow:0 2px 8px rgba(0,40,90,0.3);
+  }
+  html[data-style="vista"] header.ledger-header h1{ color:#0B2E52 !important; text-shadow:0 1px 0 rgba(255,255,255,0.6); }
+  html[data-style="vista"] .settings-icon-btn, html[data-style="vista"] .fab-add, html[data-style="vista"] .settings-btn, html[data-style="vista"] .btn-save, html[data-style="vista"] .confirm-btn-danger, html[data-style="vista"] .confirm-btn-primary{
+    background:linear-gradient(180deg,rgba(255,255,255,0.9) 0%,rgba(150,195,235,0.9) 50%,rgba(90,150,210,0.95) 100%) !important;
+    color:#0B2E52 !important;
+    border:1px solid rgba(70,110,160,0.6) !important;
+    border-radius:8px !important;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.8), 0 1px 3px rgba(0,40,90,0.3);
+  }
+  html[data-style="vista"] .hero-card, html[data-style="vista"] .vc-card, html[data-style="vista"] .loan-card, html[data-style="vista"] .summary-card, html[data-style="vista"] .settings-panel, html[data-style="vista"] .confirm-card, html[data-style="vista"] .fristen-card, html[data-style="vista"] .time-card, html[data-style="vista"] .set-item{
+    background:linear-gradient(180deg,rgba(255,255,255,0.75) 0%,rgba(210,230,248,0.65) 100%) !important;
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.7) !important;
+    border-radius:14px !important;
+    box-shadow:0 2px 10px rgba(0,40,90,0.2), inset 0 1px 0 rgba(255,255,255,0.8) !important;
+  }
+  html[data-style="vista"] .hero-card-value, html[data-style="vista"] .vc-name, html[data-style="vista"] .loan-name{ color:#0B2E52 !important; }
+  html[data-style="vista"] nav.tabs{
+    background:linear-gradient(180deg,rgba(255,255,255,0.8),rgba(180,210,240,0.7)) !important;
+    backdrop-filter:blur(10px);
+    border-radius:20px !important;
+    border:1px solid rgba(255,255,255,0.7);
+  }
+  html[data-style="vista"] nav.tabs button.active{ background:rgba(90,150,210,0.9) !important; color:#fff !important; border-radius:16px !important; }
+  html[data-style="vista"] :root, html[data-style="vista"]{ --primary:#4A90D9; --radius:14px; }
 </style>
 </head>
 <body>
@@ -837,6 +909,14 @@
           <button type="button" class="theme-option" data-theme-choice="system">System</button>
         </div>
       </div>
+      <p class="chooser-group-label" style="margin-top:16px;">Design-Stil</p>
+      <div class="summary-card">
+        <div class="theme-select-row">
+          <button type="button" class="theme-option" data-style-choice="standard">Standard</button>
+          <button type="button" class="theme-option" data-style-choice="xp">Windows XP</button>
+          <button type="button" class="theme-option" data-style-choice="vista">Vista</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1199,6 +1279,46 @@ var nativeStorage = {
     buttons.forEach(function(btn){
       btn.addEventListener('click', function(){
         setThemeChoice(btn.dataset.themeChoice);
+      });
+    });
+  }
+
+  /* ---------- Design-Stil (Standard/Windows XP/Vista) ---------- */
+  var STYLE_KEY = 'household-design-style';
+
+  function getStyleChoice(){
+    try{
+      var v = nativeStorage.getItem(STYLE_KEY);
+      if(v === 'standard' || v === 'xp' || v === 'vista') return v;
+    }catch(e){}
+    return 'standard';
+  }
+  function applyDesignStyle(style){
+    if(style === 'standard'){
+      document.documentElement.removeAttribute('data-style');
+    } else {
+      document.documentElement.setAttribute('data-style', style);
+    }
+  }
+  function updateStyleOptionButtons(style){
+    document.querySelectorAll('.theme-option[data-style-choice]').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.styleChoice === style);
+    });
+  }
+  function setStyleChoice(style){
+    try{ nativeStorage.setItem(STYLE_KEY, style); }catch(e){}
+    applyDesignStyle(style);
+    updateStyleOptionButtons(style);
+  }
+  applyDesignStyle(getStyleChoice());
+
+  function setupStyleToggle(){
+    var buttons = document.querySelectorAll('.theme-option[data-style-choice]');
+    if(!buttons.length) return;
+    updateStyleOptionButtons(getStyleChoice());
+    buttons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        setStyleChoice(btn.dataset.styleChoice);
       });
     });
   }
@@ -4344,6 +4464,7 @@ var nativeStorage = {
     setupReset();
     setupBackup();
     setupThemeToggle();
+    setupStyleToggle();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardToggle();
