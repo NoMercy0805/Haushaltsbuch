@@ -272,8 +272,12 @@
   .compact-list-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--rule);}
   .compact-list-row:last-child{border-bottom:none;}
   .compact-list-row .compact-name{color:var(--ink);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .compact-name-wrap{min-width:0;overflow:hidden;}
+  .compact-name-wrap .compact-name{display:block;}
+  .compact-sub{color:var(--ink-soft);font-size:11.5px;margin-top:2px;}
   .compact-list-row .compact-amount{font-size:14px;font-weight:700;flex-shrink:0;margin-left:10px;}
   .compact-list-row .compact-amount.income{color:var(--savings);}
+  .compact-list-row .compact-amount.expense{color:var(--ink);}
   .compact-list-row .compact-actions{display:flex;gap:4px;flex-shrink:0;margin-left:8px;}
   .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
   .vc-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
@@ -1892,23 +1896,24 @@ var nativeStorage = {
     var extraAmount = getTilgungExtra();
     var vcMonthlyNeed = sum(state.variableCosts, 'monthlyAmount');
     var rows = '';
-    function autoRow(label, amount, bg, fg){
-      return '<div class="vc-card" style="opacity:0.9;border:1px dashed var(--rule);box-shadow:none;">'+
-                '<div class="vc-card-top" style="flex-wrap:nowrap;">'+
-                  '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'+
-                    '<span class="row-icon" style="background:'+bg+';color:'+fg+';">'+AUTO_LOCK_ICON+'</span>'+
-                    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'+
-                  '</span>'+
-                  '<span class="amount-prominent expense" style="flex-shrink:0;">'+fmtEUR(amount)+'</span>'+
-                '</div>'+
+    function autoRow(label, amount){
+      return '<div class="compact-list-row">'+
+                '<span class="compact-name">'+label+'</span>'+
+                '<span class="compact-amount">'+fmtEUR(amount)+'</span>'+
+                '<span class="compact-actions">'+AUTO_LOCK_ICON+'</span>'+
               '</div>';
     }
-    if(loanTotal > 0) rows += autoRow('Kreditraten gesamt', loanTotal, 'var(--hero-red-grad)', 'var(--hero-red-text)');
-    if(extraAmount > 0) rows += autoRow('Extra-Tilgung (Tilgungsplan)', extraAmount, 'var(--hero-purple-grad)', 'var(--hero-purple-text)');
-    if(vcMonthlyNeed > 0) rows += autoRow('Sparbedarf (Variable Kosten)', vcMonthlyNeed, 'var(--hero-green-grad)', 'var(--hero-green-text)');
+    if(loanTotal > 0) rows += autoRow('Kreditraten gesamt', loanTotal);
+    if(extraAmount > 0) rows += autoRow('Extra-Tilgung (Tilgungsplan)', extraAmount);
+    if(vcMonthlyNeed > 0) rows += autoRow('Sparbedarf (Variable Kosten)', vcMonthlyNeed);
     var html = '';
     if(rows){
-      html = '<div style="color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin:14px 4px 8px;">Automatisch berechnet</div>' + rows;
+      html = '<div class="compact-list">'+
+               '<div class="compact-group-header">'+
+                 '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">Automatisch berechnet</span>'+
+               '</div>'+
+               rows+
+             '</div>';
     }
     container.innerHTML = html;
   }
@@ -2048,10 +2053,10 @@ var nativeStorage = {
     if(list.length === 0){
       container.innerHTML = '<div class="empty-state">Keine offenen Rechnungen eingetragen.</div>';
     } else {
-    var html = '';
+    var html = '<div class="compact-list">';
     list.forEach(function(inv){
       if(editing.invoice === inv.id){
-        html += '<div class="edit-row" data-id="'+inv.id+'">'+
+        html += '</div><div class="edit-row" data-id="'+inv.id+'">'+
                   '<input type="text" class="edit-name full" value="'+escapeHtml(inv.name)+'" placeholder="Bezeichnung">'+
                   '<div><label class="edit-field-label">Betrag</label><input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(inv.amount*100))+'" placeholder="Betrag (€)"></div>'+
                   '<div><label class="edit-field-label">Fälligkeitsdatum</label><input type="date" class="edit-duedate" value="'+(inv.dueDate||'')+'"></div>'+
@@ -2059,27 +2064,27 @@ var nativeStorage = {
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-invoice">Abbrechen</button>'+
                     '<button type="button" class="btn-save" data-action="save-edit-invoice" data-id="'+inv.id+'">Speichern</button>'+
                   '</div>'+
-                '</div>';
+                '</div><div class="compact-list">';
       } else {
         var isOverdue = !inv.paid && inv.dueDate && inv.dueDate < todayISO();
         var d = inv.dueDate ? parseISO(inv.dueDate) : null;
         var dateLabel = d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '';
-        html += '<div class="vc-card'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'">'+
-                  '<div class="vc-card-top">'+
-                    '<span class="vc-name" style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-                      '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren">✓</button>'+
-                      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(inv.name)+'</span>'+
-                    '</span>'+
-                    '<span class="amount-prominent expense">'+fmtEUR(inv.amount)+'</span>'+
-                  '</div>'+
-                  '<div class="vc-detail-row"><span>Status</span><span class="val'+(isOverdue?' vc-buffer neg':'')+'">'+(inv.paid ? 'Bezahlt' : (isOverdue ? 'Überfällig seit '+dateLabel : 'Fällig am '+dateLabel))+'</span></div>'+
-                  '<div class="vc-actions">'+
-                    '<button class="action-icon-btn neutral" data-action="edit-invoice" data-id="'+inv.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                    '<button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
-                  '</div>'+
+        var statusLabel = inv.paid ? 'Bezahlt' : (isOverdue ? 'Überfällig seit '+dateLabel : 'Fällig am '+dateLabel);
+        html += '<div class="compact-list-row'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'">'+
+                  '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren" style="flex-shrink:0;margin-right:10px;">✓</button>'+
+                  '<span class="compact-name-wrap">'+
+                    '<span class="compact-name">'+escapeHtml(inv.name)+'</span>'+
+                    '<span class="compact-sub" style="'+(isOverdue?'color:var(--expense);':'')+'">'+statusLabel+'</span>'+
+                  '</span>'+
+                  '<span class="compact-amount expense">'+fmtEUR(inv.amount)+'</span>'+
+                  '<span class="compact-actions">'+
+                    '<button class="action-icon-btn neutral" data-action="edit-invoice" data-id="'+inv.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
+                    '<button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                  '</span>'+
                 '</div>';
       }
     });
+    html += '</div>';
     container.innerHTML = html;
     }
 
@@ -2110,7 +2115,7 @@ var nativeStorage = {
         dateLabel = String(pd.getDate()).padStart(2,'0')+'.'+String(pd.getMonth()+1).padStart(2,'0')+'.'+pd.getFullYear();
       }
       html2 += '<div class="compact-list-row" data-id="'+inv.id+'">'+
-                '<span class="compact-name">'+escapeHtml(inv.name)+' <span style="color:var(--ink-soft);font-size:12px;">· '+dateLabel+'</span></span>'+
+                '<span class="compact-name-wrap"><span class="compact-name">'+escapeHtml(inv.name)+'</span><span class="compact-sub">Bezahlt am '+dateLabel+'</span></span>'+
                 '<span class="compact-amount" style="color:var(--savings);">'+fmtEUR(inv.amount)+'</span>'+
                 '<span class="compact-actions">'+
                   '<button class="action-icon-btn neutral" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als offen markieren" title="Als offen markieren"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>'+
@@ -2269,7 +2274,7 @@ var nativeStorage = {
           var d = parseISO(t.date);
           var dateLabel = String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
           html2 += '<div class="compact-list-row" data-id="'+t.id+'">'+
-                     '<span class="compact-name">'+escapeHtml(t.label)+' <span style="color:var(--ink-soft);font-size:12px;">· '+dateLabel+'</span></span>'+
+                     '<span class="compact-name-wrap"><span class="compact-name">'+escapeHtml(t.label)+'</span><span class="compact-sub">'+dateLabel+'</span></span>'+
                      '<span class="compact-amount" style="color:'+(t.amount>=0?'var(--savings)':'var(--expense)')+';">'+(t.amount>=0?'+':'')+fmtEUR(t.amount)+'</span>'+
                      '<span class="compact-actions">'+
                        '<button class="action-icon-btn neutral" data-action="edit-tx" data-tx-type="'+t.type+'" data-id="'+t.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
