@@ -275,6 +275,7 @@
   .compact-list-row .compact-amount{font-size:14px;font-weight:700;flex-shrink:0;margin-left:10px;}
   .compact-list-row .compact-amount.income{color:var(--savings);}
   .compact-list-row .compact-actions{display:flex;gap:4px;flex-shrink:0;margin-left:8px;}
+  .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
   .vc-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
   .vc-name{font-family:var(--serif);font-size:17px;font-weight:800;}
   .vc-monthly{font-family:var(--mono);font-size:14.5px;color:var(--ink-soft);font-weight:600;}
@@ -1723,6 +1724,36 @@ var nativeStorage = {
     gift:'#FF375F', suitcase:'#AC8E68', paw:'#A2845E', tag:'#8E8E93'
   };
 
+  // Fasst die feineren Symbol-Kategorien zu groesseren, uebersichtlicheren
+  // Gruppen zusammen (z.B. Miete + Strom + Wasser + Gas alle unter "Wohnen",
+  // Streaming + Musik unter "Verträge & Medien").
+  var CATEGORY_GROUP_MAP = {
+    house:'wohnen', bolt:'wohnen', drop:'wohnen', flame:'wohnen',
+    wifi:'medien', phone:'medien', music:'medien', film:'medien',
+    shield:'versicherung',
+    backpack:'kinder',
+    ballerina:'freizeit', dumbbell:'freizeit', ticket:'freizeit',
+    car:'auto',
+    card:'finanzen', piggy:'finanzen',
+    food:'alltag', shirt:'alltag',
+    heart:'gesundheit',
+    gift:'sonstiges', suitcase:'sonstiges', paw:'sonstiges', tag:'sonstiges'
+  };
+  var CATEGORY_GROUP_LABELS = {
+    wohnen:'Wohnen', medien:'Verträge & Medien', versicherung:'Versicherungen',
+    kinder:'Kinder & Bildung', freizeit:'Sport & Freizeit', auto:'Auto',
+    finanzen:'Bank & Sparen', alltag:'Alltag & Einkauf', gesundheit:'Gesundheit', sonstiges:'Sonstiges'
+  };
+  var CATEGORY_GROUP_ICON = {
+    wohnen:'house', medien:'film', versicherung:'shield', kinder:'backpack',
+    freizeit:'dumbbell', auto:'car', finanzen:'card', alltag:'food',
+    gesundheit:'heart', sonstiges:'tag'
+  };
+  function fixedExpenseGroupKey(item){
+    var iconKey = fixedExpenseResolvedIcon(item);
+    return CATEGORY_GROUP_MAP[iconKey] || 'sonstiges';
+  }
+
   function iconSvgMarkup(key){
     var inner = FIXED_EXPENSE_ICON_SVGS[key] || FIXED_EXPENSE_ICON_SVGS.tag;
     return '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
@@ -1797,7 +1828,7 @@ var nativeStorage = {
     var groups = {};
     var order = [];
     list.forEach(function(item){
-      var key = fixedExpenseResolvedIcon(item);
+      var key = fixedExpenseGroupKey(item);
       if(!groups[key]){ groups[key] = []; order.push(key); }
       groups[key].push(item);
     });
@@ -1806,22 +1837,23 @@ var nativeStorage = {
       return totalB - totalA;
     });
 
-    var html = '';
-    order.forEach(function(key){
-      var items = groups[key];
+    var html = '<div class="compact-list">';
+    order.forEach(function(groupKey){
+      var items = groups[groupKey];
       var groupTotal = sum(items, 'amount');
-      var color = ICON_COLORS[key] || ICON_COLORS.tag;
-      var label = ICON_PICKER_LABELS[key] || ICON_PICKER_LABELS.tag;
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 4px 8px;">'+
+      var iconKey = CATEGORY_GROUP_ICON[groupKey] || 'tag';
+      var color = ICON_COLORS[iconKey] || ICON_COLORS.tag;
+      var label = CATEGORY_GROUP_LABELS[groupKey] || CATEGORY_GROUP_LABELS.sonstiges;
+      html += '<div class="compact-group-header">'+
                 '<span style="display:flex;align-items:center;gap:8px;">'+
-                  '<span style="width:26px;height:26px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;">'+iconSvgMarkup(key)+'</span>'+
-                  '<span style="color:var(--ink-soft);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">'+escapeHtml(label)+'</span>'+
+                  '<span style="width:22px;height:22px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;">'+iconSvgMarkup(iconKey)+'</span>'+
+                  '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">'+escapeHtml(label)+'</span>'+
                 '</span>'+
-                '<span style="color:var(--ink-soft);font-size:12px;font-weight:700;">'+fmtEUR(groupTotal)+'</span>'+
+                '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(groupTotal)+'</span>'+
               '</div>';
       items.forEach(function(item){
         if(editing.fixed === item.id){
-          html += '<div class="edit-row" data-id="'+item.id+'">'+
+          html += '</div><div class="edit-row" data-id="'+item.id+'">'+
                     '<input type="text" class="edit-name" value="'+escapeHtml(item.name)+'">'+
                     '<input type="text" inputmode="decimal" data-cent-input class="edit-amount" value="'+formatCentsToStr(Math.round(item.amount*100))+'">'+
                     renderIconPicker(item)+
@@ -1829,23 +1861,24 @@ var nativeStorage = {
                       '<button type="button" class="btn-cancel" data-action="cancel-edit" data-list="fixed">Abbrechen</button>'+
                       '<button type="button" class="btn-save" data-action="save-edit" data-list="fixed" data-id="'+item.id+'">Speichern</button>'+
                     '</div>'+
-                  '</div>';
+                  '</div><div class="compact-list">';
         } else {
-          html += '<div class="vc-card" data-id="'+item.id+'">'+
-                    '<div class="vc-card-top">'+
-                      '<span class="vc-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(item.name)+'</span>'+
-                      '<span class="amount-prominent expense">'+fmtEUR(item.amount)+'</span>'+
-                    '</div>'+
-                    '<div class="vc-actions">'+
-                      '<button class="action-icon-btn neutral" data-action="edit" data-list="fixed" data-id="'+item.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                      '<button class="action-icon-btn danger" data-action="delete" data-list="fixed" data-id="'+item.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
-                    '</div>'+
+          html += '<div class="compact-list-row" data-id="'+item.id+'">'+
+                    '<span class="compact-name">'+escapeHtml(item.name)+'</span>'+
+                    '<span class="compact-amount">'+fmtEUR(item.amount)+'</span>'+
+                    '<span class="compact-actions">'+
+                      '<button class="action-icon-btn neutral" data-action="edit" data-list="fixed" data-id="'+item.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
+                      '<button class="action-icon-btn danger" data-action="delete" data-list="fixed" data-id="'+item.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                    '</span>'+
                   '</div>';
         }
       });
     });
+    html += '</div>';
     container.innerHTML = html;
   }
+
+  // Zeigt unter den Fixkosten drei automatisch berechnete, nicht bearbeit-
   // oder loeschbare Eintraege: die gesamte monatliche Kreditrate und den
   // zusaetzlichen Tilgungsplan-Betrag - passen sich von selbst an, sobald
   // sich Kredite oder der Extra-Betrag aendern.
