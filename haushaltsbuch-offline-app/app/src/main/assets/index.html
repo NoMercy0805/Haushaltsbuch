@@ -2687,16 +2687,20 @@ var nativeStorage = {
     } else if(history.length === 0){
       historyEl.innerHTML = '<div class="empty-state" style="padding:14px 4px;">Noch keine Extra-Zahlungen gebucht.</div>';
     } else {
-      var historyHtml = '';
+      var historyHtml = '<div class="compact-list">';
       history.forEach(function(m){
-        var loanRows = m.entries.map(function(e){
-          return '<div class="ledger-row" style="padding:7px 0;"><span class="row-desc">'+escapeHtml(e.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(e.extra)+'</span></div>';
-        }).join('');
-        historyHtml += '<div class="vc-card" style="cursor:default;">'+
-                  '<div class="vc-card-top"><span class="vc-name">'+m.label+'</span><span class="vc-monthly">'+fmtEUR(m.total)+'</span></div>'+
-                  loanRows+
-                '</div>';
+        historyHtml += '<div class="compact-group-header">'+
+                          '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">'+m.label+'</span>'+
+                          '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(m.total)+'</span>'+
+                        '</div>';
+        m.entries.forEach(function(e){
+          historyHtml += '<div class="compact-list-row">'+
+                            '<span class="compact-name">'+escapeHtml(e.name)+'</span>'+
+                            '<span class="compact-amount" style="color:var(--savings);">+'+fmtEUR(e.extra)+'</span>'+
+                          '</div>';
+        });
       });
+      historyHtml += '</div>';
       historyEl.innerHTML = historyHtml;
     }
   }
@@ -2784,7 +2788,7 @@ var nativeStorage = {
       container.innerHTML = '<div class="empty-state" style="padding:14px 4px;">Noch keine abbezahlten Kredite.</div>';
       return;
     }
-    var html = '';
+    var html = '<div class="compact-list">';
     paidLoans.slice().sort(function(a,b){
       return (b.paidOffDate||'').localeCompare(a.paidOffDate||'');
     }).forEach(function(loan){
@@ -2793,14 +2797,18 @@ var nativeStorage = {
         var pd = parseISO(loan.paidOffDate);
         dateLabel = String(pd.getDate()).padStart(2,'0')+'.'+String(pd.getMonth()+1).padStart(2,'0')+'.'+pd.getFullYear();
       }
-      html += '<div class="loan-card" data-id="'+loan.id+'" style="opacity:0.85;">'+
-                '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining" style="color:var(--savings);">Abbezahlt</span></div>'+
-                '<div class="loan-sub" style="margin-top:6px;"><span>Kreditsumme: '+fmtEUR(loan.originalAmount)+'</span><span>Abbezahlt am '+dateLabel+'</span></div>'+
-                '<div class="vc-actions">'+
-                  '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
-                '</div>'+
+      html += '<div class="compact-list-row" data-id="'+loan.id+'">'+
+                '<span class="compact-name-wrap">'+
+                  '<span class="compact-name">'+escapeHtml(loan.name)+'</span>'+
+                  '<span class="compact-sub">Kreditsumme '+fmtEUR(loan.originalAmount)+' · Abbezahlt am '+dateLabel+'</span>'+
+                '</span>'+
+                '<span class="compact-amount" style="color:var(--savings);">Abbezahlt</span>'+
+                '<span class="compact-actions">'+
+                  '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                '</span>'+
               '</div>';
     });
+    html += '</div>';
     container.innerHTML = html;
   }
 
