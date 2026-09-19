@@ -97,7 +97,8 @@
     --hero-purple-sub:#A87FC7;
   }
   html[data-theme="dark"] body{background:var(--paper);}
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  a, button, input, select, textarea{-webkit-tap-highlight-color:transparent;outline:none;}
   svg{stroke-linecap:round;stroke-linejoin:round;}
   :root{--ios-ease:cubic-bezier(0.4,0,0.2,1);}
   button, .vc-card, .loan-card, .fristen-card, .time-card, .set-item{
@@ -4774,6 +4775,9 @@ var nativeStorage = {
     ]},
     { version:51, date:'19.09.2026, 23:20 Uhr', items:[
       'Die Android-Statusleiste oben (Uhrzeit, Akku usw.) passt sich jetzt automatisch an helles/dunkles Design an, statt immer blau zu sein'
+    ]},
+    { version:52, date:'19.09.2026, 23:25 Uhr', items:[
+      'Das blaue Standard-Antipp-Rechteck der Android WebView entfernt - die App nutzt jetzt nur noch ihre eigenen, weicheren Tipp-Effekte'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
