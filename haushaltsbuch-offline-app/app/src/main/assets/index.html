@@ -234,9 +234,13 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
-  .icon-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
-  .icon-picker-option{width:38px;height:38px;border-radius:50%;border:2px solid transparent;background:var(--surface);color:var(--ink-soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-  .icon-picker-option.selected{background:var(--primary-soft);color:var(--primary);border-color:var(--primary);}
+  .icon-picker{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 10px;}
+  .icon-picker-group-label{color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;margin:8px 0 4px;}
+  .icon-picker-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:58px;background:none;border:none;cursor:pointer;flex-shrink:0;}
+  .icon-picker-circle{width:38px;height:38px;border-radius:50%;border:2px solid transparent;display:flex;align-items:center;justify-content:center;}
+  .icon-picker-tile.selected .icon-picker-circle{border-color:var(--ink);box-shadow:0 0 0 2px var(--surface);}
+  .icon-picker-tile-label{color:var(--ink-soft);font-size:10px;text-align:center;line-height:1.2;}
+  .icon-picker-tile.selected .icon-picker-tile-label{color:var(--ink);font-weight:700;}
   .row-leader{flex:1;border-bottom:none;height:0;}
   .row-sub{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;font-weight:600;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:2;max-width:42%;}
   .row-amount{font-family:var(--mono);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;max-width:40%;}
@@ -1776,12 +1780,29 @@ var nativeStorage = {
 
   function renderIconPicker(item){
     var current = item.icon || 'auto';
-    var html = '<div class="icon-picker full">';
-    ICON_PICKER_ORDER.forEach(function(key){
+    function tile(key){
       var color = ICON_COLORS[key] || ICON_COLORS.tag;
-      html += '<button type="button" class="icon-picker-option'+(key===current?' selected':'')+'" data-action="select-icon" data-icon-key="'+key+'" title="'+ICON_PICKER_LABELS[key]+'" aria-label="'+ICON_PICKER_LABELS[key]+'" style="background:'+color+';color:#fff;">'+iconSvgMarkup(key)+'</button>';
+      return '<button type="button" class="icon-picker-tile'+(key===current?' selected':'')+'" data-action="select-icon" data-icon-key="'+key+'">'+
+               '<span class="icon-picker-circle" style="background:'+color+';color:#fff;">'+iconSvgMarkup(key)+'</span>'+
+               '<span class="icon-picker-tile-label">'+ICON_PICKER_LABELS[key]+'</span>'+
+             '</button>';
+    }
+    var html = '<div class="icon-picker-group-label full">Automatisch</div>'+
+               '<div class="icon-picker full">'+tile('auto')+'</div>';
+    var byGroup = {};
+    var groupOrder = [];
+    ICON_PICKER_ORDER.forEach(function(key){
+      if(key === 'auto') return;
+      var groupKey = CATEGORY_GROUP_MAP[key] || 'sonstiges';
+      if(!byGroup[groupKey]){ byGroup[groupKey] = []; groupOrder.push(groupKey); }
+      byGroup[groupKey].push(key);
     });
-    html += '</div>';
+    groupOrder.forEach(function(groupKey){
+      var groupLabel = CATEGORY_GROUP_LABELS[groupKey] || CATEGORY_GROUP_LABELS.sonstiges;
+      html += '<div class="icon-picker-group-label full">'+escapeHtml(groupLabel)+'</div><div class="icon-picker full">';
+      byGroup[groupKey].forEach(function(key){ html += tile(key); });
+      html += '</div>';
+    });
     return html;
   }
 
@@ -1939,7 +1960,7 @@ var nativeStorage = {
         rerenderFn();
       } else if(action === 'select-icon'){
         var pickerRow = btn.closest('.edit-row');
-        pickerRow.querySelectorAll('.icon-picker-option').forEach(function(b){ b.classList.remove('selected'); });
+        pickerRow.querySelectorAll('.icon-picker-tile').forEach(function(b){ b.classList.remove('selected'); });
         btn.classList.add('selected');
         pickerRow.dataset.selectedIcon = btn.dataset.iconKey;
       } else if(action === 'save-edit'){
@@ -4254,6 +4275,9 @@ var nativeStorage = {
     ]},
     { version:21, date:'19.09.2026, 00:42 Uhr', items:[
       'Namen bei Offenen Rechnungen starten jetzt zuverlässig an derselben Stelle, unabhängig von der Länge des Betrags daneben'
+    ]},
+    { version:22, date:'19.09.2026, 12:10 Uhr', items:[
+      'Symbol-Auswahl beim Bearbeiten von Fixkosten zeigt jetzt Gruppen-Überschriften (Wohnen, Verträge & Medien usw.) und eine kleine Beschriftung unter jedem Symbol'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
