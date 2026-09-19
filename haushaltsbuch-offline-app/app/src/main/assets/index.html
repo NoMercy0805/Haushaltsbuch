@@ -1497,22 +1497,35 @@ var nativeStorage = {
   // weiterer Faelligkeitstermin ansteht - bei z.B. vierteljaehrlichen
   // Zahlungen (GEZ) reicht eine einzelne Zahlung im Jahr nicht aus, um
   // "fertig fuer dieses Jahr" zu sein, solange noch ein Termin offen ist.
-  function hasMoreDueDatesThisYear(interval, dueMonth, dueYear){
-    var cycle = intervalMonths(interval);
-    var anchor = dueMonth || 1;
+  // Prueft, ob fuer den Rest dieses Kalenderjahres nichts mehr offen ist:
+  // entweder weil die naechste Faelligkeit sowieso erst naechstes Jahr (oder
+  // spaeter) ist und dieses Jahr die Kostenart gar nicht betrifft (z.B. TUEV
+  // alle 2 Jahre, naechste Faelligkeit 2027), oder weil der letzte diesjaehrige
+  // Termin bereits bezahlt wurde (z.B. GEZ, letzte Rate im November bezahlt).
+  function nothingDueRestOfYear(item){
+    var cycle = intervalMonths(item.interval);
+    var anchor = item.dueMonth || 1;
     var now = new Date();
-    var currentMonthAbs = now.getFullYear()*12 + now.getMonth();
-    var anchorYear = (interval === 'zweijaehrlich' && dueYear) ? dueYear : now.getFullYear();
+    var thisYear = now.getFullYear();
+    var anchorYear = (item.interval === 'zweijaehrlich' && item.dueYear) ? item.dueYear : thisYear;
     var anchorMonthAbs = anchorYear*12 + (anchor-1);
+    var currentMonthAbs = thisYear*12 + now.getMonth();
     var diff = currentMonthAbs - anchorMonthAbs;
     var k = Math.ceil(diff / cycle);
     var nextDueAbs = anchorMonthAbs + k*cycle;
     var nextDueYear = Math.floor(nextDueAbs / 12);
-    return nextDueYear <= now.getFullYear();
+    if(nextDueYear > thisYear){
+      var lastDueAbs = nextDueAbs - cycle;
+      var lastDueYear = Math.floor(lastDueAbs / 12);
+      if(lastDueYear < thisYear) return true; // dieses Jahr betrifft die Kostenart gar nicht
+      return isPaidThisYear(item); // letzter Termin war dieses Jahr - bezahlt?
+    }
+    return false; // naechste Faelligkeit ist noch dieses Jahr
   }
   // Prueft, ob eine Kostenart, die DIESEN Monat faellig ist, bereits eine
   // Zahlung in diesem Monat erhalten hat - damit sie in der Liste nach unten
   // rutschen kann, statt weiter oben "erledigt" rumzuliegen.
+
   function isPaidThisCycle(item){
     if(monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) !== 0) return false;
     var thisMonthKey = todayISO().slice(0,7);
@@ -2238,7 +2251,7 @@ var nativeStorage = {
           var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
           var vcTint = '';
           if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
-          else if(isPaidThisYear(item) && !hasMoreDueDatesThisYear(item.interval, item.dueMonth, item.dueYear)) vcTint = 'background:var(--savings-soft);';
+          else if((dueThisMonth && isPaidThisCycle(item)) || nothingDueRestOfYear(item)) vcTint = 'background:var(--savings-soft);';
           html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
@@ -4326,6 +4339,10 @@ var nativeStorage = {
     ]},
     { version:28, date:'19.09.2026, 13:53 Uhr', items:[
       'Variable Kosten: bei mehreren Fälligkeiten pro Jahr (z.B. vierteljährlich) wird erst grün, sobald die LETZTE Zahlung des Jahres erfasst ist, nicht schon bei der ersten'
+    ]},
+    { version:29, date:'19.09.2026, 14:11 Uhr', items:[
+      'Variable Kosten: Kostenarten, die dieses Jahr gar nicht fällig sind (z.B. TÜV alle 2 Jahre), werden jetzt korrekt grün dargestellt',
+      'Variable Kosten: eine diesen Monat bezahlte Kostenart wird jetzt sofort grün, statt erst im Folgemonat'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
