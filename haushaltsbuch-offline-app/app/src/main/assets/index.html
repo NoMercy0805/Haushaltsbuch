@@ -843,6 +843,10 @@
       <form id="fuelLogModalForm" class="entry-form">
         <input type="text" inputmode="decimal" data-cent-input id="fuelModalLiters" placeholder="Liter" class="full" required>
         <input type="text" inputmode="decimal" data-milli-input id="fuelModalPrice" placeholder="€/Liter" class="full" required>
+        <div class="full">
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Datum</label>
+          <input type="date" id="fuelModalDate" required>
+        </div>
         <button type="submit">Speichern</button>
       </form>
     </div>
@@ -3466,6 +3470,7 @@ var nativeStorage = {
           }
           var car = state.cars.filter(function(c){ return c.id === selectedCarId; })[0];
           document.getElementById('addFuelLogTitle').textContent = car ? 'Tankvorgang – '+car.name : 'Tankvorgang';
+          document.getElementById('fuelModalDate').value = todayISO();
           document.getElementById('addFuelLogOverlay').classList.add('open');
         }
       });
@@ -4616,6 +4621,9 @@ var nativeStorage = {
       'Auto-Auswahl bei Tanken zeigt jetzt alle Autos gleichzeitig (umbricht in mehrere Zeilen), statt seitlich wegzuscrollen',
       'Neue "Gesamt"-Option zeigt alle Autos zusammen (Hero-Karte und Verlauf mit Auto-Namen je Eintrag)',
       'Autos lassen sich jetzt auch wieder löschen (X erscheint am ausgewählten Auto-Chip, löscht auch dessen Tankvorgänge mit)'
+    ]},
+    { version:44, date:'19.09.2026, 20:36 Uhr', items:[
+      'Tankvorgang-Formular hat jetzt ein Datumsfeld (steht standardmäßig auf heute), falls man mal einen Tankvorgang nachträgt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4874,8 +4882,9 @@ var nativeStorage = {
       e.preventDefault();
       var liters = parseAmount(document.getElementById('fuelModalLiters').value);
       var price = parseAmount(document.getElementById('fuelModalPrice').value);
+      var date = document.getElementById('fuelModalDate').value || todayISO();
       if(isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0 || !selectedCarId) return;
-      state.fuelLogs.push({ id: genId(), carId: selectedCarId, liters: liters, pricePerLiter: price, date: todayISO() });
+      state.fuelLogs.push({ id: genId(), carId: selectedCarId, liters: liters, pricePerLiter: price, date: date });
       saveState();
       document.getElementById('fuelModalLiters').value = '';
       document.getElementById('fuelModalPrice').value = '';
