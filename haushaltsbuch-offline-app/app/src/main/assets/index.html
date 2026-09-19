@@ -470,8 +470,8 @@
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap" style="display:flex;gap:8px;">
-          <button id="fuelTrackerBtn" class="settings-icon-btn" aria-label="Tank-Tracker" style="background:var(--primary-soft);color:var(--primary);">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
+          <button id="diagrammBtn" class="settings-icon-btn" aria-label="Diagramm">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7 4"/></svg>
           </button>
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -501,9 +501,9 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/></svg>
         <span>Tilgungsplan</span>
       </button>
-      <button data-tab="diagramm" class="tab" aria-label="Diagramm">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7 4"/></svg>
-        <span>Diagramm</span>
+      <button data-tab="tanken" class="tab" aria-label="Tanken">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
+        <span>Tanken</span>
       </button>
     </nav>
 
@@ -623,8 +623,47 @@
         <div id="tilgungHistoryList"></div>
       </section>
 
-      <!-- DIAGRAMM -->
-      <section id="tab-diagramm" class="tab-panel">
+      <!-- TANKEN -->
+      <section id="tab-tanken" class="tab-panel">
+        <h2 class="section-title" style="margin-top:0;">Tanken</h2>
+
+        <div id="carChipsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;"></div>
+
+        <div id="addCarForm" style="display:none;background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+          <input type="text" id="newCarNameInput" placeholder="Name des Autos (z.B. Peugeot 2008)" style="width:100%;background:var(--paper);border:none;border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;margin-bottom:10px;box-sizing:border-box;">
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-cancel" id="cancelAddCarBtn" style="flex:1;">Abbrechen</button>
+            <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--primary);">Hinzufügen</button>
+          </div>
+        </div>
+
+        <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe oben auf "+ Auto".</div>
+
+        <div id="fuelFormAndHistory" style="display:none;">
+          <div style="background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+            <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+              <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
+            <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--primary);color:#fff;">Speichern</button>
+          </div>
+
+          <p class="chooser-group-label">Verlauf</p>
+          <div id="fuelHistoryList"></div>
+        </div>
+      </section>
+
+    </main>
+
+
+    <div id="diagrammOverlay" class="settings-overlay">
+      <div class="settings-panel" style="text-align:left;">
+        <div class="settings-panel-head">
+          <h2>Diagramm</h2>
+          <button class="settings-close-btn" id="diagrammCloseBtn" aria-label="Schließen">×</button>
+        </div>
         <h2 class="section-title" style="margin-top:0;">Einnahmen / Ausgaben</h2>
         <div class="chart-block">
           <svg id="incomeExpenseRing" viewBox="0 0 120 120" width="110" height="110" class="ring-chart-svg"></svg>
@@ -647,9 +686,9 @@
 
         <h2 class="section-title">Bezahlte Rechnungen pro Monat</h2>
         <div id="paidInvoicesBarChart" class="bar-chart"></div>
-      </section>
+      </div>
+    </div>
 
-    </main>
 
     <div id="fabBackdrop" class="fab-backdrop"></div>
     <div id="fabSpeedDial" class="fab-speed-dial">
@@ -918,9 +957,9 @@
           </label>
         </div>
         <div class="tab-visibility-row">
-          <span>Diagramm</span>
+          <span>Tanken</span>
           <label class="toggle-switch">
-            <input type="checkbox" data-tab-toggle="diagramm">
+            <input type="checkbox" data-tab-toggle="tanken">
             <span class="track"></span><span class="thumb"></span>
           </label>
         </div>
@@ -996,41 +1035,6 @@
     </div>
   </div>
 
-  <div id="fuelTrackerOverlay" class="settings-overlay">
-    <div class="settings-panel" style="text-align:left;">
-      <div class="settings-panel-head">
-        <h2>Tank-Tracker</h2>
-        <button class="settings-close-btn" id="fuelTrackerCloseBtn" aria-label="Schließen">×</button>
-      </div>
-
-      <div id="carChipsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;"></div>
-
-      <div id="addCarForm" style="display:none;background:var(--paper);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
-        <input type="text" id="newCarNameInput" placeholder="Name des Autos (z.B. Peugeot 2008)" style="width:100%;background:var(--surface);border:none;border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;margin-bottom:10px;box-sizing:border-box;">
-        <div style="display:flex;gap:8px;">
-          <button type="button" class="btn-cancel" id="cancelAddCarBtn" style="flex:1;">Abbrechen</button>
-          <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--primary);">Hinzufügen</button>
-        </div>
-      </div>
-
-      <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe oben auf "+ Auto".</div>
-
-      <div id="fuelFormAndHistory" style="display:none;">
-        <div style="background:var(--paper);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
-          <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;min-width:0;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-            <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-          </div>
-          <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
-          <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--primary);color:#fff;">Speichern</button>
-        </div>
-
-        <p class="chooser-group-label">Verlauf</p>
-        <div id="fuelHistoryList"></div>
-      </div>
-    </div>
-  </div>
 
   <div id="messageOverlay" class="confirm-overlay">
     <div class="confirm-card">
@@ -2973,10 +2977,11 @@ var nativeStorage = {
     renderTilgungsplan();
     renderSparen();
     renderDiagramme();
+    renderFuelTracker();
   }
 
   /* ---------- Events ---------- */
-  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tilgungsplan', 'diagramm'];
+  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tilgungsplan', 'tanken'];
   var tabVisibility = loadTabVisibility();
 
   function loadTabVisibility(){
@@ -3199,7 +3204,7 @@ var nativeStorage = {
         return { l: car.name, v: fmtEUR(carTotal) };
       });
       return {
-        tab:null, action:'open-fuel-tracker', color:'blue', value: fmtEUR(fuelTotal),
+        tab:'tanken', color:'blue', value: fmtEUR(fuelTotal),
         label:'Tanken gesamt',
         subs: carSubs,
         icon:'<rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/>'
@@ -3260,12 +3265,6 @@ var nativeStorage = {
     container.querySelectorAll('[data-jump-tab]').forEach(function(card){
       card.addEventListener('click', function(){ switchToTab(card.dataset.jumpTab); });
     });
-    container.querySelectorAll('[data-jump-action="open-fuel-tracker"]').forEach(function(card){
-      card.addEventListener('click', function(){
-        document.getElementById('fuelTrackerOverlay').classList.add('open');
-        renderFuelTracker();
-      });
-    });
   }
 
   function setupSettingsNavigation(){
@@ -3291,7 +3290,7 @@ var nativeStorage = {
     });
   }
 
-  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan', 'diagramm'];
+  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan', 'tanken'];
 
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
@@ -4510,6 +4509,9 @@ var nativeStorage = {
     ]},
     { version:34, date:'19.09.2026, 19:04 Uhr', items:[
       'Tank-Tracker: Verlauf gruppiert jetzt nach Monat mit Zwischensumme, statt einer langen Liste'
+    ]},
+    { version:35, date:'19.09.2026, 20:01 Uhr', items:[
+      '"Tanken" ist jetzt ein vollwertiger Reiter unten (statt Button oben), "Diagramm" ist dafür als Button oben neben den Einstellungen gewandert'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4630,17 +4632,17 @@ var nativeStorage = {
     document.getElementById('fuelTotalPreview').textContent = fmtEUR(total);
   }
 
-  function setupFuelTracker(){
-    var overlay = document.getElementById('fuelTrackerOverlay');
-    document.getElementById('fuelTrackerBtn').addEventListener('click', function(){
+  function setupDiagrammOverlay(){
+    var overlay = document.getElementById('diagrammOverlay');
+    document.getElementById('diagrammBtn').addEventListener('click', function(){
       overlay.classList.add('open');
-      renderFuelTracker();
     });
-    document.getElementById('fuelTrackerCloseBtn').addEventListener('click', function(){
+    document.getElementById('diagrammCloseBtn').addEventListener('click', function(){
       overlay.classList.remove('open');
-      document.getElementById('addCarForm').style.display = 'none';
     });
+  }
 
+  function setupFuelTracker(){
     document.getElementById('cancelAddCarBtn').addEventListener('click', function(){
       document.getElementById('addCarForm').style.display = 'none';
       document.getElementById('newCarNameInput').value = '';
@@ -4918,6 +4920,7 @@ var nativeStorage = {
     setupBackup();
     setupThemeToggle();
     setupFuelTracker();
+    setupDiagrammOverlay();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardToggle();
