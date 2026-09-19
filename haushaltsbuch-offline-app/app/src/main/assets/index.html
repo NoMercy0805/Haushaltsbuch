@@ -291,8 +291,8 @@
   .compact-list-row.expanded .compact-actions{max-height:60px;opacity:1;margin-top:10px;}
   .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
   .car-chip{background:var(--paper);color:var(--ink-soft);font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;}
-  .car-chip.active{background:var(--fuel);color:#fff;}
-  .car-chip.add-chip{color:var(--fuel);background:var(--fuel-soft);}
+  .car-chip.active{background:var(--primary);color:#fff;}
+  .car-chip.add-chip{color:var(--primary);background:var(--primary-soft);}
   .vc-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
   .vc-name{font-family:var(--serif);font-size:17px;font-weight:800;}
   .vc-monthly{font-family:var(--mono);font-size:14.5px;color:var(--ink-soft);font-weight:600;}
@@ -464,7 +464,7 @@
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap" style="display:flex;gap:8px;">
-          <button id="fuelTrackerBtn" class="settings-icon-btn" aria-label="Tank-Tracker" style="background:var(--fuel-soft);color:var(--fuel);">
+          <button id="fuelTrackerBtn" class="settings-icon-btn" aria-label="Tank-Tracker" style="background:var(--primary-soft);color:var(--primary);">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
           </button>
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
@@ -1032,7 +1032,7 @@
         <input type="text" id="newCarNameInput" placeholder="Name des Autos (z.B. Peugeot 2008)" style="width:100%;background:var(--surface);border:none;border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;margin-bottom:10px;box-sizing:border-box;">
         <div style="display:flex;gap:8px;">
           <button type="button" class="btn-cancel" id="cancelAddCarBtn" style="flex:1;">Abbrechen</button>
-          <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--fuel);">Hinzufügen</button>
+          <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--primary);">Hinzufügen</button>
         </div>
       </div>
 
@@ -1042,11 +1042,11 @@
         <div style="background:var(--paper);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
           <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
           <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-            <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+            <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;min-width:0;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+            <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
           </div>
           <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
-          <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--fuel);color:#fff;">Speichern</button>
+          <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--primary);color:#fff;">Speichern</button>
         </div>
 
         <p class="chooser-group-label">Verlauf</p>
@@ -4400,6 +4400,9 @@ var nativeStorage = {
     ]},
     { version:31, date:'19.09.2026, 18:33 Uhr', items:[
       '"Abbrechen"/"Hinzufügen"-Buttons beim Auto hinzufügen im Tank-Tracker haben jetzt die richtige, abgerundete Optik'
+    ]},
+    { version:32, date:'19.09.2026, 18:36 Uhr', items:[
+      'Tank-Tracker: Überlauf bei Liter/Literpreis-Feldern behoben (kein seitliches Wischen mehr nötig), Farbe von Orange auf das app-typische Blau umgestellt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4473,7 +4476,7 @@ var nativeStorage = {
                      '<div><label class="edit-field-label">€/Liter</label><input type="text" inputmode="decimal" class="edit-fuel-price" value="'+String(log.pricePerLiter).replace('.', ',')+'"></div>'+
                      '<div class="edit-actions">'+
                        '<button type="button" class="btn-cancel" data-action="cancel-edit-fuel">Abbrechen</button>'+
-                       '<button type="button" class="btn-save" data-action="save-edit-fuel" data-id="'+log.id+'" style="background:var(--fuel);">Speichern</button>'+
+                       '<button type="button" class="btn-save" data-action="save-edit-fuel" data-id="'+log.id+'" style="background:var(--primary);">Speichern</button>'+
                      '</div>'+
                    '</div><div class="compact-list">';
         } else {
