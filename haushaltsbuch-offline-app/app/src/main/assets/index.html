@@ -1684,6 +1684,7 @@ var nativeStorage = {
     {keywords:['spotify','musik','deezer','apple music'], icon:'music'},
     {keywords:['netflix','disney','amazon prime','streaming','magenta tv','sky','dazn','wow','paramount'], icon:'film'},
     {keywords:['auto','kfz','tüv','tuv'], icon:'car'},
+    {keywords:['tank','tanken','benzin','diesel','sprit','tankstelle'], icon:'fuel'},
     {keywords:['sparkasse','bank','gebühr','kredit','darlehen'], icon:'card'},
     {keywords:['sparen','spar','rücklage','ruecklage'], icon:'piggy'},
     {keywords:['essen','lebensmittel','restaurant','supermarkt','einkauf','edeka','rewe','lidl','aldi'], icon:'food'},
@@ -1709,6 +1710,7 @@ var nativeStorage = {
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     film: '<rect x="3" y="4" width="18" height="16" rx="2.2"/><path d="M9.5 8.5v7l5.5-3.5-5.5-3.5z" fill="currentColor" stroke="none"/>',
     car: '<path d="M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13"/><rect x="2" y="13" width="20" height="5" rx="1.6"/><circle cx="7" cy="18.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="17" cy="18.2" r="1.4" fill="currentColor" stroke="none"/>',
+    fuel: '<rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/>',
     card: '<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>',
     tag: '<path d="M6 3h9l3 3v15l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8.5h6M9 12.5h6"/>',
     auto: '<path d="M20 11A8 8 0 1 0 12 20"/><path d="M20 4v7h-7"/>',
@@ -1722,13 +1724,13 @@ var nativeStorage = {
     paw: '<circle cx="7" cy="10.2" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.6" fill="currentColor" stroke="none"/><circle cx="17" cy="10.2" r="1.6" fill="currentColor" stroke="none"/><path d="M12 12c-3 0-5 2-5 4.5S8.5 21 12 21s5-2 5-4.5-2-4.5-5-4.5z"/>'
   };
 
-  var ICON_PICKER_ORDER = ['auto','house','bolt','drop','flame','wifi','phone','shield','backpack','ballerina','dumbbell','music','film','car','card','piggy','food','shirt','ticket','heart','gift','suitcase','paw','tag'];
-  var ICON_PICKER_LABELS = {auto:'Automatisch',house:'Haus',bolt:'Strom',drop:'Wasser',flame:'Gas',wifi:'Internet',phone:'Telefon',shield:'Versicherung',backpack:'Kita/Schule',ballerina:'Tanz',dumbbell:'Fitness',music:'Musik',film:'Streaming',car:'Auto',card:'Bank/Kredit',piggy:'Sparen',food:'Essen',shirt:'Kleidung',ticket:'Freizeit',heart:'Gesundheit',gift:'Geschenk',suitcase:'Reisen',paw:'Haustier',tag:'Sonstiges'};
+  var ICON_PICKER_ORDER = ['auto','house','bolt','drop','flame','wifi','phone','shield','backpack','ballerina','dumbbell','music','film','car','fuel','card','piggy','food','shirt','ticket','heart','gift','suitcase','paw','tag'];
+  var ICON_PICKER_LABELS = {auto:'Automatisch',house:'Haus',bolt:'Strom',drop:'Wasser',flame:'Gas',wifi:'Internet',phone:'Telefon',shield:'Versicherung',backpack:'Kita/Schule',ballerina:'Tanz',dumbbell:'Fitness',music:'Musik',film:'Streaming',car:'Auto',fuel:'Tanken',card:'Bank/Kredit',piggy:'Sparen',food:'Essen',shirt:'Kleidung',ticket:'Freizeit',heart:'Gesundheit',gift:'Geschenk',suitcase:'Reisen',paw:'Haustier',tag:'Sonstiges'};
 
   var ICON_COLORS = {
     auto:'#8E8E93', house:'#F5A623', bolt:'#FFCC00', drop:'#0A84FF', flame:'#FF6B35',
     wifi:'#AF52DE', phone:'#30B0C7', shield:'#5E5CE6', backpack:'#FF375F', ballerina:'#FF2D78',
-    dumbbell:'#FF9500', music:'#BF5AF2', film:'#E63946', car:'#64B5F6', card:'#30D158',
+    dumbbell:'#FF9500', music:'#BF5AF2', film:'#E63946', car:'#64B5F6', fuel:'#D97706', card:'#30D158',
     piggy:'#FF6482', food:'#FF9F0A', shirt:'#64D2FF', ticket:'#AC8FFF', heart:'#FF453A',
     gift:'#FF375F', suitcase:'#AC8E68', paw:'#A2845E', tag:'#8E8E93'
   };
@@ -1744,7 +1746,7 @@ var nativeStorage = {
     ballerina:'freizeit', dumbbell:'freizeit', ticket:'freizeit',
     car:'auto',
     card:'finanzen', piggy:'finanzen',
-    food:'alltag', shirt:'alltag',
+    food:'alltag', shirt:'alltag', fuel:'alltag',
     heart:'gesundheit',
     gift:'sonstiges', suitcase:'sonstiges', paw:'sonstiges', tag:'sonstiges'
   };
@@ -4278,6 +4280,9 @@ var nativeStorage = {
     ]},
     { version:22, date:'19.09.2026, 12:10 Uhr', items:[
       'Symbol-Auswahl beim Bearbeiten von Fixkosten zeigt jetzt Gruppen-Überschriften (Wohnen, Verträge & Medien usw.) und eine kleine Beschriftung unter jedem Symbol'
+    ]},
+    { version:23, date:'19.09.2026, 12:14 Uhr', items:[
+      'Neues Symbol "Tanken" ergänzt (Kategorie Alltag & Einkauf), wird auch automatisch bei Namen wie "Tank" oder "Benzin" erkannt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
