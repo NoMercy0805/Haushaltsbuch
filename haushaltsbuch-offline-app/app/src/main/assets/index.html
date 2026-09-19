@@ -4608,6 +4608,9 @@ var nativeStorage = {
     { version:39, date:'19.09.2026, 20:17 Uhr', items:[
       'Neues Diagramm bei Tanken: Spritpreis-Entwicklung der letzten Tankvorgänge als Linie, mit Veränderung zum letzten Mal',
       'Plus-Button bei Tanken öffnet jetzt richtige Popup-Formulare für "Tankvorgang" und "Auto hinzufügen", statt nur zum Feld hinzuscrollen - wie bei den anderen Reitern'
+    ]},
+    { version:40, date:'19.09.2026, 20:20 Uhr', items:[
+      'Spritpreis-Entwicklung zeigt jetzt die Tankvorgänge aller Autos zusammen, statt nur des gerade ausgewählten'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4712,7 +4715,8 @@ var nativeStorage = {
     var logs = state.fuelLogs.filter(function(l){ return l.carId === selectedCarId; })
       .slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
 
-    renderFuelPriceChart(logs);
+    var allLogsSorted = state.fuelLogs.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    renderFuelPriceChart(allLogsSorted);
 
     var thisMonthKeyFuel = todayISO().slice(0,7);
     var logsThisMonth = logs.filter(function(l){ return (l.date||'').slice(0,7) === thisMonthKeyFuel; });
