@@ -648,7 +648,7 @@
             <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
               <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-              <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+              <input type="text" inputmode="decimal" data-milli-input id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
             </div>
             <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
             <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--primary);color:#fff;">Speichern</button>
@@ -1312,6 +1312,17 @@ var nativeStorage = {
     var euroStr = String(euros).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return (negative ? '-' : '') + euroStr + ',' + String(rest).padStart(2, '0');
   }
+  // Dasselbe Prinzip wie formatCentsToStr, nur mit drei statt zwei
+  // Nachkommastellen - fuer den Literpreis beim Tanken (z.B. 1,679 €).
+  function formatMilliToStr(milli){
+    milli = milli || 0;
+    var negative = milli < 0;
+    milli = Math.abs(milli);
+    var whole = Math.floor(milli / 1000);
+    var rest = milli % 1000;
+    var wholeStr = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (negative ? '-' : '') + wholeStr + ',' + String(rest).padStart(3, '0');
+  }
 
   // Beim Fokussieren eines Felds scrollt Android manchmal, bevor die
   // Tastatur fertig eingeblendet ist, wodurch das Feld zu weit oben landet.
@@ -1349,11 +1360,17 @@ var nativeStorage = {
   function setupCentInputs(){
     document.addEventListener('input', function(e){
       var input = e.target;
-      if(!input.matches || !input.matches('[data-cent-input]')) return;
-      var digits = input.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
-      if(digits.length > 9) digits = digits.slice(-9);
-      input.value = digits ? formatCentsToStr(parseInt(digits, 10)) : '';
-      input.setSelectionRange(input.value.length, input.value.length);
+      if(input.matches && input.matches('[data-cent-input]')){
+        var digits = input.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+        if(digits.length > 9) digits = digits.slice(-9);
+        input.value = digits ? formatCentsToStr(parseInt(digits, 10)) : '';
+        input.setSelectionRange(input.value.length, input.value.length);
+      } else if(input.matches && input.matches('[data-milli-input]')){
+        var mdigits = input.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+        if(mdigits.length > 9) mdigits = mdigits.slice(-9);
+        input.value = mdigits ? formatMilliToStr(parseInt(mdigits, 10)) : '';
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
     });
   }
 
@@ -4551,6 +4568,9 @@ var nativeStorage = {
     ]},
     { version:37, date:'19.09.2026, 20:08 Uhr', items:[
       'Plus-Button gibt es jetzt auch bei Tanken: "Tankvorgang" springt direkt zum Eintragen-Formular, "Auto hinzufügen" öffnet das Auto-Formular'
+    ]},
+    { version:38, date:'19.09.2026, 20:11 Uhr', items:[
+      '€/Liter-Feld beim Tanken hat jetzt dieselbe automatische Komma-Eingabe wie bei anderen Beträgen, aber mit drei statt zwei Nachkommastellen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4654,7 +4674,7 @@ var nativeStorage = {
           hhtml += '</div><div class="edit-row" data-id="'+log.id+'">'+
                      '<input type="date" class="edit-date" value="'+log.date+'">'+
                      '<div><label class="edit-field-label">Liter</label><input type="text" inputmode="decimal" data-cent-input class="edit-fuel-liters" value="'+formatCentsToStr(Math.round(log.liters*100))+'"></div>'+
-                     '<div><label class="edit-field-label">€/Liter</label><input type="text" inputmode="decimal" class="edit-fuel-price" value="'+String(log.pricePerLiter).replace('.', ',')+'"></div>'+
+                     '<div><label class="edit-field-label">€/Liter</label><input type="text" inputmode="decimal" data-milli-input class="edit-fuel-price" value="'+formatMilliToStr(Math.round(log.pricePerLiter*1000))+'"></div>'+
                      '<div class="edit-actions">'+
                        '<button type="button" class="btn-cancel" data-action="cancel-edit-fuel">Abbrechen</button>'+
                        '<button type="button" class="btn-save" data-action="save-edit-fuel" data-id="'+log.id+'" style="background:var(--primary);">Speichern</button>'+
