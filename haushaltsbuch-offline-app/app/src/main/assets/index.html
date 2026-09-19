@@ -173,11 +173,11 @@
     opacity:0;transform:translateY(-16px);pointer-events:none;
   }
   #heroCard{transition:opacity .2s ease, transform .2s ease;}
-  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary{
+  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary, #fuelSummary{
     transition:padding .2s ease, transform .12s var(--ios-ease);
     cursor:pointer;
   }
-  #invoiceSummary:active, #potSummary:active, #loanSummary:active, #tilgungSummary:active{transform:scale(0.985);}
+  #invoiceSummary:active, #potSummary:active, #loanSummary:active, #tilgungSummary:active, #fuelSummary:active{transform:scale(0.985);}
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
   .hero-card.hero-red{background:var(--hero-red-grad);}
@@ -185,7 +185,7 @@
   .hero-card.hero-blue{background:var(--hero-blue-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transform-origin:left center;transition:transform .2s ease, margin-bottom .2s ease;will-change:transform;}
-  #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed{
+  #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed, #fuelSummary.collapsed{
     padding-top:10px;padding-bottom:10px;
   }
   .hero-card-label{max-height:20px;opacity:1;overflow:hidden;transition:max-height .18s ease, opacity .12s ease, margin-bottom .18s ease;}
@@ -193,19 +193,22 @@
   #invoiceSummary.collapsed .hero-card-label,
   #potSummary.collapsed .hero-card-label,
   #loanSummary.collapsed .hero-card-label,
-  #tilgungSummary.collapsed .hero-card-label{
+  #tilgungSummary.collapsed .hero-card-label,
+  #fuelSummary.collapsed .hero-card-label{
     max-height:0;opacity:0;margin-bottom:0;
   }
   #invoiceSummary.collapsed .hero-card-sub-row,
   #potSummary.collapsed .hero-card-sub-row,
   #loanSummary.collapsed .hero-card-sub-row,
-  #tilgungSummary.collapsed .hero-card-sub-row{
+  #tilgungSummary.collapsed .hero-card-sub-row,
+  #fuelSummary.collapsed .hero-card-sub-row{
     max-height:0;opacity:0;
   }
   #invoiceSummary.collapsed .hero-card-value,
   #potSummary.collapsed .hero-card-value,
   #loanSummary.collapsed .hero-card-value,
-  #tilgungSummary.collapsed .hero-card-value{
+  #tilgungSummary.collapsed .hero-card-value,
+  #fuelSummary.collapsed .hero-card-value{
     transform:scale(0.56);margin-bottom:0;
   }
   .hero-card-sub-row{display:flex;gap:18px;}
@@ -626,6 +629,7 @@
       <!-- TANKEN -->
       <section id="tab-tanken" class="tab-panel">
         <h2 class="section-title" style="margin-top:0;">Tanken</h2>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fuelSummary"></div></div>
 
         <div id="carChipsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;"></div>
 
@@ -4512,6 +4516,9 @@ var nativeStorage = {
     ]},
     { version:35, date:'19.09.2026, 20:01 Uhr', items:[
       '"Tanken" ist jetzt ein vollwertiger Reiter unten (statt Button oben), "Diagramm" ist dafür als Button oben neben den Einstellungen gewandert'
+    ]},
+    { version:36, date:'19.09.2026, 20:04 Uhr', items:[
+      'Tanken hat jetzt eine Hero-Karte oben, wie bei den anderen Reitern - zeigt Gesamtbetrag, Liter und Ø Preis/Liter des aktuellen Monats fürs gewählte Auto, ein-/ausklappbar'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4559,6 +4566,9 @@ var nativeStorage = {
     }
 
     if(!selectedCarId){
+      document.getElementById('fuelSummary').innerHTML =
+        '<div class="hero-card-label" style="color:var(--hero-blue-text);">Tanken diesen Monat</div>'+
+        '<div class="hero-card-value">0,00 €</div>';
       noCarState.style.display = '';
       formAndHistory.style.display = 'none';
       return;
@@ -4571,6 +4581,20 @@ var nativeStorage = {
 
     var logs = state.fuelLogs.filter(function(l){ return l.carId === selectedCarId; })
       .slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+    var thisMonthKeyFuel = todayISO().slice(0,7);
+    var logsThisMonth = logs.filter(function(l){ return (l.date||'').slice(0,7) === thisMonthKeyFuel; });
+    var monthTotal = logsThisMonth.reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
+    var monthLiters = logsThisMonth.reduce(function(s,l){ return s + l.liters; }, 0);
+    var monthAvgPrice = monthLiters > 0 ? monthTotal/monthLiters : 0;
+    document.getElementById('fuelSummary').innerHTML =
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Tanken diesen Monat – '+escapeHtml(car.name)+'</div>'+
+      '<div class="hero-card-value">'+fmtEUR(monthTotal)+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Liter</div><div class="hero-card-sub-value">'+monthLiters.toFixed(2).replace('.', ',')+' L</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Ø Preis/Liter</div><div class="hero-card-sub-value">'+(monthAvgPrice>0?monthAvgPrice.toFixed(3).replace('.', ','):'–')+' €</div></div>'+
+      '</div>'+
+      heroToggleButtonHTML('fuelSummary');
 
     var historyContainer = document.getElementById('fuelHistoryList');
     if(logs.length === 0){
@@ -4937,9 +4961,9 @@ var nativeStorage = {
     if(el) el.classList.toggle('collapsed');
   }
   function setupHeroCardToggle(){
-    var ids = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary'];
+    var ids = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary', 'fuelSummary'];
     document.addEventListener('click', function(e){
-      var card = e.target.closest('#invoiceSummary, #potSummary, #loanSummary, #tilgungSummary');
+      var card = e.target.closest('#invoiceSummary, #potSummary, #loanSummary, #tilgungSummary, #fuelSummary');
       if(!card || ids.indexOf(card.id) === -1) return;
       card.classList.toggle('collapsed');
     });
