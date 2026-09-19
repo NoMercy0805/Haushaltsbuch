@@ -276,7 +276,6 @@
   .edit-row .full{grid-column:1 / -1;}
   .edit-row .edit-actions{grid-column:1 / -1;display:flex;gap:10px;justify-content:flex-end;margin-top:2px;}
   .edit-row .edit-actions button{border:none;border-radius:999px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;}
-  #addCarForm button{border:none;border-radius:999px;padding:12px 0;font-size:14.5px;font-weight:700;cursor:pointer;}
   .btn-save{background:var(--primary);color:#fff;}
   .btn-cancel{background:var(--surface);color:var(--ink-soft);border:none !important;}
 
@@ -294,9 +293,12 @@
   .compact-list-row .compact-actions{display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;width:100%;max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .compact-list-row.expanded .compact-actions{max-height:60px;opacity:1;margin-top:10px;}
   .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
-  .car-chip{background:var(--paper);color:var(--ink-soft);font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;}
-  .car-chip.active{background:var(--primary);color:#fff;}
-  .car-chip.add-chip{color:var(--primary);background:var(--primary-soft);}
+  .car-chip{display:inline-flex;align-items:center;gap:7px;background:var(--paper);color:var(--ink-soft);font-size:13px;font-weight:700;padding:10px 16px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;transition:background .15s ease, color .15s ease, box-shadow .15s ease;}
+  .car-chip svg{opacity:0.7;flex-shrink:0;}
+  .car-chip.active{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(18,104,255,0.28);}
+  .car-chip.active svg{opacity:1;}
+  .range-chip{background:var(--paper);color:var(--ink-soft);font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;}
+  .range-chip.active{background:var(--primary);color:#fff;}
   .vc-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
   .vc-name{font-family:var(--serif);font-size:17px;font-weight:800;}
   .vc-monthly{font-family:var(--mono);font-size:14.5px;color:var(--ink-soft);font-weight:600;}
@@ -639,19 +641,12 @@
           </div>
           <svg id="fuelPriceChartSvg" viewBox="0 0 300 100" width="100%" height="100" preserveAspectRatio="none"></svg>
           <div id="fuelPriceChartLabels" style="display:flex;justify-content:space-between;color:var(--ink-soft);font-size:10.5px;margin-top:6px;"></div>
+          <div id="fuelPriceRangeRow" style="display:flex;gap:6px;overflow-x:auto;margin-top:14px;"></div>
         </div>
 
         <div id="carChipsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;"></div>
 
-        <div id="addCarForm" style="display:none;background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
-          <input type="text" id="newCarNameInput" placeholder="Name des Autos (z.B. Peugeot 2008)" style="width:100%;background:var(--paper);border:none;border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;margin-bottom:10px;box-sizing:border-box;">
-          <div style="display:flex;gap:8px;">
-            <button type="button" class="btn-cancel" id="cancelAddCarBtn" style="flex:1;">Abbrechen</button>
-            <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--primary);">Hinzufügen</button>
-          </div>
-        </div>
-
-        <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe oben auf "+ Auto".</div>
+        <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe unten auf das Plus, um eins hinzuzufügen.</div>
 
         <div id="fuelFormAndHistory" style="display:none;">
           <div style="background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
@@ -4611,6 +4606,11 @@ var nativeStorage = {
     ]},
     { version:40, date:'19.09.2026, 20:20 Uhr', items:[
       'Spritpreis-Entwicklung zeigt jetzt die Tankvorgänge aller Autos zusammen, statt nur des gerade ausgewählten'
+    ]},
+    { version:41, date:'19.09.2026, 20:25 Uhr', items:[
+      'Spritpreis-Diagramm: Zeitraum wählbar (Woche, Monat, 3 Monate, 6 Monate, aktuelles Jahr)',
+      '"+ Auto"-Chip bei Tanken entfernt (Auto hinzufügen läuft jetzt nur noch über den Plus-Button unten)',
+      'Auto-Auswahl etwas überarbeitet: kleines Auto-Symbol je Chip, aktiver Chip jetzt mit Schatten hervorgehoben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4643,10 +4643,54 @@ var nativeStorage = {
 
   // Zeichnet den Spritpreis-Verlauf der letzten Tankvorgaenge als einfache
   // SVG-Linie (kein externes Diagramm-Skript noetig, funktioniert offline).
+  var FUEL_CHART_RANGES = [
+    {key:'week', label:'Woche', days:7},
+    {key:'month', label:'Monat', days:30},
+    {key:'3months', label:'3 Monate', days:90},
+    {key:'6months', label:'6 Monate', days:180},
+    {key:'year', label:'Jahr', days:null}
+  ];
+  function loadFuelChartRange(){
+    try{
+      var v = nativeStorage.getItem('household-fuel-chart-range');
+      if(FUEL_CHART_RANGES.some(function(r){ return r.key === v; })) return v;
+    }catch(err){}
+    return 'month';
+  }
+  function saveFuelChartRange(v){
+    try{ nativeStorage.setItem('household-fuel-chart-range', v); }catch(err){}
+  }
+  var fuelChartRange = loadFuelChartRange();
+
+  function fuelChartCutoffDate(rangeKey){
+    var range = FUEL_CHART_RANGES.filter(function(r){ return r.key === rangeKey; })[0] || FUEL_CHART_RANGES[1];
+    var now = new Date();
+    if(range.days === null){ return new Date(now.getFullYear(), 0, 1); }
+    var cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - range.days);
+    return cutoff;
+  }
+
   function renderFuelPriceChart(sortedLogsDesc){
     var block = document.getElementById('fuelPriceChartBlock');
-    var points = sortedLogsDesc.slice(0, 8).slice().reverse(); // chronologisch, letzte 8
-    if(points.length < 2){ block.style.display = 'none'; return; }
+
+    var rangeRow = document.getElementById('fuelPriceRangeRow');
+    rangeRow.innerHTML = FUEL_CHART_RANGES.map(function(r){
+      return '<button type="button" class="range-chip'+(r.key===fuelChartRange?' active':'')+'" data-range-key="'+r.key+'">'+r.label+'</button>';
+    }).join('');
+
+    if(sortedLogsDesc.length < 2){ block.style.display = 'none'; return; }
+
+    var cutoff = fuelChartCutoffDate(fuelChartRange);
+    var points = sortedLogsDesc.filter(function(l){ return parseISO(l.date) >= cutoff; }).slice().reverse();
+    if(points.length < 2){
+      block.style.display = '';
+      document.getElementById('fuelPriceChartSvg').innerHTML = '';
+      document.getElementById('fuelPriceChartLast').textContent = '';
+      document.getElementById('fuelPriceChartDelta').textContent = '';
+      document.getElementById('fuelPriceChartLabels').innerHTML = '<span style="color:var(--ink-soft);">Zu wenige Tankvorgänge in diesem Zeitraum.</span>';
+      return;
+    }
     block.style.display = '';
 
     var prices = points.map(function(l){ return l.pricePerLiter; });
@@ -4684,11 +4728,11 @@ var nativeStorage = {
 
   function renderFuelTracker(){
     var chipsRow = document.getElementById('carChipsRow');
+    var carIconSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13"/><rect x="2" y="13" width="20" height="5" rx="1.6"/></svg>';
     var html = '';
     state.cars.forEach(function(car){
-      html += '<button type="button" class="car-chip'+(car.id===selectedCarId?' active':'')+'" data-action="select-car" data-car-id="'+car.id+'">'+escapeHtml(car.name)+'</button>';
+      html += '<button type="button" class="car-chip'+(car.id===selectedCarId?' active':'')+'" data-action="select-car" data-car-id="'+car.id+'">'+carIconSvg+escapeHtml(car.name)+'</button>';
     });
-    html += '<button type="button" class="car-chip add-chip" data-action="show-add-car">+ Auto</button>';
     chipsRow.innerHTML = html;
 
     var noCarState = document.getElementById('fuelNoCarState');
@@ -4829,22 +4873,6 @@ var nativeStorage = {
       document.getElementById('addFuelLogOverlay').classList.remove('open');
     });
 
-    document.getElementById('cancelAddCarBtn').addEventListener('click', function(){
-      document.getElementById('addCarForm').style.display = 'none';
-      document.getElementById('newCarNameInput').value = '';
-    });
-    document.getElementById('saveCarBtn').addEventListener('click', function(){
-      var name = document.getElementById('newCarNameInput').value.trim();
-      if(!name) return;
-      var car = { id: genId(), name: name };
-      state.cars.push(car);
-      selectedCarId = car.id;
-      saveState();
-      document.getElementById('addCarForm').style.display = 'none';
-      document.getElementById('newCarNameInput').value = '';
-      renderFuelTracker();
-    });
-
     document.getElementById('fuelLitersInput').addEventListener('input', updateFuelTotalPreview);
     document.getElementById('fuelPriceInput').addEventListener('input', updateFuelTotalPreview);
 
@@ -4860,15 +4888,20 @@ var nativeStorage = {
       renderFuelTracker();
     });
 
+    document.getElementById('fuelPriceRangeRow').addEventListener('click', function(e){
+      var btn = e.target.closest('[data-range-key]');
+      if(!btn) return;
+      fuelChartRange = btn.dataset.rangeKey;
+      saveFuelChartRange(fuelChartRange);
+      renderFuelTracker();
+    });
+
     document.getElementById('carChipsRow').addEventListener('click', function(e){
       var btn = e.target.closest('button');
       if(!btn) return;
       if(btn.dataset.action === 'select-car'){
         selectedCarId = btn.dataset.carId;
         renderFuelTracker();
-      } else if(btn.dataset.action === 'show-add-car'){
-        document.getElementById('addCarForm').style.display = '';
-        document.getElementById('newCarNameInput').focus();
       }
     });
 
