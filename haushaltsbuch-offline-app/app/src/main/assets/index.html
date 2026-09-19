@@ -1493,6 +1493,23 @@ var nativeStorage = {
     var nextDueAbs = anchorMonthAbs + k*cycle;
     return nextDueAbs - currentMonthAbs;
   }
+  // Prueft, ob innerhalb des laufenden Kalenderjahres noch (mindestens) ein
+  // weiterer Faelligkeitstermin ansteht - bei z.B. vierteljaehrlichen
+  // Zahlungen (GEZ) reicht eine einzelne Zahlung im Jahr nicht aus, um
+  // "fertig fuer dieses Jahr" zu sein, solange noch ein Termin offen ist.
+  function hasMoreDueDatesThisYear(interval, dueMonth, dueYear){
+    var cycle = intervalMonths(interval);
+    var anchor = dueMonth || 1;
+    var now = new Date();
+    var currentMonthAbs = now.getFullYear()*12 + now.getMonth();
+    var anchorYear = (interval === 'zweijaehrlich' && dueYear) ? dueYear : now.getFullYear();
+    var anchorMonthAbs = anchorYear*12 + (anchor-1);
+    var diff = currentMonthAbs - anchorMonthAbs;
+    var k = Math.ceil(diff / cycle);
+    var nextDueAbs = anchorMonthAbs + k*cycle;
+    var nextDueYear = Math.floor(nextDueAbs / 12);
+    return nextDueYear <= now.getFullYear();
+  }
   // Prueft, ob eine Kostenart, die DIESEN Monat faellig ist, bereits eine
   // Zahlung in diesem Monat erhalten hat - damit sie in der Liste nach unten
   // rutschen kann, statt weiter oben "erledigt" rumzuliegen.
@@ -2221,7 +2238,7 @@ var nativeStorage = {
           var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
           var vcTint = '';
           if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
-          else if(isPaidThisYear(item)) vcTint = 'background:var(--savings-soft);';
+          else if(isPaidThisYear(item) && !hasMoreDueDatesThisYear(item.interval, item.dueMonth, item.dueYear)) vcTint = 'background:var(--savings-soft);';
           html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
@@ -4306,6 +4323,9 @@ var nativeStorage = {
     ]},
     { version:27, date:'19.09.2026, 13:49 Uhr', items:[
       'Tab-Leiste unten jetzt bündig am unteren Bildschirmrand statt mit Abstand schwebend'
+    ]},
+    { version:28, date:'19.09.2026, 13:53 Uhr', items:[
+      'Variable Kosten: bei mehreren Fälligkeiten pro Jahr (z.B. vierteljährlich) wird erst grün, sobald die LETZTE Zahlung des Jahres erfasst ist, nicht schon bei der ersten'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
