@@ -3255,15 +3255,17 @@ var nativeStorage = {
     },
     tanken: function(){
       if(state.cars.length === 0) return null;
-      var fuelTotal = state.fuelLogs.reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
+      var thisMonthKeyOverview = todayISO().slice(0,7);
+      var logsThisMonthOverview = state.fuelLogs.filter(function(l){ return (l.date||'').slice(0,7) === thisMonthKeyOverview; });
+      var fuelTotal = logsThisMonthOverview.reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
       var carSubs = state.cars.map(function(car){
-        var carTotal = state.fuelLogs.filter(function(l){ return l.carId === car.id; })
+        var carTotal = logsThisMonthOverview.filter(function(l){ return l.carId === car.id; })
           .reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
         return { l: car.name, v: fmtEUR(carTotal) };
       });
       return {
         tab:'tanken', color:'blue', value: fmtEUR(fuelTotal),
-        label:'Tanken gesamt',
+        label:'Tanken diesen Monat',
         subs: carSubs,
         icon:'<rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/>'
       };
@@ -4624,6 +4626,9 @@ var nativeStorage = {
     ]},
     { version:44, date:'19.09.2026, 20:36 Uhr', items:[
       'Tankvorgang-Formular hat jetzt ein Datumsfeld (steht standardmäßig auf heute), falls man mal einen Tankvorgang nachträgt'
+    ]},
+    { version:45, date:'19.09.2026, 21:45 Uhr', items:[
+      '"Tanken gesamt"-Karte in der Übersicht zeigt jetzt nur noch den aktuellen Monat, statt der Gesamtsumme aller Zeit - wie bei der Hero-Karte im Tanken-Tab'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
