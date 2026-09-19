@@ -720,6 +720,14 @@
         <span class="fab-option-label">Kredit</span>
         <button type="button" class="fab-option-icon" style="background:var(--expense);" data-open-form="addLoanOverlay"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg></button>
       </div>
+      <div class="fab-option" data-tab-group="tanken" data-fab-action="add-fuel-log">
+        <span class="fab-option-label">Tankvorgang</span>
+        <button type="button" class="fab-option-icon" style="background:var(--primary);" data-fab-action="add-fuel-log"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg></button>
+      </div>
+      <div class="fab-option" data-tab-group="tanken" data-fab-action="add-car">
+        <span class="fab-option-label">Auto hinzufügen</span>
+        <button type="button" class="fab-option-icon" style="background:var(--ink-soft);" data-fab-action="add-car"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13"/><rect x="2" y="13" width="20" height="5" rx="1.6"/><path d="M12 16v3m-1.5-1.5h3"/></svg></button>
+      </div>
     </div>
     <button id="addEntryFab" class="fab-add" aria-label="Hinzufügen">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -3294,7 +3302,7 @@ var nativeStorage = {
     });
   }
 
-  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan', 'tanken'];
+  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan'];
 
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
@@ -3398,6 +3406,27 @@ var nativeStorage = {
         var targetId = btn.getAttribute('data-open-form');
         closeDial();
         document.getElementById(targetId).classList.add('open');
+      });
+    });
+
+    // Tanken hat keine eigenen Formular-Overlays (die Felder stecken schon
+    // im Tab) - hier wird stattdessen direkt hingescrollt und fokussiert.
+    speedDial.querySelectorAll('[data-fab-action]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var action = btn.getAttribute('data-fab-action');
+        closeDial();
+        if(action === 'add-car'){
+          var addCarForm = document.getElementById('addCarForm');
+          addCarForm.style.display = '';
+          addCarForm.scrollIntoView({behavior:'smooth', block:'center'});
+          document.getElementById('newCarNameInput').focus();
+        } else if(action === 'add-fuel-log'){
+          var litersInput = document.getElementById('fuelLitersInput');
+          if(litersInput){
+            litersInput.scrollIntoView({behavior:'smooth', block:'center'});
+            litersInput.focus();
+          }
+        }
       });
     });
 
@@ -4519,6 +4548,9 @@ var nativeStorage = {
     ]},
     { version:36, date:'19.09.2026, 20:04 Uhr', items:[
       'Tanken hat jetzt eine Hero-Karte oben, wie bei den anderen Reitern - zeigt Gesamtbetrag, Liter und Ø Preis/Liter des aktuellen Monats fürs gewählte Auto, ein-/ausklappbar'
+    ]},
+    { version:37, date:'19.09.2026, 20:08 Uhr', items:[
+      'Plus-Button gibt es jetzt auch bei Tanken: "Tankvorgang" springt direkt zum Eintragen-Formular, "Auto hinzufügen" öffnet das Auto-Formular'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
