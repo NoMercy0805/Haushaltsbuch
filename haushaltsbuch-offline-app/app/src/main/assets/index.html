@@ -137,7 +137,7 @@
   .stat-value.rest-color{color:var(--primary);}
 
   nav.tabs{display:flex;background:var(--surface);border-radius:20px;border-bottom:none;overflow-x:auto;padding:6px;gap:2px;
-    position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
+    position:fixed;left:0;right:0;bottom:0;padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));
     width:100%;padding-left:calc(6px + env(safe-area-inset-left, 0px));padding-right:calc(6px + env(safe-area-inset-right, 0px));z-index:60;
     transition:transform .2s ease, opacity .2s ease;
     box-shadow:0 4px 16px rgba(0,0,0,0.12),0 1px 4px rgba(0,0,0,0.08);}
@@ -4303,6 +4303,9 @@ var nativeStorage = {
     ]},
     { version:26, date:'19.09.2026, 13:46 Uhr', items:[
       'Variable Kosten: nur noch tatsächlich diese Jahr bereits bezahlte Kostenarten werden grün dargestellt - noch nicht fällige, aber auch noch nicht bezahlte bleiben weiß'
+    ]},
+    { version:27, date:'19.09.2026, 13:49 Uhr', items:[
+      'Tab-Leiste unten jetzt bündig am unteren Bildschirmrand statt mit Abstand schwebend'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
