@@ -1264,6 +1264,9 @@ var nativeStorage = {
     }
     var metaTheme = document.querySelector('meta[name="theme-color"]');
     if(metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0F1013' : '#1268FF');
+    if(window.AndroidBridge && typeof window.AndroidBridge.setStatusBarTheme === 'function'){
+      try{ window.AndroidBridge.setStatusBarTheme(theme === 'dark'); }catch(e){}
+    }
   }
 
   function systemPrefersDark(){
@@ -4768,6 +4771,9 @@ var nativeStorage = {
     ]},
     { version:50, date:'19.09.2026, 22:31 Uhr', items:[
       'Einklapp-Funktion bei Einnahmen, Fixkosten, Kostenarten und Verlauf Spartopf entfernt, da diese jetzt eigene Unteransichten sind - Bezahlte Rechnungen, Abbezahlte Kredite und Tilgungsplan-Verlauf bleiben weiterhin einklappbar'
+    ]},
+    { version:51, date:'19.09.2026, 23:20 Uhr', items:[
+      'Die Android-Statusleiste oben (Uhrzeit, Akku usw.) passt sich jetzt automatisch an helles/dunkles Design an, statt immer blau zu sein'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;

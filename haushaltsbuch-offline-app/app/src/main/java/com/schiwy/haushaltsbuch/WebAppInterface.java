@@ -62,6 +62,31 @@ public class WebAppInterface {
         return nightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
+    // Wird von der Web-App aufgerufen, sobald sie weiss, ob gerade das helle
+    // oder dunkle Design aktiv ist (inkl. bei "System" und Wechsel waehrend
+    // die App laeuft) - passt die Android-Statusleiste (Uhrzeit, Akku, etc.)
+    // farblich an, statt sie fest auf Blau zu belassen.
+    @JavascriptInterface
+    public void setStatusBarTheme(final boolean isDark) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                android.view.Window window = activity.getWindow();
+                window.setStatusBarColor(android.graphics.Color.parseColor(isDark ? "#0F1013" : "#F2F2F5"));
+                if (Build.VERSION.SDK_INT >= 23) {
+                    android.view.View decor = window.getDecorView();
+                    int flags = decor.getSystemUiVisibility();
+                    if (isDark) {
+                        flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    } else {
+                        flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    }
+                    decor.setSystemUiVisibility(flags);
+                }
+            }
+        });
+    }
+
     // ---------- Manuelles Backup (Downloads) ----------
 
     @JavascriptInterface
