@@ -649,16 +649,6 @@
         <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe unten auf das Plus, um eins hinzuzufügen.</div>
 
         <div id="fuelFormAndHistory" style="display:none;">
-          <div style="background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
-            <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-              <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-              <input type="text" inputmode="decimal" data-milli-input id="fuelPriceInput" placeholder="€/Liter" style="flex:1;min-width:0;background:var(--paper);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
-            </div>
-            <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
-            <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--primary);color:#fff;">Speichern</button>
-          </div>
-
           <p class="chooser-group-label">Verlauf</p>
           <div id="fuelHistoryList"></div>
         </div>
@@ -4611,6 +4601,10 @@ var nativeStorage = {
       'Spritpreis-Diagramm: Zeitraum wählbar (Woche, Monat, 3 Monate, 6 Monate, aktuelles Jahr)',
       '"+ Auto"-Chip bei Tanken entfernt (Auto hinzufügen läuft jetzt nur noch über den Plus-Button unten)',
       'Auto-Auswahl etwas überarbeitet: kleines Auto-Symbol je Chip, aktiver Chip jetzt mit Schatten hervorgehoben'
+    ]},
+    { version:42, date:'19.09.2026, 20:30 Uhr', items:[
+      '"Neuer Tankvorgang"-Formular im Tanken-Tab entfernt, da schon über den Plus-Button erreichbar',
+      'Spritpreis-Diagramm zeigt jetzt die Zeitraum-Auswahl auch bei 0 oder 1 Tankvorgängen an, statt komplett zu verschwinden'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4673,25 +4667,22 @@ var nativeStorage = {
 
   function renderFuelPriceChart(sortedLogsDesc){
     var block = document.getElementById('fuelPriceChartBlock');
+    block.style.display = '';
 
     var rangeRow = document.getElementById('fuelPriceRangeRow');
     rangeRow.innerHTML = FUEL_CHART_RANGES.map(function(r){
       return '<button type="button" class="range-chip'+(r.key===fuelChartRange?' active':'')+'" data-range-key="'+r.key+'">'+r.label+'</button>';
     }).join('');
 
-    if(sortedLogsDesc.length < 2){ block.style.display = 'none'; return; }
-
     var cutoff = fuelChartCutoffDate(fuelChartRange);
     var points = sortedLogsDesc.filter(function(l){ return parseISO(l.date) >= cutoff; }).slice().reverse();
     if(points.length < 2){
-      block.style.display = '';
       document.getElementById('fuelPriceChartSvg').innerHTML = '';
       document.getElementById('fuelPriceChartLast').textContent = '';
       document.getElementById('fuelPriceChartDelta').textContent = '';
-      document.getElementById('fuelPriceChartLabels').innerHTML = '<span style="color:var(--ink-soft);">Zu wenige Tankvorgänge in diesem Zeitraum.</span>';
+      document.getElementById('fuelPriceChartLabels').innerHTML = '<span style="color:var(--ink-soft);">Noch zu wenige Tankvorgänge in diesem Zeitraum.</span>';
       return;
     }
-    block.style.display = '';
 
     var prices = points.map(function(l){ return l.pricePerLiter; });
     var min = Math.min.apply(null, prices), max = Math.max.apply(null, prices);
@@ -4738,6 +4729,9 @@ var nativeStorage = {
     var noCarState = document.getElementById('fuelNoCarState');
     var formAndHistory = document.getElementById('fuelFormAndHistory');
 
+    var allLogsSorted = state.fuelLogs.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    renderFuelPriceChart(allLogsSorted);
+
     if(!selectedCarId || !state.cars.some(function(c){ return c.id === selectedCarId; })){
       selectedCarId = state.cars.length ? state.cars[0].id : null;
     }
@@ -4754,13 +4748,9 @@ var nativeStorage = {
     formAndHistory.style.display = '';
 
     var car = state.cars.filter(function(c){ return c.id === selectedCarId; })[0];
-    document.getElementById('fuelFormCarLabel').textContent = 'Neuer Tankvorgang – ' + car.name;
 
     var logs = state.fuelLogs.filter(function(l){ return l.carId === selectedCarId; })
       .slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
-
-    var allLogsSorted = state.fuelLogs.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
-    renderFuelPriceChart(allLogsSorted);
 
     var thisMonthKeyFuel = todayISO().slice(0,7);
     var logsThisMonth = logs.filter(function(l){ return (l.date||'').slice(0,7) === thisMonthKeyFuel; });
@@ -4829,13 +4819,6 @@ var nativeStorage = {
     }
   }
 
-  function updateFuelTotalPreview(){
-    var liters = parseAmount(document.getElementById('fuelLitersInput').value);
-    var price = parseAmount(document.getElementById('fuelPriceInput').value);
-    var total = (!isNaN(liters) && !isNaN(price)) ? liters*price : 0;
-    document.getElementById('fuelTotalPreview').textContent = fmtEUR(total);
-  }
-
   function setupDiagrammOverlay(){
     var overlay = document.getElementById('diagrammOverlay');
     document.getElementById('diagrammBtn').addEventListener('click', function(){
@@ -4871,21 +4854,6 @@ var nativeStorage = {
       document.getElementById('fuelModalPrice').value = '';
       renderFuelTracker();
       document.getElementById('addFuelLogOverlay').classList.remove('open');
-    });
-
-    document.getElementById('fuelLitersInput').addEventListener('input', updateFuelTotalPreview);
-    document.getElementById('fuelPriceInput').addEventListener('input', updateFuelTotalPreview);
-
-    document.getElementById('saveFuelLogBtn').addEventListener('click', function(){
-      var liters = parseAmount(document.getElementById('fuelLitersInput').value);
-      var price = parseAmount(document.getElementById('fuelPriceInput').value);
-      if(isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0 || !selectedCarId) return;
-      state.fuelLogs.push({ id: genId(), carId: selectedCarId, liters: liters, pricePerLiter: price, date: todayISO() });
-      saveState();
-      document.getElementById('fuelLitersInput').value = '';
-      document.getElementById('fuelPriceInput').value = '';
-      updateFuelTotalPreview();
-      renderFuelTracker();
     });
 
     document.getElementById('fuelPriceRangeRow').addEventListener('click', function(e){
