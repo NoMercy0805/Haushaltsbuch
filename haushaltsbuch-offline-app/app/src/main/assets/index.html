@@ -2209,8 +2209,7 @@ var nativeStorage = {
           var annualGoal = item.monthlyAmount * intervalMonths(item.interval);
           var buffer = annualGoal - (item.actualAmount||0);
           var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
-          var vcTint = '';
-          if(dueThisMonth) vcTint = isPaidThisCycle(item) ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
+          var vcTint = (dueThisMonth && !isPaidThisCycle(item)) ? 'background:var(--expense-soft);' : 'background:var(--savings-soft);';
           html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
@@ -4283,6 +4282,9 @@ var nativeStorage = {
     ]},
     { version:23, date:'19.09.2026, 12:14 Uhr', items:[
       'Neues Symbol "Tanken" ergänzt (Kategorie Alltag & Einkauf), wird auch automatisch bei Namen wie "Tank" oder "Benzin" erkannt'
+    ]},
+    { version:24, date:'19.09.2026, 13:11 Uhr', items:[
+      'Variable Kosten: Kostenarten, die noch nicht fällig sind, werden jetzt auch grün dargestellt (nicht nur die, die bereits diesen Monat bezahlt wurden) - rot nur noch bei fällig UND unbezahlt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
