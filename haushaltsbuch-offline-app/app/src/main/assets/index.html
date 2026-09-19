@@ -1503,6 +1503,16 @@ var nativeStorage = {
       return p.itemId === item.id && p.date && p.date.slice(0,7) === thisMonthKey;
     });
   }
+  // Prueft, ob fuer diese Kostenart bereits eine Zahlung im laufenden
+  // Kalenderjahr erfasst wurde - unabhaengig davon, ob sie diesen Monat
+  // faellig ist. So bleibt eine im August bezahlte Jahresgebuehr auch im
+  // September noch gruen markiert.
+  function isPaidThisYear(item){
+    var thisYear = todayISO().slice(0,4);
+    return state.variablePayments.some(function(p){
+      return p.itemId === item.id && p.date && p.date.slice(0,4) === thisYear;
+    });
+  }
   function intervalGoalLabel(interval){
     if(interval === 'monatlich') return 'Zielbetrag (1×)';
     if(interval === 'vierteljaehrlich') return 'Zielbetrag (3×)';
@@ -2209,7 +2219,9 @@ var nativeStorage = {
           var annualGoal = item.monthlyAmount * intervalMonths(item.interval);
           var buffer = annualGoal - (item.actualAmount||0);
           var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
-          var vcTint = (dueThisMonth && !isPaidThisCycle(item)) ? 'background:var(--expense-soft);' : 'background:var(--savings-soft);';
+          var vcTint = '';
+          if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
+          else if(isPaidThisYear(item)) vcTint = 'background:var(--savings-soft);';
           html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
                     '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
@@ -4288,6 +4300,9 @@ var nativeStorage = {
     ]},
     { version:25, date:'19.09.2026, 13:40 Uhr', items:[
       'Tab-Leiste unten jetzt über die komplette Bildschirmbreite statt schwebend mit Rand links/rechts'
+    ]},
+    { version:26, date:'19.09.2026, 13:46 Uhr', items:[
+      'Variable Kosten: nur noch tatsächlich diese Jahr bereits bezahlte Kostenarten werden grün dargestellt - noch nicht fällige, aber auch noch nicht bezahlte bleiben weiß'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
