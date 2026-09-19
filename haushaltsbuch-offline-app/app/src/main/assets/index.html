@@ -182,6 +182,7 @@
   .hero-card.hero-green{background:var(--hero-green-grad);}
   .hero-card.hero-red{background:var(--hero-red-grad);}
   .hero-card.hero-purple{background:var(--hero-purple-grad);}
+  .hero-card.hero-blue{background:var(--hero-blue-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transform-origin:left center;transition:transform .2s ease, margin-bottom .2s ease;will-change:transform;}
   #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed{
@@ -363,6 +364,11 @@
   .loan-carryover-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:6px 0;font-size:11.5px;font-family:var(--sans);cursor:pointer;}
   .loan-carryover-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
   .tab-visibility-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;font-size:15px;color:var(--ink);}
+  .widget-order-row{display:flex;align-items:center;gap:10px;padding:11px 2px;font-size:15px;color:var(--ink);background:var(--surface);touch-action:none;}
+  .widget-order-row .drag-handle{color:var(--ink-soft);flex-shrink:0;cursor:grab;padding:4px;}
+  .widget-order-row .widget-order-label{flex:1;min-width:0;}
+  .widget-order-row.dragging{opacity:0.5;background:var(--paper);border-radius:10px;}
+  .widget-order-row.drag-placeholder{outline:2px dashed var(--primary);border-radius:10px;}
   .tab-visibility-row:not(:last-child){border-bottom:1px solid var(--rule);}
   .toggle-switch{position:relative;display:inline-block;width:51px;height:31px;flex-shrink:0;}
   .toggle-switch input{opacity:0;width:100%;height:100%;margin:0;position:absolute;inset:0;z-index:2;cursor:pointer;}
@@ -929,37 +935,8 @@
         <h2>Übersicht-Anzeige</h2>
         <span style="width:34px;"></span>
       </div>
-      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen im Übersicht-Tab angezeigt werden?</p>
-      <div class="summary-card" id="overviewWidgetList">
-        <div class="tab-visibility-row">
-          <span>Offene Rechnungen</span>
-          <label class="toggle-switch">
-            <input type="checkbox" data-widget-toggle="invoices">
-            <span class="track"></span><span class="thumb"></span>
-          </label>
-        </div>
-        <div class="tab-visibility-row">
-          <span>Variable Kosten</span>
-          <label class="toggle-switch">
-            <input type="checkbox" data-widget-toggle="variabel">
-            <span class="track"></span><span class="thumb"></span>
-          </label>
-        </div>
-        <div class="tab-visibility-row">
-          <span>Kredite</span>
-          <label class="toggle-switch">
-            <input type="checkbox" data-widget-toggle="kredite">
-            <span class="track"></span><span class="thumb"></span>
-          </label>
-        </div>
-        <div class="tab-visibility-row">
-          <span>Tilgungsplan</span>
-          <label class="toggle-switch">
-            <input type="checkbox" data-widget-toggle="tilgungsplan">
-            <span class="track"></span><span class="thumb"></span>
-          </label>
-        </div>
-      </div>
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen im Übersicht-Tab angezeigt werden? Am Griff halten und ziehen, um die Reihenfolge zu ändern.</p>
+      <div class="summary-card" id="overviewWidgetList"></div>
     </div>
   </div>
 
@@ -3060,7 +3037,7 @@ var nativeStorage = {
     });
   }
 
-  var OVERVIEW_WIDGET_KEYS = ['invoices', 'variabel', 'kredite', 'tilgungsplan'];
+  var OVERVIEW_WIDGET_KEYS = ['invoices', 'variabel', 'kredite', 'tilgungsplan', 'tanken'];
 
   function loadOverviewWidgetPrefs(){
     var result = {};
@@ -3082,81 +3059,198 @@ var nativeStorage = {
     try{ nativeStorage.setItem('household-overview-widgets', JSON.stringify(overviewWidgetPrefs)); }catch(err){}
   }
 
-  function setupOverviewWidgetToggles(){
-    document.querySelectorAll('input[data-widget-toggle]').forEach(function(cb){
-      cb.checked = overviewWidgetPrefs[cb.dataset.widgetToggle];
-      cb.addEventListener('change', function(){
-        overviewWidgetPrefs[cb.dataset.widgetToggle] = cb.checked;
-        saveOverviewWidgetPrefs();
-        renderOverviewWidgets();
-      });
+  var OVERVIEW_WIDGET_LABELS = {
+    invoices: 'Offene Rechnungen',
+    variabel: 'Variable Kosten',
+    kredite: 'Kredite',
+    tilgungsplan: 'Tilgungsplan',
+    tanken: 'Tanken'
+  };
+  var DRAG_HANDLE_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>';
+
+  function renderWidgetOrderList(){
+    var container = document.getElementById('overviewWidgetList');
+    if(!container) return;
+    var html = '';
+    overviewWidgetOrder.forEach(function(key){
+      html += '<div class="widget-order-row" data-widget-key="'+key+'">'+
+                '<span class="drag-handle" data-drag-handle>'+DRAG_HANDLE_ICON+'</span>'+
+                '<span class="widget-order-label">'+(OVERVIEW_WIDGET_LABELS[key]||key)+'</span>'+
+                '<label class="toggle-switch">'+
+                  '<input type="checkbox" data-widget-toggle="'+key+'"'+(overviewWidgetPrefs[key]?' checked':'')+'>'+
+                  '<span class="track"></span><span class="thumb"></span>'+
+                '</label>'+
+              '</div>';
     });
+    container.innerHTML = html;
   }
+
+  function setupOverviewWidgetToggles(){
+    var container = document.getElementById('overviewWidgetList');
+    if(!container) return;
+    renderWidgetOrderList();
+
+    container.addEventListener('change', function(e){
+      var cb = e.target.closest('input[data-widget-toggle]');
+      if(!cb) return;
+      overviewWidgetPrefs[cb.dataset.widgetToggle] = cb.checked;
+      saveOverviewWidgetPrefs();
+      renderOverviewWidgets();
+    });
+
+    // Ziehen per Griff, um die Reihenfolge zu aendern (funktioniert mit Maus und Touch).
+    var dragKey = null;
+    var dragRow = null;
+
+    container.addEventListener('pointerdown', function(e){
+      var handle = e.target.closest('[data-drag-handle]');
+      if(!handle) return;
+      var row = handle.closest('.widget-order-row');
+      if(!row) return;
+      dragKey = row.dataset.widgetKey;
+      dragRow = row;
+      row.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    function rowAfterPoint(y){
+      var rows = Array.prototype.slice.call(container.querySelectorAll('.widget-order-row:not(.dragging)'));
+      var result = null;
+      rows.forEach(function(r){
+        var box = r.getBoundingClientRect();
+        var mid = box.top + box.height/2;
+        if(y < mid && (result === null || box.top < result.getBoundingClientRect().top)) result = r;
+      });
+      return result;
+    }
+
+    container.addEventListener('pointermove', function(e){
+      if(!dragRow) return;
+      var after = rowAfterPoint(e.clientY);
+      if(after){ container.insertBefore(dragRow, after); }
+      else { container.appendChild(dragRow); }
+    });
+
+    function endDrag(){
+      if(!dragRow) return;
+      dragRow.classList.remove('dragging');
+      var newOrder = Array.prototype.map.call(container.querySelectorAll('.widget-order-row'), function(r){ return r.dataset.widgetKey; });
+      overviewWidgetOrder = newOrder;
+      saveOverviewWidgetOrder(newOrder);
+      renderOverviewWidgets();
+      dragRow = null;
+      dragKey = null;
+    }
+    container.addEventListener('pointerup', endDrag);
+    container.addEventListener('pointercancel', endDrag);
+  }
+
+  var OVERVIEW_WIDGET_BUILDERS = {
+    invoices: function(){
+      var open = state.openInvoices.filter(function(i){ return !i.paid; });
+      var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
+      return {
+        tab:'buchungen', color:'gold', value: fmtEUR(sum(open,'amount')),
+        label:'Offene Rechnungen gesamt',
+        subs: [ {l:'Rechnungen', v:String(open.length)}, {l:'Davon überfällig', v:String(overdue)} ],
+        icon:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 17v.01M12 11v3"/>'
+      };
+    },
+    variabel: function(){
+      var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
+      var paymentTotal = sum(state.variablePayments,'amount');
+      var potBalance = contribTotal - paymentTotal;
+      var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
+      return {
+        tab:'variabel', color:'green', value: fmtEUR(potBalance),
+        label:'Rest im Spartopf',
+        subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Sparbedarf/Monat', v:fmtEUR(monthlyNeed)} ],
+        icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
+      };
+    },
+    kredite: function(){
+      var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+      return {
+        tab:'kredite', color:'red', value: fmtEUR(sum(activeLoans,'remainingBalance')),
+        label:'Restschuld gesamt',
+        subs: [ {l:'Kreditsumme', v:fmtEUR(sum(activeLoans,'originalAmount'))}, {l:'Raten/Monat', v:fmtEUR(sum(activeLoans,'monthlyPayment'))} ],
+        icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>'
+      };
+    },
+    tilgungsplan: function(){
+      var tilgungPlan = simulateSnowball(getTilgungExtra());
+      if(tilgungPlan.length === 0) return null;
+      var tilgungLast = tilgungPlan[tilgungPlan.length-1];
+      var tY = Math.floor(tilgungLast.month/12), tM = tilgungLast.month % 12;
+      var tilgungDuration = (tY>0 ? tY+(tY===1?' Jahr':' Jahre') : '') + (tY>0 && tM>0 ? ', ' : '') + (tM>0 ? tM+(tM===1?' Monat':' Monate') : (tY===0?'0 Monate':''));
+      return {
+        tab:'tilgungsplan', color:'purple', value: tilgungDuration,
+        label:'Schuldenfrei in',
+        subs: [ {l:'Voraussichtlich fertig', v:tilgungLast.monthLabel}, {l:'Betrag/Monat', v:fmtEUR(getTilgungExtra()+state.loans.filter(function(l){return l.remainingBalance>0;}).reduce(function(s,l){return s+l.monthlyPayment;},0))} ],
+        icon:'<path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/>'
+      };
+    },
+    tanken: function(){
+      if(state.cars.length === 0) return null;
+      var fuelTotal = state.fuelLogs.reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
+      var carSubs = state.cars.map(function(car){
+        var carTotal = state.fuelLogs.filter(function(l){ return l.carId === car.id; })
+          .reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
+        return { l: car.name, v: fmtEUR(carTotal) };
+      });
+      return {
+        tab:null, action:'open-fuel-tracker', color:'blue', value: fmtEUR(fuelTotal),
+        label:'Tanken gesamt',
+        subs: carSubs,
+        icon:'<rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/>'
+      };
+    }
+  };
+
+  function getOverviewWidgetOrder(){
+    var order = null;
+    try{
+      var raw = nativeStorage.getItem('household-overview-widget-order');
+      if(raw) order = JSON.parse(raw);
+    }catch(err){}
+    if(!Array.isArray(order)) order = [];
+    // Neue Widgets, die noch nicht in der gespeicherten Reihenfolge stehen
+    // (z.B. nach einem Update), hinten anhaengen; verwaiste Eintraege raus.
+    order = order.filter(function(k){ return OVERVIEW_WIDGET_KEYS.indexOf(k) !== -1; });
+    OVERVIEW_WIDGET_KEYS.forEach(function(k){ if(order.indexOf(k) === -1) order.push(k); });
+    return order;
+  }
+  function saveOverviewWidgetOrder(order){
+    try{ nativeStorage.setItem('household-overview-widget-order', JSON.stringify(order)); }catch(err){}
+  }
+  var overviewWidgetOrder = getOverviewWidgetOrder();
 
   function renderOverviewWidgets(){
     var container = document.getElementById('overviewWidgets');
     if(!container) return;
     var cards = [];
 
-    if(overviewWidgetPrefs.invoices){
-      var open = state.openInvoices.filter(function(i){ return !i.paid; });
-      var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
-      cards.push({
-        tab:'buchungen', color:'gold', value: fmtEUR(sum(open,'amount')),
-        label:'Offene Rechnungen gesamt',
-        subs: [ {l:'Rechnungen', v:String(open.length)}, {l:'Davon überfällig', v:String(overdue)} ],
-        icon:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 17v.01M12 11v3"/>'
-      });
-    }
-    if(overviewWidgetPrefs.variabel){
-      var contribTotal = sum(state.variableContributions,'amount') + (state.potCarryover||0);
-      var paymentTotal = sum(state.variablePayments,'amount');
-      var potBalance = contribTotal - paymentTotal;
-      var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
-      cards.push({
-        tab:'variabel', color:'green', value: fmtEUR(potBalance),
-        label:'Rest im Spartopf',
-        subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Sparbedarf/Monat', v:fmtEUR(monthlyNeed)} ],
-        icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
-      });
-    }
-    if(overviewWidgetPrefs.kredite){
-      var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
-      cards.push({
-        tab:'kredite', color:'red', value: fmtEUR(sum(activeLoans,'remainingBalance')),
-        label:'Restschuld gesamt',
-        subs: [ {l:'Kreditsumme', v:fmtEUR(sum(activeLoans,'originalAmount'))}, {l:'Raten/Monat', v:fmtEUR(sum(activeLoans,'monthlyPayment'))} ],
-        icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>'
-      });
-    }
-    if(overviewWidgetPrefs.tilgungsplan){
-      var tilgungPlan = simulateSnowball(getTilgungExtra());
-      if(tilgungPlan.length > 0){
-        var tilgungLast = tilgungPlan[tilgungPlan.length-1];
-        var tY = Math.floor(tilgungLast.month/12), tM = tilgungLast.month % 12;
-        var tilgungDuration = (tY>0 ? tY+(tY===1?' Jahr':' Jahre') : '') + (tY>0 && tM>0 ? ', ' : '') + (tM>0 ? tM+(tM===1?' Monat':' Monate') : (tY===0?'0 Monate':''));
-        cards.push({
-          tab:'tilgungsplan', color:'purple', value: tilgungDuration,
-          label:'Schuldenfrei in',
-          subs: [ {l:'Voraussichtlich fertig', v:tilgungLast.monthLabel}, {l:'Betrag/Monat', v:fmtEUR(getTilgungExtra()+state.loans.filter(function(l){return l.remainingBalance>0;}).reduce(function(s,l){return s+l.monthlyPayment;},0))} ],
-          icon:'<path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/>'
-        });
-      }
-    }
+    overviewWidgetOrder.forEach(function(key){
+      if(!overviewWidgetPrefs[key]) return;
+      var builder = OVERVIEW_WIDGET_BUILDERS[key];
+      if(!builder) return;
+      var card = builder();
+      if(card) cards.push(card);
+    });
 
     if(cards.length === 0){ container.innerHTML = ''; return; }
 
     var html = '';
     cards.forEach(function(c){
-      html += '<div class="hero-card hero-'+c.color+'" data-jump-tab="'+c.tab+'" style="cursor:pointer;padding:20px 18px;">'+
+      html += '<div class="hero-card hero-'+c.color+'" '+(c.tab?'data-jump-tab="'+c.tab+'"':'')+(c.action?'data-jump-action="'+c.action+'"':'')+' style="cursor:pointer;padding:20px 18px;">'+
                 '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
                   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--hero-'+c.color+'-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.icon+'</svg>'+
                   '<span style="font-size:12.5px;color:var(--hero-'+c.color+'-text);">'+c.label+'</span>'+
                 '</div>'+
                 '<div style="font-size:28px;font-weight:800;color:var(--ink);margin-bottom:12px;">'+c.value+'</div>'+
-                '<div style="display:flex;gap:18px;">'+
+                '<div style="display:flex;gap:18px;flex-wrap:wrap;">'+
                   c.subs.map(function(s){
-                    return '<div><div style="font-size:11px;color:var(--hero-'+c.color+'-sub);">'+s.l+'</div><div style="font-size:13px;font-weight:700;color:var(--ink);">'+s.v+'</div></div>';
+                    return '<div><div style="font-size:11px;color:var(--hero-'+c.color+'-sub);">'+escapeHtml(s.l)+'</div><div style="font-size:13px;font-weight:700;color:var(--ink);">'+s.v+'</div></div>';
                   }).join('')+
                 '</div>'+
               '</div>';
@@ -3165,6 +3259,12 @@ var nativeStorage = {
 
     container.querySelectorAll('[data-jump-tab]').forEach(function(card){
       card.addEventListener('click', function(){ switchToTab(card.dataset.jumpTab); });
+    });
+    container.querySelectorAll('[data-jump-action="open-fuel-tracker"]').forEach(function(card){
+      card.addEventListener('click', function(){
+        document.getElementById('fuelTrackerOverlay').classList.add('open');
+        renderFuelTracker();
+      });
     });
   }
 
@@ -4403,6 +4503,10 @@ var nativeStorage = {
     ]},
     { version:32, date:'19.09.2026, 18:36 Uhr', items:[
       'Tank-Tracker: Überlauf bei Liter/Literpreis-Feldern behoben (kein seitliches Wischen mehr nötig), Farbe von Orange auf das app-typische Blau umgestellt'
+    ]},
+    { version:33, date:'19.09.2026, 18:43 Uhr', items:[
+      'Neue Übersicht-Karte "Tanken gesamt": großer Gesamtbetrag oben, Preise je Auto klein darunter - wie die anderen Übersicht-Karten ein-/ausblendbar',
+      'Übersicht-Karten in den Einstellungen jetzt per Ziehen am Griff neu anordenbar, statt fester Reihenfolge'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
