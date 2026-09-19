@@ -4507,6 +4507,9 @@ var nativeStorage = {
     { version:33, date:'19.09.2026, 18:43 Uhr', items:[
       'Neue Übersicht-Karte "Tanken gesamt": großer Gesamtbetrag oben, Preise je Auto klein darunter - wie die anderen Übersicht-Karten ein-/ausblendbar',
       'Übersicht-Karten in den Einstellungen jetzt per Ziehen am Griff neu anordenbar, statt fester Reihenfolge'
+    ]},
+    { version:34, date:'19.09.2026, 19:04 Uhr', items:[
+      'Tank-Tracker: Verlauf gruppiert jetzt nach Monat mit Zwischensumme, statt einer langen Liste'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4571,8 +4574,24 @@ var nativeStorage = {
     if(logs.length === 0){
       historyContainer.innerHTML = '<div class="empty-state">Noch keine Tankvorgänge für dieses Auto.</div>';
     } else {
-      var hhtml = '<div class="compact-list">';
+      var monthGroups = {};
+      var monthOrder = [];
       logs.forEach(function(log){
+        var key = (log.date||'').slice(0,7);
+        if(!monthGroups[key]){ monthGroups[key] = []; monthOrder.push(key); }
+        monthGroups[key].push(log);
+      });
+
+      var hhtml = '<div class="compact-list">';
+      monthOrder.forEach(function(monthKey){
+        var parts = monthKey.split('-');
+        var monthLabel = parts.length===2 ? MONTH_NAMES[parseInt(parts[1],10)-1]+' '+parts[0] : monthKey;
+        var monthTotal = monthGroups[monthKey].reduce(function(s,l){ return s + l.liters*l.pricePerLiter; }, 0);
+        hhtml += '<div class="compact-group-header">'+
+                   '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">'+monthLabel+'</span>'+
+                   '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(monthTotal)+'</span>'+
+                 '</div>';
+        monthGroups[monthKey].forEach(function(log){
         if(editing.fuel === log.id){
           hhtml += '</div><div class="edit-row" data-id="'+log.id+'">'+
                      '<input type="date" class="edit-date" value="'+log.date+'">'+
@@ -4597,6 +4616,7 @@ var nativeStorage = {
                      '</span>'+
                    '</div>';
         }
+        });
       });
       hhtml += '</div>';
       historyContainer.innerHTML = hhtml;
