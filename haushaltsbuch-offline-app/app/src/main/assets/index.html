@@ -26,6 +26,8 @@
     --savings-soft:#DCF5EA;
     --gold:#FF9F0A;
     --gold-soft:#FFEFD6;
+    --fuel:#D97706;
+    --fuel-soft:#FBEBD3;
     --primary:#1268FF;
     --primary-a:rgba(18,104,255,0.80);
     --primary-soft:#E3EDFF;
@@ -63,6 +65,8 @@
     --savings-soft:#1B3A2C;
     --gold:#FFB03F;
     --gold-soft:#3B2E16;
+    --fuel:#E8940F;
+    --fuel-soft:#3A2C14;
     --primary:#5B9CFF;
     --primary-a:rgba(91,156,255,0.80);
     --primary-soft:#1B2A44;
@@ -285,6 +289,9 @@
   .compact-list-row .compact-actions{display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;width:100%;max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .compact-list-row.expanded .compact-actions{max-height:60px;opacity:1;margin-top:10px;}
   .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
+  .car-chip{background:var(--paper);color:var(--ink-soft);font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;}
+  .car-chip.active{background:var(--fuel);color:#fff;}
+  .car-chip.add-chip{color:var(--fuel);background:var(--fuel-soft);}
   .vc-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
   .vc-name{font-family:var(--serif);font-size:17px;font-weight:800;}
   .vc-monthly{font-family:var(--mono);font-size:14.5px;color:var(--ink-soft);font-weight:600;}
@@ -455,7 +462,10 @@
           <h1>Haushaltsbuch<span style="color:var(--primary);">+</span></h1>
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
-        <div class="settings-btn-wrap">
+        <div class="settings-btn-wrap" style="display:flex;gap:8px;">
+          <button id="fuelTrackerBtn" class="settings-icon-btn" aria-label="Tank-Tracker" style="background:var(--fuel-soft);color:var(--fuel);">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
+          </button>
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
@@ -1008,6 +1018,42 @@
     </div>
   </div>
 
+  <div id="fuelTrackerOverlay" class="settings-overlay">
+    <div class="settings-panel" style="text-align:left;">
+      <div class="settings-panel-head">
+        <h2>Tank-Tracker</h2>
+        <button class="settings-close-btn" id="fuelTrackerCloseBtn" aria-label="Schließen">×</button>
+      </div>
+
+      <div id="carChipsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;"></div>
+
+      <div id="addCarForm" style="display:none;background:var(--paper);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+        <input type="text" id="newCarNameInput" placeholder="Name des Autos (z.B. Peugeot 2008)" style="width:100%;background:var(--surface);border:none;border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;margin-bottom:10px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn-cancel" id="cancelAddCarBtn" style="flex:1;">Abbrechen</button>
+          <button type="button" class="btn-save" id="saveCarBtn" style="flex:1;background:var(--fuel);">Hinzufügen</button>
+        </div>
+      </div>
+
+      <div id="fuelNoCarState" class="empty-state" style="display:none;">Noch kein Auto hinzugefügt. Tippe oben auf "+ Auto".</div>
+
+      <div id="fuelFormAndHistory" style="display:none;">
+        <div style="background:var(--paper);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+          <div id="fuelFormCarLabel" style="color:var(--ink-soft);font-size:11px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input type="text" inputmode="decimal" data-cent-input id="fuelLitersInput" placeholder="Liter" style="flex:1;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+            <input type="text" inputmode="decimal" id="fuelPriceInput" placeholder="€/Liter" style="flex:1;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+          </div>
+          <div style="color:var(--ink-soft);font-size:12px;margin-bottom:10px;">Gesamt: <span id="fuelTotalPreview" style="color:var(--ink);font-weight:700;">0,00 €</span></div>
+          <button type="button" class="settings-btn" id="saveFuelLogBtn" style="margin-bottom:0;background:var(--fuel);color:#fff;">Speichern</button>
+        </div>
+
+        <p class="chooser-group-label">Verlauf</p>
+        <div id="fuelHistoryList"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="messageOverlay" class="confirm-overlay">
     <div class="confirm-card">
       <div class="confirm-icon" id="messageIcon">✅</div>
@@ -1223,7 +1269,7 @@ var nativeStorage = {
 
   var state = null;
   // tracks which single row/card is currently in edit mode per list
-  var editing = { income:null, fixed:null, invoice:null, vc:null, loan:null, tx:null, spar:null };
+  var editing = { income:null, fixed:null, invoice:null, vc:null, loan:null, tx:null, spar:null, fuel:null };
   var expandedLoans = {};
   var showVcList = loadBoolPref('household-show-vclist', true);
   var showPotHistory = loadBoolPref('household-show-pothistory', true);
@@ -1572,7 +1618,9 @@ var nativeStorage = {
       potCarryover: 0,
       loans: [],
       loanPayments: [],
-      savings: []
+      savings: [],
+      cars: [],
+      fuelLogs: []
     };
   }
 
@@ -1591,6 +1639,8 @@ var nativeStorage = {
         if(!Array.isArray(parsed.loans)) parsed.loans = [];
         if(!Array.isArray(parsed.loanPayments)) parsed.loanPayments = [];
         if(!Array.isArray(parsed.savings)) parsed.savings = [];
+        if(!Array.isArray(parsed.cars)) parsed.cars = [];
+        if(!Array.isArray(parsed.fuelLogs)) parsed.fuelLogs = [];
         parsed.variableCosts.forEach(function(v){
           if(!v.interval) v.interval = 'jaehrlich';
           if(!v.dueMonth) v.dueMonth = 1;
@@ -4343,6 +4393,9 @@ var nativeStorage = {
     { version:29, date:'19.09.2026, 14:11 Uhr', items:[
       'Variable Kosten: Kostenarten, die dieses Jahr gar nicht fällig sind (z.B. TÜV alle 2 Jahre), werden jetzt korrekt grün dargestellt',
       'Variable Kosten: eine diesen Monat bezahlte Kostenart wird jetzt sofort grün, statt erst im Folgemonat'
+    ]},
+    { version:30, date:'19.09.2026, 18:27 Uhr', items:[
+      'Neuer Tank-Tracker: eigener Button oben links neben den Einstellungen. Eigene Autos anlegen, getankte Liter und Literpreis eintragen (Gesamtbetrag wird automatisch berechnet), Verlauf je Auto einsehbar und bearbeitbar'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4368,6 +4421,168 @@ var nativeStorage = {
     function close(){ overlay.classList.remove('open'); }
     document.getElementById('whatsNewOkBtn').onclick = close;
     document.getElementById('whatsNewCloseBtn').onclick = close;
+  }
+
+  /* ---------- Tank-Tracker ---------- */
+  var selectedCarId = null;
+
+  function renderFuelTracker(){
+    var chipsRow = document.getElementById('carChipsRow');
+    var html = '';
+    state.cars.forEach(function(car){
+      html += '<button type="button" class="car-chip'+(car.id===selectedCarId?' active':'')+'" data-action="select-car" data-car-id="'+car.id+'">'+escapeHtml(car.name)+'</button>';
+    });
+    html += '<button type="button" class="car-chip add-chip" data-action="show-add-car">+ Auto</button>';
+    chipsRow.innerHTML = html;
+
+    var noCarState = document.getElementById('fuelNoCarState');
+    var formAndHistory = document.getElementById('fuelFormAndHistory');
+
+    if(!selectedCarId || !state.cars.some(function(c){ return c.id === selectedCarId; })){
+      selectedCarId = state.cars.length ? state.cars[0].id : null;
+    }
+
+    if(!selectedCarId){
+      noCarState.style.display = '';
+      formAndHistory.style.display = 'none';
+      return;
+    }
+    noCarState.style.display = 'none';
+    formAndHistory.style.display = '';
+
+    var car = state.cars.filter(function(c){ return c.id === selectedCarId; })[0];
+    document.getElementById('fuelFormCarLabel').textContent = 'Neuer Tankvorgang – ' + car.name;
+
+    var logs = state.fuelLogs.filter(function(l){ return l.carId === selectedCarId; })
+      .slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+    var historyContainer = document.getElementById('fuelHistoryList');
+    if(logs.length === 0){
+      historyContainer.innerHTML = '<div class="empty-state">Noch keine Tankvorgänge für dieses Auto.</div>';
+    } else {
+      var hhtml = '<div class="compact-list">';
+      logs.forEach(function(log){
+        if(editing.fuel === log.id){
+          hhtml += '</div><div class="edit-row" data-id="'+log.id+'">'+
+                     '<input type="date" class="edit-date" value="'+log.date+'">'+
+                     '<div><label class="edit-field-label">Liter</label><input type="text" inputmode="decimal" data-cent-input class="edit-fuel-liters" value="'+formatCentsToStr(Math.round(log.liters*100))+'"></div>'+
+                     '<div><label class="edit-field-label">€/Liter</label><input type="text" inputmode="decimal" class="edit-fuel-price" value="'+String(log.pricePerLiter).replace('.', ',')+'"></div>'+
+                     '<div class="edit-actions">'+
+                       '<button type="button" class="btn-cancel" data-action="cancel-edit-fuel">Abbrechen</button>'+
+                       '<button type="button" class="btn-save" data-action="save-edit-fuel" data-id="'+log.id+'" style="background:var(--fuel);">Speichern</button>'+
+                     '</div>'+
+                   '</div><div class="compact-list">';
+        } else {
+          var d = parseISO(log.date);
+          var dateLabel = String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.';
+          hhtml += '<div class="compact-list-row" data-id="'+log.id+'">'+
+                     '<span class="compact-name-wrap">'+
+                       '<span class="compact-name">'+dateLabel+' · '+log.liters.toFixed(2).replace('.', ',')+' L · '+log.pricePerLiter.toFixed(3).replace('.', ',')+' €/L</span>'+
+                     '</span>'+
+                     '<span class="compact-amount">'+fmtEUR(log.liters*log.pricePerLiter)+'</span>'+
+                     '<span class="compact-actions">'+
+                       '<button class="action-icon-btn neutral" data-action="edit-fuel" data-id="'+log.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
+                       '<button class="action-icon-btn danger" data-action="delete-fuel" data-id="'+log.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                     '</span>'+
+                   '</div>';
+        }
+      });
+      hhtml += '</div>';
+      historyContainer.innerHTML = hhtml;
+    }
+  }
+
+  function updateFuelTotalPreview(){
+    var liters = parseAmount(document.getElementById('fuelLitersInput').value);
+    var price = parseAmount(document.getElementById('fuelPriceInput').value);
+    var total = (!isNaN(liters) && !isNaN(price)) ? liters*price : 0;
+    document.getElementById('fuelTotalPreview').textContent = fmtEUR(total);
+  }
+
+  function setupFuelTracker(){
+    var overlay = document.getElementById('fuelTrackerOverlay');
+    document.getElementById('fuelTrackerBtn').addEventListener('click', function(){
+      overlay.classList.add('open');
+      renderFuelTracker();
+    });
+    document.getElementById('fuelTrackerCloseBtn').addEventListener('click', function(){
+      overlay.classList.remove('open');
+      document.getElementById('addCarForm').style.display = 'none';
+    });
+
+    document.getElementById('cancelAddCarBtn').addEventListener('click', function(){
+      document.getElementById('addCarForm').style.display = 'none';
+      document.getElementById('newCarNameInput').value = '';
+    });
+    document.getElementById('saveCarBtn').addEventListener('click', function(){
+      var name = document.getElementById('newCarNameInput').value.trim();
+      if(!name) return;
+      var car = { id: genId(), name: name };
+      state.cars.push(car);
+      selectedCarId = car.id;
+      saveState();
+      document.getElementById('addCarForm').style.display = 'none';
+      document.getElementById('newCarNameInput').value = '';
+      renderFuelTracker();
+    });
+
+    document.getElementById('fuelLitersInput').addEventListener('input', updateFuelTotalPreview);
+    document.getElementById('fuelPriceInput').addEventListener('input', updateFuelTotalPreview);
+
+    document.getElementById('saveFuelLogBtn').addEventListener('click', function(){
+      var liters = parseAmount(document.getElementById('fuelLitersInput').value);
+      var price = parseAmount(document.getElementById('fuelPriceInput').value);
+      if(isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0 || !selectedCarId) return;
+      state.fuelLogs.push({ id: genId(), carId: selectedCarId, liters: liters, pricePerLiter: price, date: todayISO() });
+      saveState();
+      document.getElementById('fuelLitersInput').value = '';
+      document.getElementById('fuelPriceInput').value = '';
+      updateFuelTotalPreview();
+      renderFuelTracker();
+    });
+
+    document.getElementById('carChipsRow').addEventListener('click', function(e){
+      var btn = e.target.closest('button');
+      if(!btn) return;
+      if(btn.dataset.action === 'select-car'){
+        selectedCarId = btn.dataset.carId;
+        renderFuelTracker();
+      } else if(btn.dataset.action === 'show-add-car'){
+        document.getElementById('addCarForm').style.display = '';
+        document.getElementById('newCarNameInput').focus();
+      }
+    });
+
+    document.getElementById('fuelHistoryList').addEventListener('click', async function(e){
+      var btn = e.target.closest('button');
+      if(!btn) return;
+      var action = btn.dataset.action;
+      var id = btn.dataset.id;
+      if(action === 'edit-fuel'){
+        editing.fuel = id;
+        renderFuelTracker();
+      } else if(action === 'cancel-edit-fuel'){
+        editing.fuel = null;
+        renderFuelTracker();
+      } else if(action === 'save-edit-fuel'){
+        var row = btn.closest('.edit-row');
+        var liters = parseAmount(row.querySelector('.edit-fuel-liters').value);
+        var price = parseAmount(row.querySelector('.edit-fuel-price').value);
+        var date = row.querySelector('.edit-date').value;
+        var log = state.fuelLogs.filter(function(l){ return l.id === id; })[0];
+        if(log && !isNaN(liters) && !isNaN(price) && date){
+          log.liters = liters; log.pricePerLiter = price; log.date = date;
+        }
+        editing.fuel = null;
+        saveState();
+        renderFuelTracker();
+      } else if(action === 'delete-fuel'){
+        if(!await confirmDialog('Diesen Tankvorgang wirklich löschen?')) return;
+        state.fuelLogs = state.fuelLogs.filter(function(l){ return l.id !== id; });
+        saveState();
+        renderFuelTracker();
+      }
+    });
   }
 
   function renderUpdateHistorie(){
@@ -4571,6 +4786,7 @@ var nativeStorage = {
     setupReset();
     setupBackup();
     setupThemeToggle();
+    setupFuelTracker();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardToggle();
