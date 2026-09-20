@@ -174,9 +174,9 @@
   .sub-nav-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
 
   .beta-month-nav{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:15;}
-  .beta-month-label-btn{background:none;border:none;font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);cursor:pointer;padding:4px 2px;}
+  .beta-month-label-btn{background:none;border:none;font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);cursor:pointer;padding:4px 2px;white-space:nowrap;flex-shrink:0;}
   .beta-month-nav button{background:var(--surface);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0;}
-  .beta-month-label{display:flex;gap:6px;align-items:baseline;}
+  .beta-month-label{display:flex;gap:6px;align-items:baseline;justify-content:center;flex:1;min-width:0;overflow:hidden;}
   .beta-day-group{background:var(--surface);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;}
   .beta-day-header{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px;background:var(--paper);}
   .beta-day-header .beta-day-title{font-size:14px;font-weight:800;color:var(--ink);}
@@ -5036,6 +5036,9 @@ var nativeStorage = {
     ]},
     { version:71, date:'20.09.2026, 21:14 Uhr', items:[
       'Neues 4x1-Homescreen-Widget für Beta: zeigt den aktuellen Kontostand, "+" öffnet direkt eine neue Einnahme, "-" eine neue Ausgabe, Antippen der Zahl öffnet den Beta-Tab'
+    ]},
+    { version:72, date:'20.09.2026, 21:18 Uhr', items:[
+      'Beta: Monat/Jahr-Anzeige überlappte sich teils bei wenig Platz - Layout jetzt robuster gegen dieses Zusammenquetschen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
