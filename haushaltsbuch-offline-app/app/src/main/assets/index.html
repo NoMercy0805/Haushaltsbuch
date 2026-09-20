@@ -172,6 +172,26 @@
   .sub-nav-row{display:flex;gap:4px;background:var(--paper);border-radius:14px;padding:4px;margin:0 0 18px;}
   .sub-nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:none;border-radius:11px;padding:11px 8px;font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;transition:background .15s ease, color .15s ease;}
   .sub-nav-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+
+  .beta-month-nav{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;}
+  .beta-month-nav button{background:var(--surface);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0;}
+  .beta-month-label{font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);text-align:center;}
+  .beta-day-group{background:var(--surface);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;}
+  .beta-day-header{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px;background:var(--paper);}
+  .beta-day-header .beta-day-title{font-size:14px;font-weight:800;color:var(--ink);}
+  .beta-day-header .beta-day-total{font-size:15px;font-weight:800;}
+  .beta-entry-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid var(--rule);}
+  .beta-entry-icon{width:22px;height:22px;border-radius:50%;border:2px solid var(--rule-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;}
+  .beta-entry-icon.reconciled{background:var(--ink-soft);border-color:var(--ink-soft);}
+  .beta-entry-name-wrap{flex:1;min-width:0;overflow:hidden;}
+  .beta-entry-name{font-size:14.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+  .beta-entry-sub{font-size:12px;color:var(--ink-soft);}
+  .beta-entry-amount{font-size:14.5px;font-weight:800;flex-shrink:0;}
+  #betaBalanceBar{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom, 0px));background:var(--expense);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:10px;z-index:59;}
+  #betaBalanceBar.positive{background:var(--savings);}
+  #betaBalanceBar .beta-balance-label{font-size:12px;font-weight:700;opacity:0.9;}
+  #betaBalanceBar .beta-balance-value{font-size:19px;font-weight:800;flex:1;}
+  #betaBalanceBar .beta-balance-range{font-size:10.5px;opacity:0.85;text-align:right;}
   .chooser-group-label{font-family:var(--serif);font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);margin:4px 4px 0;}
   h2.section-title:first-child{margin-top:4px;}
 
@@ -524,6 +544,10 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
         <span>Tanken</span>
       </button>
+      <button data-tab="beta" class="tab" aria-label="Beta">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M9 13h6M9 17h4"/></svg>
+        <span>Beta</span>
+      </button>
     </nav>
 
     <main>
@@ -710,7 +734,24 @@
         </div>
       </section>
 
+      <!-- BETA -->
+      <section id="tab-beta" class="tab-panel" style="padding-bottom:70px;">
+        <div class="beta-month-nav">
+          <button type="button" id="betaMonthPrev" aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="beta-month-label" id="betaMonthLabel"></div>
+          <button type="button" id="betaMonthNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+
+        <div id="betaList"></div>
+      </section>
+
     </main>
+
+    <div id="betaBalanceBar" style="display:none;">
+      <span class="beta-balance-label">Kontostand</span>
+      <span class="beta-balance-value" id="betaBalanceValue"></span>
+      <span class="beta-balance-range" id="betaBalanceRange"></span>
+    </div>
 
 
     <div id="diagrammOverlay" class="settings-overlay">
@@ -778,6 +819,10 @@
       <div class="fab-option" data-tab-group="tanken" data-fab-action="add-car">
         <span class="fab-option-label">Auto hinzufügen</span>
         <button type="button" class="fab-option-icon" style="background:var(--ink-soft);" data-fab-action="add-car"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13"/><rect x="2" y="13" width="20" height="5" rx="1.6"/><path d="M12 16v3m-1.5-1.5h3"/></svg></button>
+      </div>
+      <div class="fab-option" data-tab-group="beta" data-open-form="addBetaOverlay">
+        <span class="fab-option-label">Neuer Eintrag</span>
+        <button type="button" class="fab-option-icon" style="background:var(--primary);" data-open-form="addBetaOverlay"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M9 13h6M9 17h4"/></svg></button>
       </div>
     </div>
     <button id="addEntryFab" class="fab-add" aria-label="Hinzufügen">
@@ -918,6 +963,31 @@
     </div>
   </div>
 
+  <div id="addBetaOverlay" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <h2 id="addBetaTitle">Neuer Eintrag</h2>
+        <button class="settings-close-btn" data-close-form="addBetaOverlay" aria-label="Schließen">×</button>
+      </div>
+      <form id="betaEntryForm" class="entry-form">
+        <div class="full" style="display:flex;gap:16px;margin-bottom:2px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="ausgabe" checked style="accent-color:var(--expense);">Ausgabe</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="einnahme" style="accent-color:var(--savings);">Einnahme</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="umbuchung" style="accent-color:var(--primary);">Umbuchung</label>
+        </div>
+        <input type="text" id="betaTitleInput" placeholder="Titel" class="full" list="betaTitleSuggestions" required autocomplete="off">
+        <datalist id="betaTitleSuggestions"></datalist>
+        <input type="date" id="betaDateInput" class="full" required>
+        <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
+        <input type="text" id="betaCategoryInput" placeholder="Kategorie (optional)" class="full">
+        <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-top:2px;"><input type="checkbox" id="betaRecurringInput" style="width:18px;height:18px;">Dauerauftrag</label>
+        <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);"><input type="checkbox" id="betaReconciledInput" style="width:18px;height:18px;">Abgeglichen</label>
+        <button type="submit">Speichern</button>
+        <button type="button" id="betaDeleteBtn" class="btn-cancel full" style="display:none;color:var(--expense);">Eintrag löschen</button>
+      </form>
+    </div>
+  </div>
+
   <div id="addSparOverlay" class="settings-overlay">
     <div class="settings-panel">
       <div class="settings-panel-head">
@@ -1047,6 +1117,13 @@
           <span>Tanken</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="tanken">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <div class="tab-visibility-row">
+          <span>Beta</span>
+          <label class="toggle-switch">
+            <input type="checkbox" data-tab-toggle="beta">
             <span class="track"></span><span class="thumb"></span>
           </label>
         </div>
@@ -1709,7 +1786,8 @@ var nativeStorage = {
       loanPayments: [],
       savings: [],
       cars: [],
-      fuelLogs: []
+      fuelLogs: [],
+      betaEntries: []
     };
   }
 
@@ -1730,6 +1808,7 @@ var nativeStorage = {
         if(!Array.isArray(parsed.savings)) parsed.savings = [];
         if(!Array.isArray(parsed.cars)) parsed.cars = [];
         if(!Array.isArray(parsed.fuelLogs)) parsed.fuelLogs = [];
+        if(!Array.isArray(parsed.betaEntries)) parsed.betaEntries = [];
         parsed.variableCosts.forEach(function(v){
           if(!v.interval) v.interval = 'jaehrlich';
           if(!v.dueMonth) v.dueMonth = 1;
@@ -3054,10 +3133,11 @@ var nativeStorage = {
     renderSparen();
     renderDiagramme();
     renderFuelTracker();
+    renderBeta();
   }
 
   /* ---------- Events ---------- */
-  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tanken'];
+  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tanken', 'beta'];
   var activeKreditSubView = 'kredite';
   var tabVisibility = loadTabVisibility();
 
@@ -3402,6 +3482,7 @@ var nativeStorage = {
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
+    document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
     var effectiveTabName = tabName;
     if(tabName === 'kredite') effectiveTabName = activeKreditSubView;
     else if(tabName === 'buchungen') effectiveTabName = activeBuchungenSubView;
@@ -3525,7 +3606,8 @@ var nativeStorage = {
       'einnahmen': 'addIncomeOverlay',
       'fixkosten': 'addFixedOverlay',
       'spartopf': 'addContribOverlay',
-      'kostenarten': 'addVcOverlay'
+      'kostenarten': 'addVcOverlay',
+      'beta': 'addBetaOverlay'
     };
 
     function getActiveTab(){
@@ -3557,6 +3639,7 @@ var nativeStorage = {
       var tab = getActiveTab();
       var directFormId = tab ? singleOptionFormByTab[tab] : null;
       if(directFormId){
+        if(directFormId === 'addBetaOverlay') resetBetaForm();
         document.getElementById(directFormId).classList.add('open');
         return;
       }
@@ -3570,6 +3653,7 @@ var nativeStorage = {
       btn.addEventListener('click', function(){
         var targetId = btn.getAttribute('data-open-form');
         closeDial();
+        if(targetId === 'addBetaOverlay') resetBetaForm();
         document.getElementById(targetId).classList.add('open');
       });
     });
@@ -4777,6 +4861,11 @@ var nativeStorage = {
     ]},
     { version:60, date:'20.09.2026, 18:37 Uhr', items:[
       'Verlauf Spartopf: die automatische "Übertrag aus Vorjahr(en)"-Anzeige bleibt erhalten, das manuelle Eingabefeld dafür ganz unten in der Liste wurde entfernt'
+    ]},
+    { version:61, date:'20.09.2026, 19:03 Uhr', items:[
+      'Neuer Reiter "Beta": eigenständiger Buchungs-Tracker ohne Verknüpfung zu anderen Reitern - Monat/Jahr-Navigation, Einträge nach Tag gruppiert mit Tagessaldo, laufender Kontostand unten',
+      'Eintragen-Formular mit Titel-Vorschlägen (Autovervollständigung) - wählst du einen bekannten Titel, wird der zuletzt eingetragene Betrag automatisch übernommen',
+      'Ausgabe/Einnahme/Umbuchung, Kategorie, Dauerauftrag- und Abgeglichen-Kennzeichnung (Dauerauftrag erzeugt noch keine automatischen Folgeeinträge)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4890,6 +4979,177 @@ var nativeStorage = {
   }
 
   var ALL_CARS_KEY = '__all__';
+
+  /* ---------- Beta (eigenständiger Buchungs-Tracker, keine Verknüpfung) ---------- */
+  var betaViewMonth = new Date().getMonth();
+  var betaViewYear = new Date().getFullYear();
+  var editingBetaId = null;
+
+  function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; } // Umbuchung wird wie Ausgabe (negativ) behandelt, analog zur Vorlage
+
+  function renderBeta(){
+    var monthLabel = MONTH_NAMES[betaViewMonth] + ' ' + betaViewYear;
+    document.getElementById('betaMonthLabel').textContent = monthLabel;
+
+    var entries = state.betaEntries.filter(function(e){
+      var d = parseISO(e.date);
+      return d.getMonth() === betaViewMonth && d.getFullYear() === betaViewYear;
+    });
+
+    var dayGroups = {};
+    var dayOrder = [];
+    entries.forEach(function(e){
+      if(!dayGroups[e.date]){ dayGroups[e.date] = []; dayOrder.push(e.date); }
+      dayGroups[e.date].push(e);
+    });
+    dayOrder.sort(function(a,b){ return b.localeCompare(a); });
+
+    var listEl = document.getElementById('betaList');
+    if(dayOrder.length === 0){
+      listEl.innerHTML = '<div class="empty-state">Noch keine Einträge in diesem Monat.</div>';
+    } else {
+      var html = '';
+      dayOrder.forEach(function(dateKey){
+        var dayEntries = dayGroups[dateKey];
+        var dayTotal = dayEntries.reduce(function(s,e){ return s + betaTypeSign(e.type)*e.amount; }, 0);
+        var d = parseISO(dateKey);
+        html += '<div class="beta-day-group">'+
+                  '<div class="beta-day-header">'+
+                    '<span class="beta-day-title">'+String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear()+'</span>'+
+                    '<span class="beta-day-total" style="color:'+(dayTotal>=0?'var(--savings)':'var(--expense)')+';">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
+                  '</div>';
+        dayEntries.forEach(function(e){
+          var sign = betaTypeSign(e.type);
+          html += '<div class="beta-entry-row" data-id="'+e.id+'">'+
+                    '<span class="beta-entry-icon'+(e.reconciled?' reconciled':'')+'">'+(e.reconciled?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</span>'+
+                    '<span class="beta-entry-name-wrap">'+
+                      '<span class="beta-entry-name">'+escapeHtml(e.title)+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+'</span>'+
+                      '<span class="beta-entry-sub">'+escapeHtml(e.category||'Nicht zugeordnet')+'</span>'+
+                    '</span>'+
+                    '<span class="beta-entry-amount" style="color:'+(sign>=0?'var(--savings)':'var(--expense)')+';">'+(sign>=0?'+':'-')+fmtEUR(e.amount)+'</span>'+
+                  '</div>';
+        });
+        html += '</div>';
+      });
+      listEl.innerHTML = html;
+    }
+
+    // Laufender Kontostand: Summe aller Eintraege bis einschliesslich Ende
+    // des angezeigten Monats (unabhaengig vom Rest der App).
+    var cutoff = new Date(betaViewYear, betaViewMonth+1, 0, 23, 59, 59);
+    var balance = state.betaEntries.filter(function(e){ return parseISO(e.date) <= cutoff; })
+      .reduce(function(s,e){ return s + betaTypeSign(e.type)*e.amount; }, 0);
+    var barEl = document.getElementById('betaBalanceBar');
+    barEl.classList.toggle('positive', balance >= 0);
+    document.getElementById('betaBalanceValue').textContent = fmtEUR(balance);
+    var firstOfMonth = new Date(betaViewYear, betaViewMonth, 1);
+    var lastOfMonth = new Date(betaViewYear, betaViewMonth+1, 0);
+    function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); }
+    document.getElementById('betaBalanceRange').innerHTML = fmtShort(firstOfMonth)+'<br>- '+fmtShort(lastOfMonth);
+
+    // Titel-Vorschlaege (einmalig je Titel, neuester zuerst)
+    var seenTitles = {};
+    var suggestions = '';
+    state.betaEntries.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).forEach(function(e){
+      if(!seenTitles[e.title]){ seenTitles[e.title] = true; suggestions += '<option value="'+escapeHtml(e.title)+'">'; }
+    });
+    document.getElementById('betaTitleSuggestions').innerHTML = suggestions;
+  }
+
+  function switchBetaMonth(delta){
+    var d = new Date(betaViewYear, betaViewMonth + delta, 1);
+    betaViewMonth = d.getMonth();
+    betaViewYear = d.getFullYear();
+    renderBeta();
+  }
+
+  function setupBeta(){
+    document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
+    document.getElementById('betaMonthNext').addEventListener('click', function(){ switchBetaMonth(1); });
+
+    document.getElementById('betaList').addEventListener('click', function(e){
+      var row = e.target.closest('.beta-entry-row');
+      if(!row) return;
+      var entry = state.betaEntries.filter(function(x){ return x.id === row.dataset.id; })[0];
+      if(!entry) return;
+      editingBetaId = entry.id;
+      document.getElementById('addBetaTitle').textContent = 'Eintrag bearbeiten';
+      document.getElementById('betaDeleteBtn').style.display = '';
+      document.querySelector('input[name="betaType"][value="'+entry.type+'"]').checked = true;
+      document.getElementById('betaTitleInput').value = entry.title;
+      document.getElementById('betaDateInput').value = entry.date;
+      document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(entry.amount*100));
+      document.getElementById('betaCategoryInput').value = entry.category || '';
+      document.getElementById('betaRecurringInput').checked = !!entry.recurring;
+      document.getElementById('betaReconciledInput').checked = !!entry.reconciled;
+      document.getElementById('addBetaOverlay').classList.add('open');
+    });
+
+    document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
+      if(!editingBetaId) return;
+      if(!await confirmDialog('Diesen Eintrag wirklich löschen?')) return;
+      state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== editingBetaId; });
+      saveState();
+      document.getElementById('addBetaOverlay').classList.remove('open');
+      resetBetaForm();
+      renderBeta();
+    });
+
+    // Betrag automatisch mit dem zuletzt fuer diesen Titel verwendeten Wert
+    // vorbefuellen, sobald ein bereits bekannter Titel eingetragen wird.
+    document.getElementById('betaTitleInput').addEventListener('change', function(){
+      if(editingBetaId) return; // beim Bearbeiten nicht ueberschreiben
+      var title = this.value.trim();
+      if(!title) return;
+      var matches = state.betaEntries.filter(function(e){ return e.title === title; })
+        .sort(function(a,b){ return b.date.localeCompare(a.date); });
+      if(matches.length > 0){
+        document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(matches[0].amount*100));
+        var typeRadio = document.querySelector('input[name="betaType"][value="'+matches[0].type+'"]');
+        if(typeRadio) typeRadio.checked = true;
+      }
+    });
+
+    document.getElementById('betaEntryForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var type = document.querySelector('input[name="betaType"]:checked').value;
+      var title = document.getElementById('betaTitleInput').value.trim();
+      var date = document.getElementById('betaDateInput').value;
+      var amount = parseAmount(document.getElementById('betaAmountInput').value);
+      var category = document.getElementById('betaCategoryInput').value.trim();
+      var recurring = document.getElementById('betaRecurringInput').checked;
+      var reconciled = document.getElementById('betaReconciledInput').checked;
+      if(!title || !date || isNaN(amount) || amount <= 0) return;
+
+      if(editingBetaId){
+        var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
+        if(entry){
+          entry.type = type; entry.title = title; entry.date = date; entry.amount = amount;
+          entry.category = category; entry.recurring = recurring; entry.reconciled = reconciled;
+        }
+      } else {
+        state.betaEntries.push({ id: genId(), type: type, title: title, date: date, amount: amount, category: category, recurring: recurring, reconciled: reconciled });
+      }
+      saveState();
+      document.getElementById('addBetaOverlay').classList.remove('open');
+      resetBetaForm();
+      var d = parseISO(date);
+      betaViewMonth = d.getMonth(); betaViewYear = d.getFullYear();
+      renderBeta();
+    });
+
+    document.getElementById('addBetaOverlay').addEventListener('click', function(e){
+      if(e.target.closest('[data-close-form="addBetaOverlay"]')) resetBetaForm();
+    });
+  }
+
+  function resetBetaForm(){
+    editingBetaId = null;
+    document.getElementById('addBetaTitle').textContent = 'Neuer Eintrag';
+    document.getElementById('betaDeleteBtn').style.display = 'none';
+    document.getElementById('betaEntryForm').reset();
+    document.getElementById('betaDateInput').value = todayISO();
+  }
 
   function renderFuelTracker(){
     var chipsRow = document.getElementById('carChipsRow');
@@ -5309,6 +5569,7 @@ var nativeStorage = {
     setupBackup();
     setupThemeToggle();
     setupFuelTracker();
+    setupBeta();
     setupDiagrammOverlay();
     setupCardExpandToggle();
     setupCentInputs();
