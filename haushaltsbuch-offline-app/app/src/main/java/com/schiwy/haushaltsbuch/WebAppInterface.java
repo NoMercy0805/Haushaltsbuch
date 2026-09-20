@@ -87,6 +87,21 @@ public class WebAppInterface {
         });
     }
 
+    // ---------- Beta-Widget (4x1 Homescreen-Widget) ----------
+
+    // Wird von der Web-App aufgerufen, sobald sich der Kontostand im Beta-Tab
+    // aendert (renderBeta) - speichert den fertig formatierten Text fuer das
+    // Widget zwischen und stoesst ein sofortiges Neuzeichnen an.
+    @JavascriptInterface
+    public void updateBetaWidgetBalance(final String balanceText) {
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences(
+                    BetaWidgetProvider.PREFS_NAME, android.content.Context.MODE_PRIVATE);
+            prefs.edit().putString(BetaWidgetProvider.KEY_BALANCE, balanceText).apply();
+            BetaWidgetProvider.updateAll(context);
+        } catch (Exception ignored) {}
+    }
+
     // ---------- Manuelles Backup (Downloads) ----------
 
     @JavascriptInterface

@@ -5033,6 +5033,9 @@ var nativeStorage = {
     ]},
     { version:70, date:'20.09.2026, 21:08 Uhr', items:[
       'Wichtiger Backup-Fix: Tanken (Autos/Tankvorgänge) und Beta fehlten bisher komplett in der Sicherung/Wiederherstellung - das hätte beim Wiederherstellen zu Fehlern in diesen Bereichen führen können. Ab jetzt werden beide vollständig mit gesichert'
+    ]},
+    { version:71, date:'20.09.2026, 21:14 Uhr', items:[
+      'Neues 4x1-Homescreen-Widget für Beta: zeigt den aktuellen Kontostand, "+" öffnet direkt eine neue Einnahme, "-" eine neue Ausgabe, Antippen der Zahl öffnet den Beta-Tab'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5212,6 +5215,9 @@ var nativeStorage = {
     var barEl = document.getElementById('betaBalanceBar');
     barEl.classList.toggle('positive', balance >= 0);
     document.getElementById('betaBalanceValue').textContent = fmtEUR(balance);
+    if(window.AndroidBridge && typeof window.AndroidBridge.updateBetaWidgetBalance === 'function'){
+      try{ window.AndroidBridge.updateBetaWidgetBalance((balance>=0?'':'-')+fmtEUR(Math.abs(balance))); }catch(e){}
+    }
     var firstOfMonth = new Date(betaViewYear, betaViewMonth, 1);
     var lastOfMonth = new Date(betaViewYear, betaViewMonth+1, 0);
     function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); }
@@ -5939,6 +5945,22 @@ var nativeStorage = {
     await restoreDatabaseFromText(content);
     performAutoBackup();
   }
+
+  // Wird von MainActivity aufgerufen, sobald das Beta-Homescreen-Widget
+  // angetippt wurde (+, - oder die Zahl selbst) - oeffnet den Beta-Tab und
+  // ggf. direkt das Eintragen-Formular mit vorausgewaehltem Typ.
+  window.openBetaFromWidget = function(action){
+    try{
+      switchToTab('beta');
+      if(action === 'add_einnahme' || action === 'add_ausgabe'){
+        resetBetaForm();
+        var type = action === 'add_einnahme' ? 'einnahme' : 'ausgabe';
+        var radio = document.querySelector('input[name="betaType"][value="'+type+'"]');
+        if(radio) radio.checked = true;
+        document.getElementById('addBetaOverlay').classList.add('open');
+      }
+    }catch(e){}
+  };
 
   window.onBackupFolderPicked = function(success, folderName){
     if(success){

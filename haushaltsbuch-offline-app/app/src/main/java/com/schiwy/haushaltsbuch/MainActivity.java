@@ -80,6 +80,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 view.evaluateJavascript(DOWNLOAD_HOOK_JS, null);
+                handleBetaWidgetIntent(getIntent());
             }
         });
 
@@ -106,6 +107,23 @@ public class MainActivity extends Activity {
         webView.loadUrl("file:///android_asset/index.html");
 
         requestStoragePermissionIfNeeded();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleBetaWidgetIntent(intent);
+    }
+
+    /** Reagiert auf einen Tipp auf das Beta-Homescreen-Widget (+/-/Zahl). */
+    private void handleBetaWidgetIntent(Intent intent) {
+        if (intent == null || webView == null) return;
+        String action = intent.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION);
+        if (action == null) return;
+        intent.removeExtra(BetaWidgetProvider.EXTRA_BETA_ACTION);
+        String js = "window.openBetaFromWidget && window.openBetaFromWidget('" + action + "');";
+        webView.evaluateJavascript(js, null);
     }
 
     /** Called by WebAppInterface.pickBackupFolder() (already on the UI thread). */
