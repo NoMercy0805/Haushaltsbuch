@@ -7,7 +7,7 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/beta_widget_4x1"
     android:previewLayout="@layout/beta_widget_4x1"
-    android:resizeMode="both"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:previewImage="@mipmap/ic_launcher"
     android:description="@string/widget_desc_4x1" />
