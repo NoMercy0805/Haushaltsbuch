@@ -13,25 +13,25 @@
 
     <TextView
         android:id="@+id/widget_plus_btn"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:background="@drawable/widget_circle_plus"
         android:gravity="center"
         android:text="+"
         android:textColor="@color/widget_plus_bg"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/widget_minus_btn"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:layout_marginStart="6dp"
         android:background="@drawable/widget_circle_minus"
         android:gravity="center"
         android:text="\u2212"
         android:textColor="@color/widget_minus_bg"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 
     <TextView
@@ -43,7 +43,7 @@
         android:paddingStart="8dp"
         android:text="0,00 \u20ac"
         android:textColor="@color/widget_text"
-        android:textSize="13sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         android:maxLines="1"
         android:ellipsize="end" />
