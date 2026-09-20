@@ -536,7 +536,7 @@
 
     <nav class="tabs">
       <button data-tab="beta" class="tab active" aria-label="Kontostand">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M9 13h6M9 17h4"/></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="6" cy="18" rx="4" ry="1.6"/><path d="M2 18v-3"/><path d="M10 18v-3"/><ellipse cx="6" cy="15" rx="4" ry="1.6"/><ellipse cx="13" cy="20" rx="4" ry="1.6"/><path d="M9 20v-4"/><path d="M17 20v-4"/><ellipse cx="13" cy="16" rx="4" ry="1.6"/><ellipse cx="19" cy="17" rx="4" ry="1.6"/><path d="M15 17v-5"/><path d="M23 17v-5"/><ellipse cx="19" cy="12" rx="4" ry="1.6"/></svg>
         <span>Kontostand</span>
       </button>
       <button data-tab="buchungen" class="tab">
@@ -5053,6 +5053,9 @@ var nativeStorage = {
     { version:76, date:'20.09.2026, 21:35 Uhr', items:[
       'Übersicht ist jetzt ein Button oben im Header (neben Diagramm) statt ein Reiter unten - öffnet sich als eigenes Fenster',
       '"Beta" ist umbenannt in "Kontostand" und steht jetzt an der ersten Stelle unten, dort wo vorher Übersicht war (inkl. Widget-Beschriftung)'
+    ]},
+    { version:77, date:'20.09.2026, 21:38 Uhr', items:[
+      'Kontostand-Icon in der Tab-Leiste jetzt drei Münzstapel statt Dokument-Symbol'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
