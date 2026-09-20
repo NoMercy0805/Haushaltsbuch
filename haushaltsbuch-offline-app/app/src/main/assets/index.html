@@ -521,6 +521,9 @@
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap" style="display:flex;gap:8px;">
+          <button id="uebersichtBtn" class="settings-icon-btn" aria-label="Übersicht">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
+          </button>
           <button id="diagrammBtn" class="settings-icon-btn" aria-label="Diagramm">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7 4"/></svg>
           </button>
@@ -532,9 +535,9 @@
     </header>
 
     <nav class="tabs">
-      <button data-tab="uebersicht" class="tab active" aria-label="Übersicht">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
-        <span>Übersicht</span>
+      <button data-tab="beta" class="tab active" aria-label="Kontostand">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M9 13h6M9 17h4"/></svg>
+        <span>Kontostand</span>
       </button>
       <button data-tab="buchungen" class="tab">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h5"/></svg>
@@ -552,31 +555,11 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="14" rx="1.5"/><path d="M6 7V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/><path d="M6.5 12h5"/><path d="M13 11h2.3l3 3.1v4.4a1.5 1.5 0 0 1-3 0v-2.2"/></svg>
         <span>Tanken</span>
       </button>
-      <button data-tab="beta" class="tab" aria-label="Beta">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M9 13h6M9 17h4"/></svg>
-        <span>Beta</span>
-      </button>
+
     </nav>
 
     <main>
       <!-- ÜBERSICHT -->
-      <section id="tab-uebersicht" class="tab-panel active">
-        <div class="hero-card" id="heroCard">
-          <div class="hero-card-label">Monatlicher Rest</div>
-          <div class="hero-card-value" id="heroCardValue"></div>
-          <div class="hero-card-sub-row">
-            <div>
-              <div class="hero-card-sub-label" style="color:var(--savings);">▲ Einnahmen</div>
-              <div class="hero-card-sub-value" id="heroCardIncome"></div>
-            </div>
-            <div>
-              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Ausgaben</div>
-              <div class="hero-card-sub-value" id="heroCardFixed"></div>
-            </div>
-          </div>
-        </div>
-        <div id="overviewWidgets"></div>
-      </section>
 
       <!-- BUCHUNGEN -->
       <section id="tab-buchungen" class="tab-panel">
@@ -743,7 +726,7 @@
       </section>
 
       <!-- BETA -->
-      <section id="tab-beta" class="tab-panel" style="padding-bottom:70px;">
+      <section id="tab-beta" class="tab-panel active" style="padding-bottom:70px;">
         <div class="beta-month-nav">
           <button type="button" id="betaMonthPrev" aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <div class="beta-month-label"><button type="button" id="betaMonthLabel" class="beta-month-label-btn"></button> <button type="button" id="betaYearLabel" class="beta-month-label-btn"></button></div>
@@ -754,6 +737,30 @@
       </section>
 
     </main>
+
+    <div id="uebersichtOverlay" class="settings-overlay">
+      <div class="settings-panel" style="text-align:left;">
+        <div class="settings-panel-head">
+          <h2>Übersicht</h2>
+          <button class="settings-close-btn" id="uebersichtCloseBtn" aria-label="Schließen">×</button>
+        </div>
+        <div class="hero-card" id="heroCard">
+          <div class="hero-card-label">Monatlicher Rest</div>
+          <div class="hero-card-value" id="heroCardValue"></div>
+          <div class="hero-card-sub-row">
+            <div>
+              <div class="hero-card-sub-label" style="color:var(--savings);">▲ Einnahmen</div>
+              <div class="hero-card-sub-value" id="heroCardIncome"></div>
+            </div>
+            <div>
+              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Ausgaben</div>
+              <div class="hero-card-sub-value" id="heroCardFixed"></div>
+            </div>
+          </div>
+        </div>
+        <div id="overviewWidgets"></div>
+      </div>
+    </div>
 
     <div id="betaBalanceBar" style="display:none;">
       <span class="beta-balance-label">Kontostand</span>
@@ -1113,13 +1120,6 @@
       </div>
       <div class="summary-card" id="tabVisibilityList">
         <div class="tab-visibility-row">
-          <span>Übersicht</span>
-          <label class="toggle-switch">
-            <input type="checkbox" data-tab-toggle="uebersicht">
-            <span class="track"></span><span class="thumb"></span>
-          </label>
-        </div>
-        <div class="tab-visibility-row">
           <span>Buchungen</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="buchungen">
@@ -1148,7 +1148,7 @@
           </label>
         </div>
         <div class="tab-visibility-row">
-          <span>Beta</span>
+          <span>Kontostand</span>
           <label class="toggle-switch">
             <input type="checkbox" data-tab-toggle="beta">
             <span class="track"></span><span class="thumb"></span>
@@ -1192,11 +1192,11 @@
       <button id="autoBackupToggleBtn" class="settings-btn">Ordner für automatisches Backup wählen</button>
       <button id="autoBackupDisableBtn" class="settings-btn" style="display:none;background:var(--primary-soft);color:var(--primary);">Automatisches Backup deaktivieren</button>
 
-      <p class="chooser-group-label" style="margin-top:16px;">Beta-Import</p>
+      <p class="chooser-group-label" style="margin-top:16px;">Kontostand-Import</p>
       <div class="summary-card">
-        <p style="margin:0 0 4px;font-size:15px;">Importiert eine CSV-Datei (Datum/Titel/Hauptkategorie/Betrag/Abgeglichen) als eigenständige Einträge in den Beta-Tab, ohne andere Bereiche der App zu berühren.</p>
+        <p style="margin:0 0 4px;font-size:15px;">Importiert eine CSV-Datei (Datum/Titel/Hauptkategorie/Betrag/Abgeglichen) als eigenständige Einträge in den Kontostand-Tab, ohne andere Bereiche der App zu berühren.</p>
       </div>
-      <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Beta)</button>
+      <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Kontostand)</button>
       <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
 
       <p class="chooser-group-label" style="margin-top:16px;">Wiederherstellen</p>
@@ -3234,7 +3234,7 @@ var nativeStorage = {
   }
 
   /* ---------- Events ---------- */
-  var TAB_ORDER = ['uebersicht', 'buchungen', 'variabel', 'kredite', 'tanken', 'beta'];
+  var TAB_ORDER = ['beta', 'buchungen', 'variabel', 'kredite', 'tanken'];
   var activeKreditSubView = 'kredite';
   var tabVisibility = loadTabVisibility();
 
@@ -3561,7 +3561,7 @@ var nativeStorage = {
     });
   }
 
-  var FAB_HIDDEN_TABS = ['uebersicht', 'tilgungsplan'];
+  var FAB_HIDDEN_TABS = ['tilgungsplan'];
 
   function updateFabVisibilityForTab(effectiveTabName){
     var fab = document.getElementById('addEntryFab');
@@ -5049,6 +5049,10 @@ var nativeStorage = {
     ]},
     { version:75, date:'20.09.2026, 21:29 Uhr', items:[
       'Beta: "Umbuchung"-Option entfernt, da es nur ein Konto gibt und diese Auswahl keinen Sinn ergibt'
+    ]},
+    { version:76, date:'20.09.2026, 21:35 Uhr', items:[
+      'Übersicht ist jetzt ein Button oben im Header (neben Diagramm) statt ein Reiter unten - öffnet sich als eigenes Fenster',
+      '"Beta" ist umbenannt in "Kontostand" und steht jetzt an der ersten Stelle unten, dort wo vorher Übersicht war (inkl. Widget-Beschriftung)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5776,6 +5780,16 @@ var nativeStorage = {
     }
   }
 
+  function setupUebersichtOverlay(){
+    var overlay = document.getElementById('uebersichtOverlay');
+    document.getElementById('uebersichtBtn').addEventListener('click', function(){
+      overlay.classList.add('open');
+    });
+    document.getElementById('uebersichtCloseBtn').addEventListener('click', function(){
+      overlay.classList.remove('open');
+    });
+  }
+
   function setupDiagrammOverlay(){
     var overlay = document.getElementById('diagrammOverlay');
     document.getElementById('diagrammBtn').addEventListener('click', function(){
@@ -6095,6 +6109,7 @@ var nativeStorage = {
     setupThemeToggle();
     setupFuelTracker();
     setupBeta();
+    setupUebersichtOverlay();
     setupDiagrammOverlay();
     setupCardExpandToggle();
     setupCentInputs();

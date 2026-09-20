@@ -54,7 +54,7 @@
             android:id="@+id/widget_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Beta"
+            android:text="Kontostand"
             android:textColor="@color/widget_label"
             android:textSize="11sp" />
     </LinearLayout>
