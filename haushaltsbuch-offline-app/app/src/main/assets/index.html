@@ -2419,28 +2419,14 @@ var nativeStorage = {
     var txs = allTxs.filter(function(t){ return parseISO(t.date).getFullYear() === year; });
     txs.sort(function(a,b){ return b.date.localeCompare(a.date); });
 
-    var pinnedHtml = '';
-    if(editingPotCarryover){
-      pinnedHtml += '<div class="edit-row" data-id="carryover">'+
-                 '<input type="number" step="0.01" class="edit-carryover-amount full" value="'+(state.potCarryover||0)+'" placeholder="Betrag (€)">'+
-                 '<div class="edit-actions">'+
-                   '<button type="button" class="btn-cancel" data-action="cancel-edit-carryover">Abbrechen</button>'+
-                   '<button type="button" class="btn-save" data-action="save-edit-carryover">Speichern</button>'+
-                 '</div>'+
-               '</div>';
-    } else {
-      pinnedHtml += '<div class="vc-card">'+
-                 '<div class="vc-card-top">'+
-                   '<span class="vc-name">Übertrag Vorjahr</span>'+
-                   '<span class="vc-monthly" style="color:'+((state.potCarryover||0)>=0?'var(--savings)':'var(--expense)')+';font-weight:700;">'+((state.potCarryover||0)>=0?'+':'')+fmtEUR(state.potCarryover||0)+'</span>'+
-                 '</div>'+
-                 '<div class="vc-actions">'+
-                   '<button class="action-icon-btn neutral" data-action="edit-carryover" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                 '</div>'+
+    var html2 = '';
+    if(carryover !== 0){
+      html2 += '<div class="carryover-row">'+
+                 '<span class="row-desc">Übertrag aus Vorjahr'+(carryover>=0?'en':'')+'</span>'+
+                 '<span class="row-leader"></span>'+
+                 '<span class="row-amount">'+(carryover>=0?'+':'')+fmtEUR(carryover)+'</span>'+
                '</div>';
     }
-
-    var html2 = '';
     if(txs.length === 0 && carryover === 0){
       html2 += '<div class="empty-state">Noch keine Buchungen im Spartopf.</div>';
     } else if(txs.length === 0){
@@ -2472,7 +2458,7 @@ var nativeStorage = {
       });
       html2 += '</div>';
     }
-    txContainer.innerHTML = html2 + pinnedHtml;
+    txContainer.innerHTML = html2;
   }
 
   function populatePotYearSelect(allTxs){
@@ -3914,15 +3900,6 @@ var nativeStorage = {
           }
         }
         editing.tx = null; saveState(); renderAll();
-      } else if(action === 'edit-carryover'){
-        editingPotCarryover = true; renderVariabel(); focusEditRow('carryover');
-      } else if(action === 'cancel-edit-carryover'){
-        editingPotCarryover = false; renderVariabel();
-      } else if(action === 'save-edit-carryover'){
-        var carryoverRow = btn.closest('.edit-row');
-        var newCarryover = parseAmount(carryoverRow.querySelector('.edit-carryover-amount').value);
-        state.potCarryover = isNaN(newCarryover) ? 0 : newCarryover;
-        editingPotCarryover = false; saveState(); renderAll();
       }
     });
   }
@@ -4798,8 +4775,8 @@ var nativeStorage = {
     { version:59, date:'20.09.2026, 18:26 Uhr', items:[
       'Jahres-Auswahl beim Verlauf Spartopf jetzt als Chips statt Dropdown, wie beim Extra-Betrag im Tilgungsplan - bricht bei vielen Jahren automatisch in eine neue Zeile um'
     ]},
-    { version:60, date:'20.09.2026, 18:32 Uhr', items:[
-      '"Übertrag aus Vorjahr(en)"-Anzeigebox beim Verlauf Spartopf entfernt - die laufende Fortführung des Saldos ins neue Jahr bleibt davon unberührt'
+    { version:60, date:'20.09.2026, 18:37 Uhr', items:[
+      'Verlauf Spartopf: die automatische "Übertrag aus Vorjahr(en)"-Anzeige bleibt erhalten, das manuelle Eingabefeld dafür ganz unten in der Liste wurde entfernt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
