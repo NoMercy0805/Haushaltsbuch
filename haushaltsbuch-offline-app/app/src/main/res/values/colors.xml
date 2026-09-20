@@ -2,7 +2,9 @@
     <color name="ic_launcher_background">#FFFFFF</color>
     <color name="widget_bg">#FFFFFF</color>
     <color name="widget_plus_bg">#00A971</color>
+    <color name="widget_plus_soft">#DCF5EA</color>
     <color name="widget_minus_bg">#F0421F</color>
+    <color name="widget_minus_soft">#FDE8E3</color>
     <color name="widget_balance_pos">#00A971</color>
     <color name="widget_balance_neg">#F0421F</color>
     <color name="widget_label">#8A8A8E</color>

@@ -1,7 +1,9 @@
 <resources>
     <color name="widget_bg">#1C1D22</color>
     <color name="widget_plus_bg">#2ED991</color>
+    <color name="widget_plus_soft">#1B3A2C</color>
     <color name="widget_minus_bg">#FF5B42</color>
+    <color name="widget_minus_soft">#3A2420</color>
     <color name="widget_balance_pos">#2ED991</color>
     <color name="widget_balance_neg">#FF5B42</color>
     <color name="widget_label">#8E9098</color>
