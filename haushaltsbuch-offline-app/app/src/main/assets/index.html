@@ -475,6 +475,7 @@
   .confirm-btn{flex:1;border:none;border-radius:999px;padding:14px 10px;font-family:var(--serif);font-weight:700;font-size:15px;cursor:pointer;}
   .confirm-btn-cancel{background:var(--paper);color:var(--ink);}
   .confirm-btn-danger{background:var(--expense);color:#fff;}
+  .beta-recurring-choice-btn{display:block;width:100%;text-align:left;background:none;border:none;padding:14px 4px;font-size:15px;font-family:var(--sans);color:var(--ink);cursor:pointer;}
   .confirm-btn-danger:hover{background:#D5361A;}
   .confirm-btn-cancel:hover{background:var(--rule);}
   .confirm-btn-primary{background:var(--primary);color:#fff;}
@@ -1251,6 +1252,17 @@
     </div>
   </div>
 
+  <div id="betaRecurringChoiceOverlay" class="confirm-overlay">
+    <div class="confirm-card" style="text-align:left;">
+      <p class="confirm-message" style="text-align:left;margin-bottom:14px;">Dies ist ein Dauerauftrag. Was möchtest du ändern?</p>
+      <button type="button" class="beta-recurring-choice-btn" data-choice="this">Diesen Eintrag ändern</button>
+      <button type="button" class="beta-recurring-choice-btn" data-choice="following" style="border-top:1px solid var(--rule);">Diesen und alle folgenden Einträge ändern</button>
+      <div class="confirm-actions" style="margin-top:10px;">
+        <button type="button" class="confirm-btn confirm-btn-cancel" id="betaRecurringChoiceCancelBtn" style="width:100%;">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
   <div id="syncReminderOverlay" class="confirm-overlay">
     <div class="confirm-card">
       <div class="confirm-icon">🔄</div>
@@ -1875,6 +1887,36 @@ var nativeStorage = {
       function onKeydown(e){ if(e.key === 'Escape') cleanup(false); }
 
       okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', onOverlayClick);
+      document.addEventListener('keydown', onKeydown);
+    });
+  }
+
+  // Fragt bei einem Eintrag, der zu einem Dauerauftrag gehoert, ob nur
+  // dieser eine oder dieser und alle folgenden Eintraege geaendert werden
+  // sollen - analog zum Original-Verhalten. Gibt 'this', 'following' oder
+  // null (abgebrochen) zurueck.
+  function betaRecurringChoiceDialog(){
+    return new Promise(function(resolve){
+      var overlay = document.getElementById('betaRecurringChoiceOverlay');
+      var cancelBtn = document.getElementById('betaRecurringChoiceCancelBtn');
+      overlay.classList.add('visible');
+
+      function cleanup(result){
+        overlay.classList.remove('visible');
+        overlay.querySelectorAll('[data-choice]').forEach(function(btn){ btn.removeEventListener('click', onChoice); });
+        cancelBtn.removeEventListener('click', onCancel);
+        overlay.removeEventListener('click', onOverlayClick);
+        document.removeEventListener('keydown', onKeydown);
+        resolve(result);
+      }
+      function onChoice(e){ cleanup(e.currentTarget.dataset.choice); }
+      function onCancel(){ cleanup(null); }
+      function onOverlayClick(e){ if(e.target === overlay) cleanup(null); }
+      function onKeydown(e){ if(e.key === 'Escape') cleanup(null); }
+
+      overlay.querySelectorAll('[data-choice]').forEach(function(btn){ btn.addEventListener('click', onChoice); });
       cancelBtn.addEventListener('click', onCancel);
       overlay.addEventListener('click', onOverlayClick);
       document.addEventListener('keydown', onKeydown);
@@ -4921,6 +4963,9 @@ var nativeStorage = {
     { version:65, date:'20.09.2026, 19:51 Uhr', items:[
       'Beta: Zeitzonen-Fehler bei Dauerauftrag behoben - der nächste Termin landete durch die Zeitumstellung teils auf einem falschen Tag und die Folgemonate fehlten dadurch',
       'Beta: Plus-Button überschnitt sich mit der Kontostand-Leiste - Position wird jetzt ebenfalls dynamisch berechnet'
+    ]},
+    { version:66, date:'20.09.2026, 20:05 Uhr', items:[
+      'Beta: Beim Bearbeiten eines Dauerauftrag-Eintrags fragt die App jetzt, ob nur dieser eine oder dieser und alle folgenden Einträge geändert werden sollen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5039,6 +5084,7 @@ var nativeStorage = {
   var betaViewMonth = new Date().getMonth();
   var betaViewYear = new Date().getFullYear();
   var editingBetaId = null;
+  var editingBetaScope = 'this'; // 'this' oder 'following'
 
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; } // Umbuchung wird wie Ausgabe (negativ) behandelt, analog zur Vorlage
 
@@ -5191,6 +5237,31 @@ var nativeStorage = {
     document.getElementById('betaDateLabelWrap').textContent = checked ? 'Erste Ausführung' : 'Datum';
   }
 
+  function openBetaEditForm(entry, scope){
+    editingBetaId = entry.id;
+    editingBetaScope = scope;
+    document.getElementById('addBetaTitle').textContent = scope === 'following' ? 'Diesen und alle folgenden ändern' : 'Eintrag bearbeiten';
+    document.getElementById('betaDeleteBtn').style.display = '';
+    document.querySelector('input[name="betaType"][value="'+entry.type+'"]').checked = true;
+    document.getElementById('betaTitleInput').value = entry.title;
+    document.getElementById('betaDateInput').value = entry.date;
+    document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(entry.amount*100));
+    document.getElementById('betaCategoryInput').value = entry.category || '';
+    document.getElementById('betaRecurringInput').checked = !!entry.recurring;
+    document.getElementById('betaReconciledInput').checked = !!entry.reconciled;
+    var showRecurrenceFields = entry.isRecurringTemplate || scope === 'following';
+    if(showRecurrenceFields){
+      var tpl = entry.isRecurringTemplate ? entry : state.betaEntries.filter(function(x){ return x.id === entry.recurringGroupId; })[0];
+      document.getElementById('betaPeriodInput').value = (tpl && tpl.recurrencePeriod) || 'monthly';
+      var tplEnd = tpl && tpl.recurrenceEnd;
+      document.getElementById('betaEndDateEnabledInput').checked = !!tplEnd;
+      document.getElementById('betaEndDateInput').value = tplEnd || '';
+      document.getElementById('betaEndDateInput').style.display = tplEnd ? '' : 'none';
+    }
+    updateBetaRecurringFieldsVisibility(showRecurrenceFields);
+    document.getElementById('addBetaOverlay').classList.add('open');
+  }
+
   function setupBeta(){
     generateBetaRecurringOccurrences();
 
@@ -5204,7 +5275,7 @@ var nativeStorage = {
       document.getElementById('betaEndDateInput').style.display = this.checked ? '' : 'none';
     });
 
-    document.getElementById('betaList').addEventListener('click', function(e){
+    document.getElementById('betaList').addEventListener('click', async function(e){
       var toggleBtn = e.target.closest('[data-action="toggle-reconciled"]');
       if(toggleBtn){
         var toggleEntry = state.betaEntries.filter(function(x){ return x.id === toggleBtn.dataset.id; })[0];
@@ -5219,24 +5290,14 @@ var nativeStorage = {
       if(!row) return;
       var entry = state.betaEntries.filter(function(x){ return x.id === row.dataset.id; })[0];
       if(!entry) return;
-      editingBetaId = entry.id;
-      document.getElementById('addBetaTitle').textContent = 'Eintrag bearbeiten';
-      document.getElementById('betaDeleteBtn').style.display = '';
-      document.querySelector('input[name="betaType"][value="'+entry.type+'"]').checked = true;
-      document.getElementById('betaTitleInput').value = entry.title;
-      document.getElementById('betaDateInput').value = entry.date;
-      document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(entry.amount*100));
-      document.getElementById('betaCategoryInput').value = entry.category || '';
-      document.getElementById('betaRecurringInput').checked = !!entry.recurring;
-      document.getElementById('betaReconciledInput').checked = !!entry.reconciled;
-      if(entry.isRecurringTemplate){
-        document.getElementById('betaPeriodInput').value = entry.recurrencePeriod || 'monthly';
-        document.getElementById('betaEndDateEnabledInput').checked = !!entry.recurrenceEnd;
-        document.getElementById('betaEndDateInput').value = entry.recurrenceEnd || '';
-        document.getElementById('betaEndDateInput').style.display = entry.recurrenceEnd ? '' : 'none';
+
+      var scope = 'this';
+      if(entry.isRecurringTemplate || entry.recurringGroupId){
+        var choice = await betaRecurringChoiceDialog();
+        if(!choice) return;
+        scope = choice;
       }
-      updateBetaRecurringFieldsVisibility(!!entry.isRecurringTemplate);
-      document.getElementById('addBetaOverlay').classList.add('open');
+      openBetaEditForm(entry, scope);
     });
 
     document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
@@ -5285,8 +5346,10 @@ var nativeStorage = {
       if(editingBetaId){
         var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
         if(entry){
+          var originalDate = entry.date;
           entry.type = type; entry.title = title; entry.date = date; entry.amount = amount;
           entry.category = category; entry.reconciled = reconciled;
+
           if(entry.isRecurringTemplate){
             entry.recurrencePeriod = period;
             entry.recurrenceEnd = endDate || null;
@@ -5294,6 +5357,25 @@ var nativeStorage = {
             // Aus einem einfachen Eintrag wird nachtraeglich ein Dauerauftrag
             entry.recurring = true; entry.isRecurringTemplate = true;
             entry.recurrencePeriod = period; entry.recurrenceEnd = endDate || null;
+          }
+
+          if(editingBetaScope === 'following' && entry.recurringGroupId){
+            // Diesen und alle folgenden Eintraege der Serie (Datum >= urspruenglichem
+            // Datum dieses Eintrags) sowie die Vorlage selbst mit den neuen Werten
+            // aktualisieren, damit auch kuenftig erzeugte Termine dazu passen.
+            var tpl = state.betaEntries.filter(function(x){ return x.id === entry.recurringGroupId; })[0];
+            state.betaEntries.forEach(function(other){
+              if(other.id === entry.id) return;
+              if(other.recurringGroupId === entry.recurringGroupId && other.date >= originalDate){
+                other.type = type; other.title = title; other.amount = amount; other.category = category;
+              }
+            });
+            if(tpl){
+              tpl.type = type; tpl.title = title; tpl.category = category;
+              if(tpl.date >= originalDate) tpl.amount = amount;
+              tpl.recurrencePeriod = period;
+              tpl.recurrenceEnd = endDate || null;
+            }
           }
         }
       } else {
@@ -5321,6 +5403,7 @@ var nativeStorage = {
 
   function resetBetaForm(){
     editingBetaId = null;
+    editingBetaScope = 'this';
     document.getElementById('addBetaTitle').textContent = 'Neuer Eintrag';
     document.getElementById('betaDeleteBtn').style.display = 'none';
     document.getElementById('betaEntryForm').reset();
