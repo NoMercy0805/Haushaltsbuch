@@ -120,7 +120,7 @@
   .fab-add{
     position:fixed;
     right:20px;
-    bottom:calc(env(safe-area-inset-bottom, 0px) + 90px);
+    bottom:calc(env(safe-area-inset-bottom, 0px) + 90px + var(--beta-bar-extra, 0px));
     width:60px;height:60px;border-radius:50%;
     background:var(--primary-a);color:#fff;border:none;
     display:flex;align-items:center;justify-content:center;
@@ -135,7 +135,7 @@
   .fab-add.fab-open svg{transform:rotate(45deg);}
   .fab-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:190;pointer-events:none;transition:background .2s ease;}
   .fab-backdrop.fab-open{background:rgba(0,0,0,0.4);pointer-events:auto;}
-  .fab-speed-dial{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom, 0px) + 166px);z-index:195;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:14px;pointer-events:none;}
+  .fab-speed-dial{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom, 0px) + 166px + var(--beta-bar-extra, 0px));z-index:195;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:14px;pointer-events:none;}
   .fab-option{display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(10px) scale(0.9);transition:opacity .18s ease, transform .18s var(--ios-ease);pointer-events:none;}
   .fab-speed-dial.fab-open .fab-option{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
   .fab-option-label{background:var(--surface);color:var(--ink);font-family:var(--serif);font-size:13px;font-weight:700;padding:8px 13px;border-radius:12px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
@@ -3498,7 +3498,14 @@ var nativeStorage = {
   function positionBetaBalanceBar(){
     var bar = document.getElementById('betaBalanceBar');
     var navEl = document.querySelector('nav.tabs');
-    if(bar && navEl) bar.style.bottom = navEl.offsetHeight + 'px';
+    var fab = document.getElementById('addEntryFab');
+    var speedDial = document.getElementById('fabSpeedDial');
+    if(bar && navEl){
+      bar.style.bottom = navEl.offsetHeight + 'px';
+      var extra = bar.offsetHeight + 'px';
+      if(fab) fab.style.setProperty('--beta-bar-extra', extra);
+      if(speedDial) speedDial.style.setProperty('--beta-bar-extra', extra);
+    }
   }
 
   function switchToTab(tabName){
@@ -3510,7 +3517,14 @@ var nativeStorage = {
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
-    if(tabName === 'beta') positionBetaBalanceBar();
+    if(tabName === 'beta'){
+      positionBetaBalanceBar();
+    } else {
+      var fabEl = document.getElementById('addEntryFab');
+      var dialEl = document.getElementById('fabSpeedDial');
+      if(fabEl) fabEl.style.removeProperty('--beta-bar-extra');
+      if(dialEl) dialEl.style.removeProperty('--beta-bar-extra');
+    }
     var effectiveTabName = tabName;
     if(tabName === 'kredite') effectiveTabName = activeKreditSubView;
     else if(tabName === 'buchungen') effectiveTabName = activeBuchungenSubView;
@@ -4903,6 +4917,10 @@ var nativeStorage = {
     ]},
     { version:64, date:'20.09.2026, 19:14 Uhr', items:[
       'Beta: Der Kreis bei jedem Eintrag lässt sich jetzt direkt antippen, um "Abgeglichen" umzuschalten, ohne den Eintrag extra öffnen zu müssen'
+    ]},
+    { version:65, date:'20.09.2026, 19:51 Uhr', items:[
+      'Beta: Zeitzonen-Fehler bei Dauerauftrag behoben - der nächste Termin landete durch die Zeitumstellung teils auf einem falschen Tag und die Folgemonate fehlten dadurch',
+      'Beta: Plus-Button überschnitt sich mit der Kontostand-Leiste - Position wird jetzt ebenfalls dynamisch berechnet'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5101,6 +5119,14 @@ var nativeStorage = {
     renderBeta();
   }
 
+  // Wandelt ein Date in YYYY-MM-DD nach LOKALER Zeit um (nicht UTC) - wichtig
+  // fuer selbst berechnete Termine, da toISOString() bei positiver Zeitzone
+  // (z.B. MEZ/MESZ) den Kalendertag um einen Tag zurueckschieben kann,
+  // sobald lokale Mitternacht in UTC noch auf den Vortag faellt.
+  function localDateStr(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
   function betaAddPeriod(date, period){
     var d = new Date(date.getTime());
     switch(period){
@@ -5143,7 +5169,7 @@ var nativeStorage = {
       while(cursor <= horizon && guard < 240){
         guard++;
         if(endDate && cursor > endDate) break;
-        var dateKey = cursor.toISOString().slice(0,10);
+        var dateKey = localDateStr(cursor);
         if(!existingDates[dateKey]){
           state.betaEntries.push({
             id: genId(), type: tpl.type, title: tpl.title, date: dateKey, amount: tpl.amount,
