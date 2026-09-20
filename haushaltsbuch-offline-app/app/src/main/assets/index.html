@@ -4375,7 +4375,10 @@ var nativeStorage = {
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
     {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
-    {name:'savings', columns:['id','date','amount','type','comment']}
+    {name:'savings', columns:['id','date','amount','type','comment']},
+    {name:'cars', columns:['id','name']},
+    {name:'fuelLogs', columns:['id','carId','liters','pricePerLiter','date']},
+    {name:'betaEntries', columns:['id','type','title','date','amount','category','recurring','reconciled','isRecurringTemplate','recurrencePeriod','recurrenceEnd','recurringGroupId']}
   ];
 
   function csvEscape(val){
@@ -4431,7 +4434,7 @@ var nativeStorage = {
 
   function parseCSVDatabase(text){
     var rows = parseCSV(text);
-    var result = { income:[], fixedExpenses:[], openInvoices:[], variableCosts:[], variableContributions:[], variablePayments:[], loans:[], loanPayments:[], savings:[], potCarryover:0 };
+    var result = { income:[], fixedExpenses:[], openInvoices:[], variableCosts:[], variableContributions:[], variablePayments:[], loans:[], loanPayments:[], savings:[], cars:[], fuelLogs:[], betaEntries:[], potCarryover:0 };
     var currentTable = null, currentColumns = null;
     rows.forEach(function(row){
       if(!row || row.length === 0) return;
@@ -4490,6 +4493,20 @@ var nativeStorage = {
         obj.totalTermMonths = (!isNaN(parsedTerm) && parsedTerm > 0) ? parsedTerm : null;
         var parsedCarryover = parseInt(obj.carryoverPct, 10);
         obj.carryoverPct = (!isNaN(parsedCarryover) && parsedCarryover >= 0 && parsedCarryover <= 100) ? parsedCarryover : 100;
+      } else if(currentTable === 'fuelLogs'){
+        obj.liters = parseFloat(obj.liters) || 0;
+        obj.pricePerLiter = parseFloat(obj.pricePerLiter) || 0;
+      } else if(currentTable === 'betaEntries'){
+        obj.amount = parseFloat(obj.amount) || 0;
+        obj.recurring = (obj.recurring === 'true' || obj.recurring === true || obj.recurring === '1');
+        obj.reconciled = (obj.reconciled === 'true' || obj.reconciled === true || obj.reconciled === '1');
+        if(obj.isRecurringTemplate === 'true' || obj.isRecurringTemplate === true || obj.isRecurringTemplate === '1'){
+          obj.isRecurringTemplate = true;
+        } else {
+          delete obj.isRecurringTemplate;
+        }
+        if(!obj.recurrenceEnd) obj.recurrenceEnd = null;
+        if(!obj.recurringGroupId) delete obj.recurringGroupId;
       }
       result[currentTable].push(obj);
     });
@@ -4676,7 +4693,7 @@ var nativeStorage = {
     if(!ok){
       return false;
     }
-    var required = ['income','fixedExpenses','openInvoices','variableCosts','variableContributions','variablePayments','loans','loanPayments','savings'];
+    var required = ['income','fixedExpenses','openInvoices','variableCosts','variableContributions','variablePayments','loans','loanPayments','savings','cars','fuelLogs','betaEntries'];
     required.forEach(function(k){ if(!Array.isArray(parsed[k])) parsed[k] = []; });
     if(typeof parsed.potCarryover !== 'number' || isNaN(parsed.potCarryover)) parsed.potCarryover = 0;
     parsed.variableCosts.forEach(function(v){
@@ -5013,6 +5030,9 @@ var nativeStorage = {
     ]},
     { version:69, date:'20.09.2026, 21:04 Uhr', items:[
       'CSV-Import für Beta aus dem Beta-Tab entfernt und stattdessen als eigener Button in Einstellungen → Backup verschoben'
+    ]},
+    { version:70, date:'20.09.2026, 21:08 Uhr', items:[
+      'Wichtiger Backup-Fix: Tanken (Autos/Tankvorgänge) und Beta fehlten bisher komplett in der Sicherung/Wiederherstellung - das hätte beim Wiederherstellen zu Fehlern in diesen Bereichen führen können. Ab jetzt werden beide vollständig mit gesichert'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
