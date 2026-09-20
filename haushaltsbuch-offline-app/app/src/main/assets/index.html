@@ -2441,13 +2441,6 @@ var nativeStorage = {
     }
 
     var html2 = '';
-    if(carryover !== 0){
-      html2 += '<div class="carryover-row">'+
-                 '<span class="row-desc">Übertrag aus Vorjahr'+(carryover>=0?'en':'')+'</span>'+
-                 '<span class="row-leader"></span>'+
-                 '<span class="row-amount">'+(carryover>=0?'+':'')+fmtEUR(carryover)+'</span>'+
-               '</div>';
-    }
     if(txs.length === 0 && carryover === 0){
       html2 += '<div class="empty-state">Noch keine Buchungen im Spartopf.</div>';
     } else if(txs.length === 0){
@@ -4804,6 +4797,9 @@ var nativeStorage = {
     ]},
     { version:59, date:'20.09.2026, 18:26 Uhr', items:[
       'Jahres-Auswahl beim Verlauf Spartopf jetzt als Chips statt Dropdown, wie beim Extra-Betrag im Tilgungsplan - bricht bei vielen Jahren automatisch in eine neue Zeile um'
+    ]},
+    { version:60, date:'20.09.2026, 18:32 Uhr', items:[
+      '"Übertrag aus Vorjahr(en)"-Anzeigebox beim Verlauf Spartopf entfernt - die laufende Fortführung des Saldos ins neue Jahr bleibt davon unberührt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
