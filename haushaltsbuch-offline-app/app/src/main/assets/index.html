@@ -3252,7 +3252,7 @@ var nativeStorage = {
       var open = state.openInvoices.filter(function(i){ return !i.paid; });
       var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
       return {
-        tab:'buchungen', subView:'rechnungen', color:'gold', value: fmtEUR(sum(open,'amount')),
+        tab:'buchungen', subView:'rechnungen', color:'blue', value: fmtEUR(sum(open,'amount')),
         label:'Offene Rechnungen gesamt',
         subs: [ {l:'Rechnungen', v:String(open.length)}, {l:'Davon überfällig', v:String(overdue)} ],
         icon:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 17v.01M12 11v3"/>'
@@ -3264,7 +3264,7 @@ var nativeStorage = {
       var potBalance = contribTotal - paymentTotal;
       var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
       return {
-        tab:'variabel', subView:'spartopf', color:'green', value: fmtEUR(potBalance),
+        tab:'variabel', subView:'spartopf', color:'blue', value: fmtEUR(potBalance),
         label:'Rest im Spartopf',
         subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Sparbedarf/Monat', v:fmtEUR(monthlyNeed)} ],
         icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
@@ -3273,7 +3273,7 @@ var nativeStorage = {
     kredite: function(){
       var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
       return {
-        tab:'kredite', color:'red', value: fmtEUR(sum(activeLoans,'remainingBalance')),
+        tab:'kredite', color:'blue', value: fmtEUR(sum(activeLoans,'remainingBalance')),
         label:'Restschuld gesamt',
         subs: [ {l:'Kreditsumme', v:fmtEUR(sum(activeLoans,'originalAmount'))}, {l:'Raten/Monat', v:fmtEUR(sum(activeLoans,'monthlyPayment'))} ],
         icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>'
@@ -3286,7 +3286,7 @@ var nativeStorage = {
       var tY = Math.floor(tilgungLast.month/12), tM = tilgungLast.month % 12;
       var tilgungDuration = (tY>0 ? tY+(tY===1?' Jahr':' Jahre') : '') + (tY>0 && tM>0 ? ', ' : '') + (tM>0 ? tM+(tM===1?' Monat':' Monate') : (tY===0?'0 Monate':''));
       return {
-        tab:null, action:'open-tilgungsplan', color:'purple', value: tilgungDuration,
+        tab:null, action:'open-tilgungsplan', color:'blue', value: tilgungDuration,
         label:'Schuldenfrei in',
         subs: [ {l:'Voraussichtlich fertig', v:tilgungLast.monthLabel}, {l:'Betrag/Monat', v:fmtEUR(getTilgungExtra()+state.loans.filter(function(l){return l.remainingBalance>0;}).reduce(function(s,l){return s+l.monthlyPayment;},0))} ],
         icon:'<path d="M3 3v18h18"/><path d="M6 7l4 4 3-1 6 8"/>'
@@ -4785,6 +4785,10 @@ var nativeStorage = {
     { version:54, date:'20.09.2026, 13:30 Uhr', items:[
       'App-Icon nochmal angepasst: Buch weniger hochgezogen und mittig ausgerichtet',
       'Fixkosten-Symbol (Tausch-Pfeile) korrigiert - Pfeilspitzen trafen die Linien vorher nicht ganz exakt'
+    ]},
+    { version:55, date:'20.09.2026, 14:34 Uhr', items:[
+      'Übersicht-Karten (Rechnungen, Spartopf, Kredite, Tilgungsplan) zeigen jetzt alle dasselbe helle Blau wie "Monatlicher Rest", statt jeweils eigener Farben',
+      'App-Icon in demselben Blauton eingefärbt, Haus/Euro-Zeichen in kräftigerem Dunkelblau für bessere Lesbarkeit'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
