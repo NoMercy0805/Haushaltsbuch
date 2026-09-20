@@ -977,10 +977,28 @@
         </div>
         <input type="text" id="betaTitleInput" placeholder="Titel" class="full" list="betaTitleSuggestions" required autocomplete="off">
         <datalist id="betaTitleSuggestions"></datalist>
+        <div class="full" id="betaDateLabelWrap" style="font-size:12px;color:var(--ink-soft);margin:2px 0 -8px;">Datum</div>
         <input type="date" id="betaDateInput" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
         <input type="text" id="betaCategoryInput" placeholder="Kategorie (optional)" class="full">
         <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-top:2px;"><input type="checkbox" id="betaRecurringInput" style="width:18px;height:18px;">Dauerauftrag</label>
+
+        <div class="full" id="betaRecurringFields" style="display:none;background:var(--paper);border-radius:14px;padding:12px 14px;margin:-4px 0 4px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);margin-bottom:10px;"><input type="checkbox" id="betaEndDateEnabledInput" style="width:16px;height:16px;">Ablaufdatum festlegen</label>
+          <input type="date" id="betaEndDateInput" style="display:none;width:100%;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Periode</div>
+          <select id="betaPeriodInput" style="width:100%;background:var(--surface);border:none;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;box-sizing:border-box;">
+            <option value="weekly">Jede Woche</option>
+            <option value="biweekly">Alle 2 Wochen</option>
+            <option value="4weekly">Alle 4 Wochen</option>
+            <option value="monthly" selected>Jeden Monat</option>
+            <option value="2monthly">Alle 2 Monate</option>
+            <option value="3monthly">Alle 3 Monate</option>
+            <option value="6monthly">Alle 6 Monate</option>
+            <option value="yearly">Jedes Jahr</option>
+          </select>
+        </div>
+
         <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);"><input type="checkbox" id="betaReconciledInput" style="width:18px;height:18px;">Abgeglichen</label>
         <button type="submit">Speichern</button>
         <button type="button" id="betaDeleteBtn" class="btn-cancel full" style="display:none;color:var(--expense);">Eintrag löschen</button>
@@ -4866,6 +4884,9 @@ var nativeStorage = {
       'Neuer Reiter "Beta": eigenständiger Buchungs-Tracker ohne Verknüpfung zu anderen Reitern - Monat/Jahr-Navigation, Einträge nach Tag gruppiert mit Tagessaldo, laufender Kontostand unten',
       'Eintragen-Formular mit Titel-Vorschlägen (Autovervollständigung) - wählst du einen bekannten Titel, wird der zuletzt eingetragene Betrag automatisch übernommen',
       'Ausgabe/Einnahme/Umbuchung, Kategorie, Dauerauftrag- und Abgeglichen-Kennzeichnung (Dauerauftrag erzeugt noch keine automatischen Folgeeinträge)'
+    ]},
+    { version:62, date:'20.09.2026, 19:08 Uhr', items:[
+      'Beta: Dauerauftrag erzeugt jetzt automatisch echte Folgebuchungen - mit Periode (wöchentlich bis jährlich) und optionalem Ablaufdatum, ca. 2 Monate im Voraus'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -4988,6 +5009,7 @@ var nativeStorage = {
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; } // Umbuchung wird wie Ausgabe (negativ) behandelt, analog zur Vorlage
 
   function renderBeta(){
+    generateBetaRecurringOccurrences();
     var monthLabel = MONTH_NAMES[betaViewMonth] + ' ' + betaViewYear;
     document.getElementById('betaMonthLabel').textContent = monthLabel;
 
@@ -5063,9 +5085,82 @@ var nativeStorage = {
     renderBeta();
   }
 
+  function betaAddPeriod(date, period){
+    var d = new Date(date.getTime());
+    switch(period){
+      case 'weekly': d.setDate(d.getDate()+7); break;
+      case 'biweekly': d.setDate(d.getDate()+14); break;
+      case '4weekly': d.setDate(d.getDate()+28); break;
+      case 'monthly': d = betaAddMonths(d, 1); break;
+      case '2monthly': d = betaAddMonths(d, 2); break;
+      case '3monthly': d = betaAddMonths(d, 3); break;
+      case '6monthly': d = betaAddMonths(d, 6); break;
+      case 'yearly': d = betaAddMonths(d, 12); break;
+      default: d.setDate(d.getDate()+30);
+    }
+    return d;
+  }
+  function betaAddMonths(date, n){
+    var day = date.getDate();
+    var d = new Date(date.getFullYear(), date.getMonth()+n, 1);
+    var daysInTarget = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    d.setDate(Math.min(day, daysInTarget));
+    return d;
+  }
+
+  // Erzeugt fehlende Folge-Buchungen fuer alle Dauerauftrags-Vorlagen, bis
+  // ca. 2 Monate in die Zukunft (damit anstehende Termine schon sichtbar sind).
+  function generateBetaRecurringOccurrences(){
+    var horizon = new Date();
+    horizon.setMonth(horizon.getMonth()+2);
+    var changed = false;
+    var templates = state.betaEntries.filter(function(e){ return e.isRecurringTemplate; });
+    templates.forEach(function(tpl){
+      var existingDates = {};
+      state.betaEntries.forEach(function(e){
+        if(e.id === tpl.id || e.recurringGroupId === tpl.id) existingDates[e.date] = true;
+      });
+      var period = tpl.recurrencePeriod || 'monthly';
+      var endDate = tpl.recurrenceEnd ? parseISO(tpl.recurrenceEnd) : null;
+      var cursor = betaAddPeriod(parseISO(tpl.date), period);
+      var guard = 0;
+      while(cursor <= horizon && guard < 240){
+        guard++;
+        if(endDate && cursor > endDate) break;
+        var dateKey = cursor.toISOString().slice(0,10);
+        if(!existingDates[dateKey]){
+          state.betaEntries.push({
+            id: genId(), type: tpl.type, title: tpl.title, date: dateKey, amount: tpl.amount,
+            category: tpl.category, recurring: true, recurringGroupId: tpl.id, reconciled: false
+          });
+          existingDates[dateKey] = true;
+          changed = true;
+        }
+        cursor = betaAddPeriod(cursor, period);
+      }
+    });
+    if(changed) saveState();
+  }
+
+  function updateBetaRecurringFieldsVisibility(isTemplateEdit){
+    var checked = document.getElementById('betaRecurringInput').checked;
+    var showFields = checked && (isTemplateEdit !== false);
+    document.getElementById('betaRecurringFields').style.display = showFields ? '' : 'none';
+    document.getElementById('betaDateLabelWrap').textContent = checked ? 'Erste Ausführung' : 'Datum';
+  }
+
   function setupBeta(){
+    generateBetaRecurringOccurrences();
+
     document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
     document.getElementById('betaMonthNext').addEventListener('click', function(){ switchBetaMonth(1); });
+
+    document.getElementById('betaRecurringInput').addEventListener('change', function(){
+      updateBetaRecurringFieldsVisibility(true);
+    });
+    document.getElementById('betaEndDateEnabledInput').addEventListener('change', function(){
+      document.getElementById('betaEndDateInput').style.display = this.checked ? '' : 'none';
+    });
 
     document.getElementById('betaList').addEventListener('click', function(e){
       var row = e.target.closest('.beta-entry-row');
@@ -5082,12 +5177,23 @@ var nativeStorage = {
       document.getElementById('betaCategoryInput').value = entry.category || '';
       document.getElementById('betaRecurringInput').checked = !!entry.recurring;
       document.getElementById('betaReconciledInput').checked = !!entry.reconciled;
+      if(entry.isRecurringTemplate){
+        document.getElementById('betaPeriodInput').value = entry.recurrencePeriod || 'monthly';
+        document.getElementById('betaEndDateEnabledInput').checked = !!entry.recurrenceEnd;
+        document.getElementById('betaEndDateInput').value = entry.recurrenceEnd || '';
+        document.getElementById('betaEndDateInput').style.display = entry.recurrenceEnd ? '' : 'none';
+      }
+      updateBetaRecurringFieldsVisibility(!!entry.isRecurringTemplate);
       document.getElementById('addBetaOverlay').classList.add('open');
     });
 
     document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
       if(!editingBetaId) return;
-      if(!await confirmDialog('Diesen Eintrag wirklich löschen?')) return;
+      var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
+      var msg = (entry && entry.isRecurringTemplate)
+        ? 'Diesen Dauerauftrag wirklich löschen? Bereits erzeugte Folgebuchungen bleiben erhalten, es werden aber keine neuen mehr angelegt.'
+        : 'Diesen Eintrag wirklich löschen?';
+      if(!await confirmDialog(msg)) return;
       state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== editingBetaId; });
       saveState();
       document.getElementById('addBetaOverlay').classList.remove('open');
@@ -5119,18 +5225,36 @@ var nativeStorage = {
       var category = document.getElementById('betaCategoryInput').value.trim();
       var recurring = document.getElementById('betaRecurringInput').checked;
       var reconciled = document.getElementById('betaReconciledInput').checked;
+      var period = document.getElementById('betaPeriodInput').value;
+      var endDateEnabled = document.getElementById('betaEndDateEnabledInput').checked;
+      var endDate = endDateEnabled ? document.getElementById('betaEndDateInput').value : null;
       if(!title || !date || isNaN(amount) || amount <= 0) return;
 
       if(editingBetaId){
         var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
         if(entry){
           entry.type = type; entry.title = title; entry.date = date; entry.amount = amount;
-          entry.category = category; entry.recurring = recurring; entry.reconciled = reconciled;
+          entry.category = category; entry.reconciled = reconciled;
+          if(entry.isRecurringTemplate){
+            entry.recurrencePeriod = period;
+            entry.recurrenceEnd = endDate || null;
+          } else if(!entry.recurringGroupId && recurring){
+            // Aus einem einfachen Eintrag wird nachtraeglich ein Dauerauftrag
+            entry.recurring = true; entry.isRecurringTemplate = true;
+            entry.recurrencePeriod = period; entry.recurrenceEnd = endDate || null;
+          }
         }
       } else {
-        state.betaEntries.push({ id: genId(), type: type, title: title, date: date, amount: amount, category: category, recurring: recurring, reconciled: reconciled });
+        var newEntry = { id: genId(), type: type, title: title, date: date, amount: amount, category: category, recurring: recurring, reconciled: reconciled };
+        if(recurring){
+          newEntry.isRecurringTemplate = true;
+          newEntry.recurrencePeriod = period;
+          newEntry.recurrenceEnd = endDate || null;
+        }
+        state.betaEntries.push(newEntry);
       }
       saveState();
+      generateBetaRecurringOccurrences();
       document.getElementById('addBetaOverlay').classList.remove('open');
       resetBetaForm();
       var d = parseISO(date);
@@ -5149,6 +5273,8 @@ var nativeStorage = {
     document.getElementById('betaDeleteBtn').style.display = 'none';
     document.getElementById('betaEntryForm').reset();
     document.getElementById('betaDateInput').value = todayISO();
+    document.getElementById('betaEndDateInput').style.display = 'none';
+    updateBetaRecurringFieldsVisibility(true);
   }
 
   function renderFuelTracker(){
