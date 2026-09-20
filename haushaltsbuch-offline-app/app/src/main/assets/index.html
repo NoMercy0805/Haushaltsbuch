@@ -981,7 +981,6 @@
         <div class="full" style="display:flex;gap:16px;margin-bottom:2px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="ausgabe" checked style="accent-color:var(--expense);">Ausgabe</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="einnahme" style="accent-color:var(--savings);">Einnahme</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="umbuchung" style="accent-color:var(--primary);">Umbuchung</label>
         </div>
         <div class="full" style="position:relative;">
           <input type="text" id="betaTitleInput" placeholder="Titel" style="width:100%;box-sizing:border-box;" required autocomplete="off">
@@ -5047,6 +5046,9 @@ var nativeStorage = {
     { version:74, date:'20.09.2026, 21:27 Uhr', items:[
       'Beta-Widget: Anordnung geändert - Plus/Minus jetzt zusammen links, Kontostand rechts (wie beim Referenz-Widget)',
       'Beta-Widget passt sich jetzt automatisch an Hell-/Dunkelmodus des Geräts an'
+    ]},
+    { version:75, date:'20.09.2026, 21:29 Uhr', items:[
+      'Beta: "Umbuchung"-Option entfernt, da es nur ein Konto gibt und diese Auswahl keinen Sinn ergibt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5168,7 +5170,7 @@ var nativeStorage = {
   var betaKnownTitles = [];
   var editingBetaScope = 'this'; // 'this' oder 'following'
 
-  function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; } // Umbuchung wird wie Ausgabe (negativ) behandelt, analog zur Vorlage
+  function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
 
   function renderBeta(){
     generateBetaRecurringOccurrences();
