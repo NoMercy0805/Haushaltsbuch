@@ -475,7 +475,10 @@
   .confirm-btn{flex:1;border:none;border-radius:999px;padding:14px 10px;font-family:var(--serif);font-weight:700;font-size:15px;cursor:pointer;}
   .confirm-btn-cancel{background:var(--paper);color:var(--ink);}
   .confirm-btn-danger{background:var(--expense);color:#fff;}
+  #betaTitleSuggestionsBox{max-height:220px;overflow-y:auto;}
   .beta-recurring-choice-btn{display:block;width:100%;text-align:left;background:none;border:none;padding:14px 4px;font-size:15px;font-family:var(--sans);color:var(--ink);cursor:pointer;}
+  .beta-title-suggestion{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--rule);padding:11px 14px;font-size:14px;font-family:var(--sans);color:var(--ink);cursor:pointer;}
+  .beta-title-suggestion:first-child{border-top:none;}
   .confirm-btn-danger:hover{background:#D5361A;}
   .confirm-btn-cancel:hover{background:var(--rule);}
   .confirm-btn-primary{background:var(--primary);color:#fff;}
@@ -744,6 +747,12 @@
           <button type="button" id="betaMonthNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
 
+        <button type="button" id="betaImportBtn" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:var(--surface);border:none;border-radius:12px;padding:10px;margin-bottom:14px;color:var(--ink-soft);font-size:12.5px;font-family:var(--sans);cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          CSV importieren
+        </button>
+        <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
+
         <div id="betaList"></div>
       </section>
 
@@ -977,8 +986,10 @@
           <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="einnahme" style="accent-color:var(--savings);">Einnahme</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);"><input type="radio" name="betaType" value="umbuchung" style="accent-color:var(--primary);">Umbuchung</label>
         </div>
-        <input type="text" id="betaTitleInput" placeholder="Titel" class="full" list="betaTitleSuggestions" required autocomplete="off">
-        <datalist id="betaTitleSuggestions"></datalist>
+        <div class="full" style="position:relative;">
+          <input type="text" id="betaTitleInput" placeholder="Titel" style="width:100%;box-sizing:border-box;" required autocomplete="off">
+          <div id="betaTitleSuggestionsBox" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:20;overflow:hidden;"></div>
+        </div>
         <div class="full" id="betaDateLabelWrap" style="font-size:12px;color:var(--ink-soft);margin:2px 0 -8px;">Datum</div>
         <input type="date" id="betaDateInput" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
@@ -4966,6 +4977,11 @@ var nativeStorage = {
     ]},
     { version:66, date:'20.09.2026, 20:05 Uhr', items:[
       'Beta: Beim Bearbeiten eines Dauerauftrag-Eintrags fragt die App jetzt, ob nur dieser eine oder dieser und alle folgenden Einträge geändert werden sollen'
+    ]},
+    { version:67, date:'20.09.2026, 20:46 Uhr', items:[
+      'Beta: CSV-Import hinzugefügt (Datum/Titel/Hauptkategorie/Betrag/Abgeglichen) - importiert alle Zeilen als eigenständige Beta-Einträge, ohne andere Bereiche der App zu berühren',
+      'Beta: Dauerauftrag erzeugt jetzt auch Termine für weiter in der Zukunft liegende Monate, sobald man im Kalender dorthin vorblättert, statt nur die nächsten 2 Monate ab heute',
+      'Beta: Titel-Vorschläge zeigen jetzt erst nach Eingabe eine gefilterte Liste passender Titel an, statt einer Dropdown-Liste mit Pfeil, die alle Titel sofort anzeigt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5084,6 +5100,7 @@ var nativeStorage = {
   var betaViewMonth = new Date().getMonth();
   var betaViewYear = new Date().getFullYear();
   var editingBetaId = null;
+  var betaKnownTitles = [];
   var editingBetaScope = 'this'; // 'this' oder 'following'
 
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; } // Umbuchung wird wie Ausgabe (negativ) behandelt, analog zur Vorlage
@@ -5149,13 +5166,13 @@ var nativeStorage = {
     function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); }
     document.getElementById('betaBalanceRange').innerHTML = fmtShort(firstOfMonth)+'<br>- '+fmtShort(lastOfMonth);
 
-    // Titel-Vorschlaege (einmalig je Titel, neuester zuerst)
+    // Bekannte Titel merken (einmalig je Titel, neuester zuerst) - werden
+    // beim Tippen im Titel-Feld gefiltert und als eigene Liste angezeigt.
     var seenTitles = {};
-    var suggestions = '';
+    betaKnownTitles = [];
     state.betaEntries.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).forEach(function(e){
-      if(!seenTitles[e.title]){ seenTitles[e.title] = true; suggestions += '<option value="'+escapeHtml(e.title)+'">'; }
+      if(!seenTitles[e.title]){ seenTitles[e.title] = true; betaKnownTitles.push(e.title); }
     });
-    document.getElementById('betaTitleSuggestions').innerHTML = suggestions;
   }
 
   function switchBetaMonth(delta){
@@ -5201,6 +5218,11 @@ var nativeStorage = {
   function generateBetaRecurringOccurrences(){
     var horizon = new Date();
     horizon.setMonth(horizon.getMonth()+2);
+    // Beim Betrachten eines weiter in der Zukunft liegenden Monats soll
+    // dieser ebenfalls schon abgedeckt sein, nicht nur die naechsten 2 Monate
+    // ab heute - sonst fehlen Termine beim Vorblaettern im Kalender.
+    var viewedMonthEnd = new Date(betaViewYear, betaViewMonth+1, 0);
+    if(viewedMonthEnd > horizon) horizon = viewedMonthEnd;
     var changed = false;
     var templates = state.betaEntries.filter(function(e){ return e.isRecurringTemplate; });
     templates.forEach(function(tpl){
@@ -5262,6 +5284,53 @@ var nativeStorage = {
     document.getElementById('addBetaOverlay').classList.add('open');
   }
 
+  // Parst die "Alle exportieren"-CSV eines Buchungs-Exports (Semikolon-
+  // getrennt, jedes Feld in Anfuehrungszeichen) und wandelt jede Zeile in
+  // einen Beta-Eintrag um. Nur fuer den Beta-Tab gedacht, keine Verknuepfung
+  // zu anderen Bereichen der App.
+  function parseBetaCsvLine(line){
+    if(line.charAt(0) === '"') line = line.slice(1);
+    if(line.charAt(line.length-1) === '"') line = line.slice(0, -1);
+    return line.split('";"');
+  }
+
+  function parseBetaImportCsv(text){
+    var lines = text.split(/\r\n|\n|\r/).filter(function(l){ return l.trim().length > 0; });
+    if(lines.length < 2) return [];
+    var header = parseBetaCsvLine(lines[0]).map(function(h){ return h.trim().toLowerCase(); });
+    var idx = {
+      datum: header.indexOf('datum'),
+      titel: header.indexOf('titel'),
+      kategorie: header.indexOf('hauptkategorie'),
+      betrag: header.indexOf('betrag'),
+      abgeglichen: header.indexOf('abgeglichen')
+    };
+    if(idx.datum === -1 || idx.titel === -1 || idx.betrag === -1) return [];
+
+    var result = [];
+    for(var i=1;i<lines.length;i++){
+      var cols = parseBetaCsvLine(lines[i]);
+      var dateRaw = (cols[idx.datum]||'').trim();
+      var dParts = dateRaw.split('.');
+      if(dParts.length !== 3) continue;
+      var date = dParts[2]+'-'+dParts[1].padStart(2,'0')+'-'+dParts[0].padStart(2,'0');
+      var title = (cols[idx.titel]||'').trim();
+      if(!title) continue;
+      var amountRaw = (cols[idx.betrag]||'0').trim().replace(/\./g,'').replace(',', '.');
+      var amount = parseFloat(amountRaw);
+      if(isNaN(amount) || amount === 0) continue;
+      var category = idx.kategorie !== -1 ? (cols[idx.kategorie]||'').trim() : '';
+      if(category === 'Nicht zugeordnet') category = '';
+      var reconciled = idx.abgeglichen !== -1 && (cols[idx.abgeglichen]||'').trim().toLowerCase() === 'ja';
+
+      result.push({
+        id: genId(), type: amount >= 0 ? 'einnahme' : 'ausgabe', title: title, date: date,
+        amount: Math.abs(amount), category: category, recurring: false, reconciled: reconciled
+      });
+    }
+    return result;
+  }
+
   function setupBeta(){
     generateBetaRecurringOccurrences();
 
@@ -5273,6 +5342,36 @@ var nativeStorage = {
     });
     document.getElementById('betaEndDateEnabledInput').addEventListener('change', function(){
       document.getElementById('betaEndDateInput').style.display = this.checked ? '' : 'none';
+    });
+
+    document.getElementById('betaImportBtn').addEventListener('click', function(){
+      document.getElementById('betaImportFile').click();
+    });
+    document.getElementById('betaImportFile').addEventListener('change', async function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      try{
+        var buffer = await file.arrayBuffer();
+        var text = new TextDecoder('iso-8859-1').decode(buffer);
+        var rows = parseBetaImportCsv(text);
+        if(rows.length === 0){
+          await showMessage('Keine gültigen Zeilen in der CSV-Datei gefunden.', {icon:'⚠️'});
+          e.target.value = '';
+          return;
+        }
+        if(!await confirmDialog(rows.length+' Einträge aus der CSV-Datei importieren? Sie werden zu den bestehenden Beta-Einträgen hinzugefügt.', {icon:'📥', confirmLabel:'Importieren'})) {
+          e.target.value = '';
+          return;
+        }
+        rows.forEach(function(r){ state.betaEntries.push(r); });
+        saveState();
+        generateBetaRecurringOccurrences();
+        renderBeta();
+        await showMessage(rows.length+' Einträge erfolgreich importiert.', {icon:'✅'});
+      }catch(err){
+        await showMessage('Import fehlgeschlagen: Datei konnte nicht gelesen werden.', {icon:'⚠️'});
+      }
+      e.target.value = '';
     });
 
     document.getElementById('betaList').addEventListener('click', async function(e){
@@ -5316,10 +5415,8 @@ var nativeStorage = {
 
     // Betrag automatisch mit dem zuletzt fuer diesen Titel verwendeten Wert
     // vorbefuellen, sobald ein bereits bekannter Titel eingetragen wird.
-    document.getElementById('betaTitleInput').addEventListener('change', function(){
+    function betaAutofillFromTitle(title){
       if(editingBetaId) return; // beim Bearbeiten nicht ueberschreiben
-      var title = this.value.trim();
-      if(!title) return;
       var matches = state.betaEntries.filter(function(e){ return e.title === title; })
         .sort(function(a,b){ return b.date.localeCompare(a.date); });
       if(matches.length > 0){
@@ -5327,6 +5424,38 @@ var nativeStorage = {
         var typeRadio = document.querySelector('input[name="betaType"][value="'+matches[0].type+'"]');
         if(typeRadio) typeRadio.checked = true;
       }
+    }
+
+    var betaTitleInputEl = document.getElementById('betaTitleInput');
+    var betaSuggestBox = document.getElementById('betaTitleSuggestionsBox');
+
+    function hideBetaTitleSuggestions(){
+      betaSuggestBox.style.display = 'none';
+      betaSuggestBox.innerHTML = '';
+    }
+
+    betaTitleInputEl.addEventListener('input', function(){
+      var typed = this.value.trim().toLowerCase();
+      if(!typed){ hideBetaTitleSuggestions(); return; }
+      var matches = betaKnownTitles.filter(function(t){ return t.toLowerCase().indexOf(typed) !== -1; }).slice(0, 6);
+      if(matches.length === 0){ hideBetaTitleSuggestions(); return; }
+      betaSuggestBox.innerHTML = matches.map(function(t){
+        return '<button type="button" class="beta-title-suggestion">'+escapeHtml(t)+'</button>';
+      }).join('');
+      betaSuggestBox.style.display = '';
+    });
+    betaSuggestBox.addEventListener('click', function(e){
+      var btn = e.target.closest('.beta-title-suggestion');
+      if(!btn) return;
+      betaTitleInputEl.value = btn.textContent;
+      hideBetaTitleSuggestions();
+      betaAutofillFromTitle(btn.textContent);
+    });
+    betaTitleInputEl.addEventListener('blur', function(){
+      setTimeout(hideBetaTitleSuggestions, 150); // Verzoegerung, damit ein Klick auf einen Vorschlag noch ankommt
+    });
+    betaTitleInputEl.addEventListener('change', function(){
+      betaAutofillFromTitle(this.value.trim());
     });
 
     document.getElementById('betaEntryForm').addEventListener('submit', function(e){
@@ -5410,6 +5539,8 @@ var nativeStorage = {
     document.getElementById('betaDateInput').value = todayISO();
     document.getElementById('betaEndDateInput').style.display = 'none';
     updateBetaRecurringFieldsVisibility(true);
+    var suggestBox = document.getElementById('betaTitleSuggestionsBox');
+    if(suggestBox){ suggestBox.style.display = 'none'; suggestBox.innerHTML = ''; }
   }
 
   function renderFuelTracker(){
