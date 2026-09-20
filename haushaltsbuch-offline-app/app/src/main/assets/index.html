@@ -187,7 +187,8 @@
   .beta-entry-name{font-size:14.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px;}
   .beta-entry-sub{font-size:12px;color:var(--ink-soft);}
   .beta-entry-amount{font-size:14.5px;font-weight:800;flex-shrink:0;}
-  #betaBalanceBar{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom, 0px));background:var(--expense);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:10px;z-index:59;}
+  #betaBalanceBar{position:fixed;left:0;right:0;background:var(--expense);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:10px;z-index:59;transition:transform .2s ease, opacity .2s ease;}
+  #betaBalanceBar.keyboard-hidden{transform:translateY(140%);opacity:0;pointer-events:none;}
   #betaBalanceBar.positive{background:var(--savings);}
   #betaBalanceBar .beta-balance-label{font-size:12px;font-weight:700;opacity:0.9;}
   #betaBalanceBar .beta-balance-value{font-size:19px;font-weight:800;flex:1;}
@@ -1519,6 +1520,8 @@ var nativeStorage = {
       if(isOpen !== keyboardOpen){
         keyboardOpen = isOpen;
         if(nav) nav.classList.toggle('keyboard-hidden', isOpen);
+        var betaBar = document.getElementById('betaBalanceBar');
+        if(betaBar) betaBar.classList.toggle('keyboard-hidden', isOpen);
         document.querySelectorAll('.hero-sticky-wrap, #heroCard').forEach(function(el){
           el.classList.toggle('keyboard-hidden', isOpen);
         });
@@ -3492,6 +3495,12 @@ var nativeStorage = {
     if(speedDial) speedDial.classList.toggle('fab-tab-hidden', hideFab);
   }
 
+  function positionBetaBalanceBar(){
+    var bar = document.getElementById('betaBalanceBar');
+    var navEl = document.querySelector('nav.tabs');
+    if(bar && navEl) bar.style.bottom = navEl.offsetHeight + 'px';
+  }
+
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
     var panel = document.getElementById('tab-'+tabName);
@@ -3501,6 +3510,7 @@ var nativeStorage = {
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
+    if(tabName === 'beta') positionBetaBalanceBar();
     var effectiveTabName = tabName;
     if(tabName === 'kredite') effectiveTabName = activeKreditSubView;
     else if(tabName === 'buchungen') effectiveTabName = activeBuchungenSubView;
@@ -4887,6 +4897,9 @@ var nativeStorage = {
     ]},
     { version:62, date:'20.09.2026, 19:08 Uhr', items:[
       'Beta: Dauerauftrag erzeugt jetzt automatisch echte Folgebuchungen - mit Periode (wöchentlich bis jährlich) und optionalem Ablaufdatum, ca. 2 Monate im Voraus'
+    ]},
+    { version:63, date:'20.09.2026, 19:12 Uhr', items:[
+      'Beta: Kontostand-Leiste überschnitt sich mit der Tab-Leiste unten - Position wird jetzt dynamisch anhand der tatsächlichen Höhe berechnet, statt mit einem festen Wert'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
