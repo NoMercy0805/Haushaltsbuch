@@ -382,9 +382,9 @@
 
   .theme-select-row{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:4px;}
   .tilgung-extra-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:9px 0;font-size:13px;font-family:var(--sans);cursor:pointer;}
-  .tilgung-extra-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
+  .tilgung-extra-chip.active{background:var(--hero-blue-grad);color:var(--hero-blue-text);font-weight:700;}
   .loan-carryover-chip{flex:1;background:var(--paper);color:var(--ink-soft);border:none;border-radius:999px;padding:6px 0;font-size:11.5px;font-family:var(--sans);cursor:pointer;}
-  .loan-carryover-chip.active{background:var(--hero-purple-grad);color:var(--hero-purple-text);font-weight:700;}
+  .loan-carryover-chip.active{background:var(--hero-blue-grad);color:var(--hero-blue-text);font-weight:700;}
   .tab-visibility-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;font-size:15px;color:var(--ink);}
   .widget-order-row{display:flex;align-items:center;gap:10px;padding:11px 2px;font-size:15px;color:var(--ink);background:var(--surface);touch-action:none;}
   .widget-order-row .drag-handle{color:var(--ink-soft);flex-shrink:0;cursor:grab;padding:4px;}
@@ -659,7 +659,7 @@
             <span style="color:var(--ink-soft);font-size:13px;">Zusätzlicher Betrag pro Monat</span>
             <button type="button" class="icon-btn info-btn" id="tilgungInfoBtn" aria-label="Info zur Methode" style="border-radius:50%;">i</button>
           </div>
-          <input type="text" inputmode="decimal" data-cent-input id="tilgungExtraInput" style="display:block;width:100%;text-align:center;background:none;border:none;border-bottom:2px solid var(--hero-purple-text);color:var(--ink);font-size:30px;font-weight:800;font-family:var(--sans);padding:0 0 6px;margin-bottom:14px;">
+          <input type="text" inputmode="decimal" data-cent-input id="tilgungExtraInput" style="display:block;width:100%;text-align:center;background:none;border:none;border-bottom:2px solid var(--hero-blue-text);color:var(--ink);font-size:30px;font-weight:800;font-family:var(--sans);padding:0 0 6px;margin-bottom:14px;">
           <div style="display:flex;gap:8px;" id="tilgungExtraChips">
             <button type="button" class="tilgung-extra-chip" data-extra-value="50">50 €</button>
             <button type="button" class="tilgung-extra-chip" data-extra-value="100">100 €</button>
@@ -4792,6 +4792,9 @@ var nativeStorage = {
     ]},
     { version:56, date:'20.09.2026, 16:46 Uhr', items:[
       'Hero-Karten innerhalb der Reiter (Rechnungen, Spartopf, Kredite, Tilgungsplan, Tanken) jetzt ebenfalls einheitlich in Blau, statt Gold/Grün/Rot/Lila/Grau'
+    ]},
+    { version:57, date:'20.09.2026, 16:48 Uhr', items:[
+      'Tilgungsplan: Prozent-Chips (0/25/50/75/100%) und der Extra-Betrag-Eingabe-Rahmen jetzt auch in Blau statt Lila'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
