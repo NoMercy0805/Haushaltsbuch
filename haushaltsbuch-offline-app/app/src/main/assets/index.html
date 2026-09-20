@@ -563,7 +563,7 @@
         </div>
 
         <div id="rechnungenSubView">
-        <div class="hero-sticky-wrap"><div class="hero-card hero-gold" id="invoiceSummary"></div></div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="invoiceSummary"></div></div>
         <div id="invoiceList"></div>
 
         <div class="section-toggle-row" id="paidInvoicesHeader" style="margin-top:22px;">
@@ -614,7 +614,7 @@
         </div>
 
         <div id="spartopfSubView" style="display:none;">
-        <div class="hero-sticky-wrap"><div class="hero-card hero-green" id="potSummary"></div></div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="potSummary"></div></div>
 
         <div class="section-toggle-row" id="potHeader" style="cursor:default;">
           <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></div>
@@ -639,7 +639,7 @@
         </div>
 
         <div id="krediteSubView">
-        <div class="hero-sticky-wrap"><div class="hero-card hero-red" id="loanSummary"></div></div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="loanSummary"></div></div>
 
         <div id="loanList"></div>
 
@@ -652,7 +652,7 @@
         </div>
 
         <div id="tilgungsplanSubView" style="display:none;">
-        <div class="hero-sticky-wrap"><div class="hero-card hero-purple" id="tilgungSummary"></div></div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="tilgungSummary"></div></div>
 
         <div class="summary-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -684,7 +684,7 @@
       <!-- TANKEN -->
       <section id="tab-tanken" class="tab-panel">
         <h2 class="section-title" style="margin-top:0;">Tanken</h2>
-        <div class="hero-sticky-wrap"><div class="hero-card hero-exhaust" id="fuelSummary"></div></div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fuelSummary"></div></div>
 
         <div id="fuelPriceChartBlock" style="display:none;background:var(--surface);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;">
           <div style="color:var(--ink-soft);font-size:11px;margin-bottom:2px;">Spritpreis-Entwicklung</div>
@@ -2235,11 +2235,11 @@ var nativeStorage = {
     var openTotal = sum(open, 'amount');
     var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
     document.getElementById('invoiceSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-gold-text);">Offene Rechnungen gesamt</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Offene Rechnungen gesamt</div>'+
       '<div class="hero-card-value">'+fmtEUR(openTotal)+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Rechnungen</div><div class="hero-card-sub-value">'+open.length+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-gold-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Rechnungen</div><div class="hero-card-sub-value">'+open.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('invoiceSummary');
 
@@ -2331,11 +2331,11 @@ var nativeStorage = {
     var potBalance = contribTotal - paymentTotal;
     var monthlyNeed = sum(state.variableCosts,'monthlyAmount');
     document.getElementById('potSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-green-text);">Rest im Spartopf</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Rest im Spartopf</div>'+
       '<div class="hero-card-value">'+fmtEUR(potBalance)+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-green-sub);">Sparbedarf/Monat</div><div class="hero-card-sub-value">'+fmtEUR(monthlyNeed)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Sparbedarf/Monat</div><div class="hero-card-sub-value">'+fmtEUR(monthlyNeed)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('potSummary');
 
@@ -2786,11 +2786,11 @@ var nativeStorage = {
     var durationLabel = (years>0 ? years+(years===1?' Jahr':' Jahre') : '') + (years>0 && restMonths>0 ? ', ' : '') + (restMonths>0 ? restMonths+(restMonths===1?' Monat':' Monate') : (years===0?'0 Monate':''));
 
     summaryEl.innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-purple-text);">Schuldenfrei in</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Schuldenfrei in</div>'+
       '<div class="hero-card-value">'+durationLabel+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-purple-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('tilgungSummary');
 
@@ -2906,11 +2906,11 @@ var nativeStorage = {
     var totalOriginal = sum(activeLoans,'originalAmount');
     var totalMonthly = sum(activeLoans,'monthlyPayment');
     document.getElementById('loanSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-red-text);">Restschuld gesamt</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Restschuld gesamt</div>'+
       '<div class="hero-card-value">'+fmtEUR(totalRemaining)+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-red-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('loanSummary');
 
@@ -4789,6 +4789,9 @@ var nativeStorage = {
     { version:55, date:'20.09.2026, 14:34 Uhr', items:[
       'Übersicht-Karten (Rechnungen, Spartopf, Kredite, Tilgungsplan) zeigen jetzt alle dasselbe helle Blau wie "Monatlicher Rest", statt jeweils eigener Farben',
       'App-Icon in demselben Blauton eingefärbt, Haus/Euro-Zeichen in kräftigerem Dunkelblau für bessere Lesbarkeit'
+    ]},
+    { version:56, date:'20.09.2026, 16:46 Uhr', items:[
+      'Hero-Karten innerhalb der Reiter (Rechnungen, Spartopf, Kredite, Tilgungsplan, Tanken) jetzt ebenfalls einheitlich in Blau, statt Gold/Grün/Rot/Lila/Grau'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
