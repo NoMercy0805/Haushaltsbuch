@@ -750,12 +750,6 @@
           <button type="button" id="betaMonthNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
 
-        <button type="button" id="betaImportBtn" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:var(--surface);border:none;border-radius:12px;padding:10px;margin-bottom:14px;color:var(--ink-soft);font-size:12.5px;font-family:var(--sans);cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-          CSV importieren
-        </button>
-        <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
-
         <div id="betaList"></div>
       </section>
 
@@ -1198,6 +1192,13 @@
       </div>
       <button id="autoBackupToggleBtn" class="settings-btn">Ordner für automatisches Backup wählen</button>
       <button id="autoBackupDisableBtn" class="settings-btn" style="display:none;background:var(--primary-soft);color:var(--primary);">Automatisches Backup deaktivieren</button>
+
+      <p class="chooser-group-label" style="margin-top:16px;">Beta-Import</p>
+      <div class="summary-card">
+        <p style="margin:0 0 4px;font-size:15px;">Importiert eine CSV-Datei (Datum/Titel/Hauptkategorie/Betrag/Abgeglichen) als eigenständige Einträge in den Beta-Tab, ohne andere Bereiche der App zu berühren.</p>
+      </div>
+      <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Beta)</button>
+      <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
 
       <p class="chooser-group-label" style="margin-top:16px;">Wiederherstellen</p>
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
@@ -5009,6 +5010,9 @@ var nativeStorage = {
     { version:68, date:'20.09.2026, 21:02 Uhr', items:[
       'Beta: Pfeile, Monat und Jahr bleiben jetzt beim Runterscrollen oben fest sichtbar',
       'Beta: Monat und Jahr antippen öffnet jetzt jeweils eine eigene Auswahl, statt nur über die Pfeile durchzublättern'
+    ]},
+    { version:69, date:'20.09.2026, 21:04 Uhr', items:[
+      'CSV-Import für Beta aus dem Beta-Tab entfernt und stattdessen als eigener Button in Einstellungen → Backup verschoben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
