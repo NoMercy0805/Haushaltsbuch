@@ -22,6 +22,7 @@ public class BetaWidgetProvider extends AppWidgetProvider {
 
     public static final String PREFS_NAME = "BetaWidgetPrefs";
     public static final String KEY_BALANCE = "beta_balance_text";
+    public static final String KEY_POSITIVE = "beta_balance_positive";
     public static final String EXTRA_BETA_ACTION = "beta_widget_action";
     public static final String ACTION_ADD_EINNAHME = "add_einnahme";
     public static final String ACTION_ADD_AUSGABE = "add_ausgabe";
@@ -61,7 +62,11 @@ public class BetaWidgetProvider extends AppWidgetProvider {
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String balanceText = prefs.getString(KEY_BALANCE, "0,00 \u20ac");
+        boolean isPositive = prefs.getBoolean(KEY_POSITIVE, true);
         views.setTextViewText(R.id.widget_balance, balanceText);
+        views.setTextColor(R.id.widget_balance, isPositive
+                ? context.getResources().getColor(R.color.widget_balance_pos)
+                : context.getResources().getColor(R.color.widget_balance_neg));
 
         views.setOnClickPendingIntent(R.id.widget_plus_btn,
                 buildPendingIntent(context, 101, ACTION_ADD_EINNAHME));
