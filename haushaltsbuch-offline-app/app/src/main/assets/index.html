@@ -351,6 +351,7 @@
 
   .edit-row{background:var(--primary-soft);border:none;border-radius:18px;padding:16px;margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .edit-field-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin:0 4px 4px;}
+  .field-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin:0 4px 4px;}
   .edit-row input, .edit-row select{font-family:var(--sans);font-size:16px;padding:13px 14px;border:none;border-radius:14px;background:var(--surface);color:var(--ink);width:100%;}
   .edit-row .full{grid-column:1 / -1;}
   .edit-row .edit-actions{grid-column:1 / -1;display:flex;gap:10px;justify-content:flex-end;margin-top:2px;}
@@ -980,12 +981,16 @@
       </div>
       <form id="loanForm" class="entry-form">
         <input type="text" id="loanName" placeholder="Bezeichnung" class="full" required>
-        <input type="text" inputmode="decimal" data-cent-input id="loanOriginal" placeholder="Kreditsumme (€)" step="0.01" class="full">
-        <input type="text" inputmode="decimal" data-cent-input id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" class="full" required>
+        <input type="text" inputmode="decimal" data-cent-input id="loanOriginal" placeholder="Kredit ohne Zinsen (€)" step="0.01" class="full">
         <div class="full">
-          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Gesamtlaufzeit in Monaten (optional, laut Vertrag)</label>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Gesamtbetrag inkl. Zinsen (optional, laut Vertrag - macht den Tilgungsplan genauer)</label>
+          <input type="text" inputmode="decimal" data-cent-input id="loanTotalWithInterest" placeholder="z. B. 12.480,00" step="0.01">
+        </div>
+        <div>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Laufzeit in Monaten (optional, lt. Vertrag)</label>
           <input type="number" id="loanTermMonths" placeholder="z. B. 36" min="1" step="1">
         </div>
+        <input type="text" inputmode="decimal" data-cent-input id="loanMonthly" placeholder="Rate/Monat (€)" step="0.01" required>
         <button type="submit">Kredit hinzufügen</button>
       </form>
     </div>
@@ -2895,9 +2900,36 @@ var nativeStorage = {
     return (typeof v === 'number' && v >= 0 && v <= 100) ? v : 100;
   }
 
+  // Ermittelt naeherungsweise den monatlichen Zinssatz eines Annuitaetendarlehens
+  // aus Kreditsumme (ohne Zinsen), fester Monatsrate und Gesamtbetrag (inkl.
+  // Zinsen) - per Newton-Verfahren, da sich die Annuitaetenformel nicht direkt
+  // nach dem Zinssatz aufloesen laesst. Gibt null zurueck, wenn keine sinnvolle
+  // Loesung gefunden wird (z.B. fehlende/unplausible Eingaben).
+  function solveLoanMonthlyRate(principal, monthly, totalWithInterest){
+    if(!principal || !monthly || !totalWithInterest) return null;
+    if(totalWithInterest <= principal) return null;
+    var n = totalWithInterest / monthly;
+    if(n < 1) return null;
+    var r = 0.01;
+    for(var iter=0; iter<60; iter++){
+      var pow = Math.pow(1+r, -n);
+      var f = monthly*(1-pow)/r - principal;
+      var h = 0.00001;
+      var powH = Math.pow(1+r+h, -n);
+      var fH = monthly*(1-powH)/(r+h) - principal;
+      var deriv = (fH - f) / h;
+      if(Math.abs(deriv) < 1e-9) break;
+      var newR = r - f/deriv;
+      if(newR <= 0) newR = r/2;
+      if(Math.abs(newR - r) < 1e-9){ r = newR; break; }
+      r = newR;
+    }
+    return (r > 0 && isFinite(r)) ? r : null;
+  }
+
   function simulateSnowball(extraPerMonth, maxMonths){
     var loans = state.loans.filter(function(l){ return l.remainingBalance > 0; })
-                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment, carryoverPct:getLoanCarryoverPct(l), _counted:false}; });
+                            .map(function(l){ return {id:l.id, name:l.name, balance:l.remainingBalance, monthlyPayment:l.monthlyPayment, monthlyRate:l.monthlyRate||null, carryoverPct:getLoanCarryoverPct(l), _counted:false}; });
     if(loans.length === 0) return [];
     // currentBudget ist der insgesamt pro Monat verfuegbare Betrag - wird ein
     // Kredit abbezahlt, fliesst nur der bei diesem Kredit eingestellte
@@ -2925,8 +2957,12 @@ var nativeStorage = {
       var detail = [];
       loans.forEach(function(l){
         if(l.balance <= 0.005) return;
-        var pay = Math.min(l.monthlyPayment, l.balance, budget);
-        l.balance = Math.round((l.balance - pay)*100)/100;
+        var interestPortion = l.monthlyRate ? Math.round(l.balance * l.monthlyRate * 100)/100 : 0;
+        var maxPay = Math.min(l.monthlyPayment, budget);
+        var principalPortion = Math.max(0, Math.min(maxPay - interestPortion, l.balance));
+        var pay = Math.round((principalPortion + interestPortion)*100)/100;
+        pay = Math.min(pay, budget);
+        l.balance = Math.round((l.balance - principalPortion)*100)/100;
         budget = Math.round((budget - pay)*100)/100;
         detail.push({id:l.id, name:l.name, rate:pay, extra:0, remainingAfter:l.balance});
         markIfPaidOff(l);
@@ -4325,17 +4361,21 @@ var nativeStorage = {
       var name = document.getElementById('loanName').value.trim();
       var original = parseAmount(document.getElementById('loanOriginal').value);
       var monthly = parseAmount(document.getElementById('loanMonthly').value);
+      var totalWithInterestRaw = parseAmount(document.getElementById('loanTotalWithInterest').value);
       var termMonthsRaw = document.getElementById('loanTermMonths').value;
       var termMonths = termMonthsRaw ? parseInt(termMonthsRaw, 10) : NaN;
       if(!name || isNaN(monthly)) return;
       original = isNaN(original) ? 0 : original;
+      var totalWithInterest = isNaN(totalWithInterestRaw) ? null : totalWithInterestRaw;
+      var monthlyRate = (original > 0 && totalWithInterest) ? solveLoanMonthlyRate(original, monthly, totalWithInterest) : null;
       state.loans.push({
         id:genId(), name:name, originalAmount:original, remainingBalance:original, monthlyPayment:monthly,
         totalTermMonths: (!isNaN(termMonths) && termMonths > 0) ? termMonths : null,
+        totalWithInterest: totalWithInterest, monthlyRate: monthlyRate,
         carryoverPct: 100
       });
       saveState();
-      document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanMonthly').value=''; document.getElementById('loanTermMonths').value='';
+      document.getElementById('loanName').value=''; document.getElementById('loanOriginal').value=''; document.getElementById('loanTotalWithInterest').value=''; document.getElementById('loanMonthly').value=''; document.getElementById('loanTermMonths').value='';
       renderAll();
       document.getElementById('addLoanOverlay').classList.remove('open');
     });
@@ -4372,6 +4412,9 @@ var nativeStorage = {
           loan.originalAmount = newOriginal;
           loan.monthlyPayment = monthly;
           loan.totalTermMonths = (!isNaN(termMonths) && termMonths > 0) ? termMonths : null;
+          if(loan.totalWithInterest){
+            loan.monthlyRate = solveLoanMonthlyRate(loan.originalAmount, loan.monthlyPayment, loan.totalWithInterest);
+          }
         }
         editing.loan = null; saveState(); renderAll();
       } else if(action === 'pay-loan'){
@@ -4467,7 +4510,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth','dueYear']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct','totalWithInterest','monthlyRate']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']},
     {name:'cars', columns:['id','name']},
@@ -4587,6 +4630,10 @@ var nativeStorage = {
         obj.totalTermMonths = (!isNaN(parsedTerm) && parsedTerm > 0) ? parsedTerm : null;
         var parsedCarryover = parseInt(obj.carryoverPct, 10);
         obj.carryoverPct = (!isNaN(parsedCarryover) && parsedCarryover >= 0 && parsedCarryover <= 100) ? parsedCarryover : 100;
+        var parsedTotalWithInterest = parseFloat(obj.totalWithInterest);
+        obj.totalWithInterest = (!isNaN(parsedTotalWithInterest) && parsedTotalWithInterest > 0) ? parsedTotalWithInterest : null;
+        var parsedMonthlyRate = parseFloat(obj.monthlyRate);
+        obj.monthlyRate = (!isNaN(parsedMonthlyRate) && parsedMonthlyRate > 0) ? parsedMonthlyRate : null;
       } else if(currentTable === 'fuelLogs'){
         obj.liters = parseFloat(obj.liters) || 0;
         obj.pricePerLiter = parseFloat(obj.pricePerLiter) || 0;
@@ -5257,6 +5304,10 @@ var nativeStorage = {
     ]},
     { version:110, date:'21.09.2026, 17:58 Uhr', items:[
       'Kontostand: "Eintrag löschen"-Button im Bearbeiten-Formular sieht jetzt genauso aus wie "Speichern" (gleiche Pillenform/Größe), nur in Rot statt Blau'
+    ]},
+    { version:111, date:'21.09.2026, 19:45 Uhr', items:[
+      'Kredite: Neues optionales Feld "Gesamtbetrag inkl. Zinsen" beim Anlegen - daraus wird intern der Zinssatz berechnet, damit der Tilgungsplan zwischen Zins- und Tilgungsanteil jeder Rate unterscheidet und genauer rechnet. Ohne Angabe bleibt alles wie bisher (lineare Berechnung)',
+      'Kredite: Laufzeit und Monatsrate stehen jetzt nebeneinander im Formular, jeweils mit eigener Beschreibung'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
