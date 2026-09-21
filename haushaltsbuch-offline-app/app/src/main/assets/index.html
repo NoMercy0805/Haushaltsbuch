@@ -3845,7 +3845,8 @@ var nativeStorage = {
   var SUB_VIEW_TABS = {
     kredite: { views: ['kredite', 'tilgungsplan'], get: function(){ return activeKreditSubView; }, set: switchKreditSubView },
     buchungen: { views: BUCHUNGEN_SUB_VIEWS, get: function(){ return activeBuchungenSubView; }, set: switchBuchungenSubView },
-    variabel: { views: VARIABEL_SUB_VIEWS, get: function(){ return activeVariabelSubView; }, set: switchVariabelSubView }
+    variabel: { views: VARIABEL_SUB_VIEWS, get: function(){ return activeVariabelSubView; }, set: switchVariabelSubView },
+    beta: { views: ['all', 'unreconciled'], get: function(){ return betaFilterMode; }, set: function(v){ betaFilterMode = v; renderBeta(); } }
   };
 
   function setupSwipe(){
@@ -5099,6 +5100,10 @@ var nativeStorage = {
     ]},
     { version:90, date:'21.09.2026, 09:24 Uhr', items:[
       'Kontostand: Filter-Auswahl jetzt exakt im Segmented-Control-Stil wie bei Buchungen (Rechnungen/Einnahmen/Fixkosten) - eigener Rahmen mit grauem Hintergrund statt einzelner blauer Pillen'
+    ]},
+    { version:91, date:'21.09.2026, 09:38 Uhr', items:[
+      'Kontostand: Seitliches Wischen wechselt jetzt auch zwischen "Alle" und "Nicht abgeglichen", wie bei den anderen Unteransichten',
+      'Kontostand: Beim Markieren eines Eintrags als abgeglichen fragt die App jetzt erst nach, um versehentliches Abgleichen zu vermeiden - beim Zurücksetzen bleibt es ohne Nachfrage'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5562,7 +5567,12 @@ var nativeStorage = {
       if(toggleBtn){
         var toggleEntry = state.betaEntries.filter(function(x){ return x.id === toggleBtn.dataset.id; })[0];
         if(toggleEntry){
-          toggleEntry.reconciled = !toggleEntry.reconciled;
+          if(!toggleEntry.reconciled){
+            if(!await confirmDialog('"'+toggleEntry.title+'" als abgeglichen markieren?', {icon:'✅', confirmLabel:'Abgleichen'})) return;
+            toggleEntry.reconciled = true;
+          } else {
+            toggleEntry.reconciled = false;
+          }
           saveState();
           renderBeta();
         }
