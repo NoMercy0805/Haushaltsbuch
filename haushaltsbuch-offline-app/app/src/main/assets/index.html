@@ -1209,6 +1209,12 @@
       <p class="chooser-group-label" style="margin-top:16px;">Kontostand: Dauerauftrag-Vorlagen</p>
       <div id="betaTemplatesList"></div>
 
+      <p class="chooser-group-label" style="margin-top:16px;">Kontostand: Titel-Vorschläge</p>
+      <div class="summary-card">
+        <p style="margin:0 0 4px;font-size:15px;">Nicht mehr benötigte Vorschläge (z.B. alte Titel wie "O2") lassen sich hier entfernen, ohne die dazugehörigen Einträge zu löschen.</p>
+      </div>
+      <div id="betaTitleSuggestionsSettings"></div>
+
       <p class="chooser-group-label" style="margin-top:16px;">Wiederherstellen</p>
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
       <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswählen…</button>
@@ -1865,7 +1871,8 @@ var nativeStorage = {
       savings: [],
       cars: [],
       fuelLogs: [],
-      betaEntries: []
+      betaEntries: [],
+      betaHiddenTitles: []
     };
   }
 
@@ -1887,6 +1894,7 @@ var nativeStorage = {
         if(!Array.isArray(parsed.cars)) parsed.cars = [];
         if(!Array.isArray(parsed.fuelLogs)) parsed.fuelLogs = [];
         if(!Array.isArray(parsed.betaEntries)) parsed.betaEntries = [];
+        if(!Array.isArray(parsed.betaHiddenTitles)) parsed.betaHiddenTitles = [];
         parsed.variableCosts.forEach(function(v){
           if(!v.interval) v.interval = 'jaehrlich';
           if(!v.dueMonth) v.dueMonth = 1;
@@ -5153,6 +5161,10 @@ var nativeStorage = {
     { version:100, date:'21.09.2026, 11:52 Uhr', items:[
       'Kontostand: Neu hinzugefügte Einträge stehen jetzt oben am jeweiligen Tag, statt unten',
       'Einstellungen: Neuer Bereich "Kontostand: Dauerauftrag-Vorlagen" zum Verwalten und Löschen nicht mehr benötigter Dauerauftrag-Vorlagen'
+    ]},
+    { version:101, date:'21.09.2026, 11:56 Uhr', items:[
+      'Einstellungen: Neuer Bereich "Kontostand: Titel-Vorschläge" zum Ausblenden nicht mehr benötigter Vorschläge (z.B. alte Titel wie "O2"), ohne die zugehörigen Einträge zu löschen - ausgeblendete lassen sich auch wiederherstellen',
+      'Kontostand: Tippt man auf den automatisch befüllten Betrag, springt er jetzt auf leer statt den alten Wert stehen zu lassen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5273,6 +5285,7 @@ var nativeStorage = {
   var editingBetaId = null;
   var betaKnownTitles = [];
   var betaFilterMode = 'all'; // 'all' oder 'unreconciled'
+  var betaAmountWasAutofilled = false;
   var editingBetaScope = 'this'; // 'this' oder 'following'
 
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
@@ -5280,6 +5293,7 @@ var nativeStorage = {
   function renderBeta(){
     generateBetaRecurringOccurrences();
     renderBetaTemplatesList();
+    renderBetaTitleSuggestionsSettings();
     document.getElementById('betaMonthLabel').textContent = MONTH_NAMES[betaViewMonth];
     document.getElementById('betaYearLabel').textContent = betaViewYear;
 
@@ -5364,10 +5378,13 @@ var nativeStorage = {
 
     // Bekannte Titel merken (einmalig je Titel, neuester zuerst) - werden
     // beim Tippen im Titel-Feld gefiltert und als eigene Liste angezeigt.
+    // Ausgeblendete Titel (state.betaHiddenTitles) werden dabei uebersprungen.
     var seenTitles = {};
     betaKnownTitles = [];
     state.betaEntries.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).forEach(function(e){
-      if(!seenTitles[e.title]){ seenTitles[e.title] = true; betaKnownTitles.push(e.title); }
+      if(!seenTitles[e.title] && state.betaHiddenTitles.indexOf(e.title) === -1){
+        seenTitles[e.title] = true; betaKnownTitles.push(e.title);
+      }
     });
   }
 
@@ -5562,6 +5579,19 @@ var nativeStorage = {
       renderBeta();
     });
 
+    document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){
+      var titleBtn = e.target.closest('[data-action="hide-beta-title"], [data-action="restore-beta-title"]');
+      if(!titleBtn) return;
+      var title = titleBtn.dataset.title;
+      if(titleBtn.dataset.action === 'hide-beta-title'){
+        if(state.betaHiddenTitles.indexOf(title) === -1) state.betaHiddenTitles.push(title);
+      } else {
+        state.betaHiddenTitles = state.betaHiddenTitles.filter(function(t){ return t !== title; });
+      }
+      saveState();
+      renderBeta();
+    });
+
     document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
     document.getElementById('betaFilterRow').addEventListener('click', function(e){
       var btn = e.target.closest('[data-filter]');
@@ -5689,6 +5719,7 @@ var nativeStorage = {
         .sort(function(a,b){ return b.date.localeCompare(a.date); });
       if(matches.length > 0){
         document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(matches[0].amount*100));
+        betaAmountWasAutofilled = true;
         var typeRadio = document.querySelector('input[name="betaType"][value="'+matches[0].type+'"]');
         if(typeRadio) typeRadio.checked = true;
       }
@@ -5724,6 +5755,17 @@ var nativeStorage = {
     });
     betaTitleInputEl.addEventListener('change', function(){
       betaAutofillFromTitle(this.value.trim());
+    });
+
+    var betaAmountInputEl = document.getElementById('betaAmountInput');
+    betaAmountInputEl.addEventListener('focus', function(){
+      if(betaAmountWasAutofilled){
+        this.value = '';
+        betaAmountWasAutofilled = false;
+      }
+    });
+    betaAmountInputEl.addEventListener('input', function(){
+      betaAmountWasAutofilled = false;
     });
 
     document.getElementById('betaEntryForm').addEventListener('submit', function(e){
@@ -5801,6 +5843,7 @@ var nativeStorage = {
   function resetBetaForm(){
     editingBetaId = null;
     editingBetaScope = 'this';
+    betaAmountWasAutofilled = false;
     document.getElementById('addBetaTitle').textContent = 'Neuer Eintrag';
     document.getElementById('betaDeleteBtn').style.display = 'none';
     document.getElementById('betaEntryForm').reset();
@@ -5809,6 +5852,32 @@ var nativeStorage = {
     updateBetaRecurringFieldsVisibility(true);
     var suggestBox = document.getElementById('betaTitleSuggestionsBox');
     if(suggestBox){ suggestBox.style.display = 'none'; suggestBox.innerHTML = ''; }
+  }
+
+  function renderBetaTitleSuggestionsSettings(){
+    var container = document.getElementById('betaTitleSuggestionsSettings');
+    if(!container) return;
+    var seen = {};
+    var allTitles = [];
+    state.betaEntries.forEach(function(e){
+      if(!seen[e.title]){ seen[e.title] = true; allTitles.push(e.title); }
+    });
+    allTitles.sort(function(a,b){ return a.localeCompare(b, 'de'); });
+    if(allTitles.length === 0){
+      container.innerHTML = '<div class="empty-state">Noch keine Titel vorhanden.</div>';
+      return;
+    }
+    container.innerHTML = '<div class="compact-list">'+allTitles.map(function(title){
+      var hidden = state.betaHiddenTitles.indexOf(title) !== -1;
+      return '<div class="compact-list-row" style="cursor:default;">'+
+               '<span class="compact-name-wrap"><span class="compact-name" style="'+(hidden?'color:var(--ink-soft);text-decoration:line-through;':'')+'">'+escapeHtml(title)+'</span></span>'+
+               '<button type="button" class="action-icon-btn '+(hidden?'gold':'danger')+'" data-action="'+(hidden?'restore-beta-title':'hide-beta-title')+'" data-title="'+escapeHtml(title)+'" style="margin-left:8px;" aria-label="'+(hidden?'Wiederherstellen':'Ausblenden')+'">'+
+                 (hidden
+                   ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg>'
+                   : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>')+
+               '</button>'+
+             '</div>';
+    }).join('')+'</div>';
   }
 
   function renderBetaTemplatesList(){
