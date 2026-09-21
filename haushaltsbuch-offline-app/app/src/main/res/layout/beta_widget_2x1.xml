@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="@drawable/widget_card_bg"
+    android:background="@android:color/transparent"
     android:gravity="center_vertical"
     android:baselineAligned="false"
     android:paddingStart="10dp"
@@ -34,18 +34,32 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/widget_balance"
+    <LinearLayout
+        android:id="@+id/widget_balance_pill"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="36dp"
         android:layout_weight="1"
-        android:gravity="end"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/widget_amount_pill_neg"
+        android:gravity="center"
         android:paddingStart="8dp"
-        android:text="0,00 \u20ac"
-        android:textColor="@color/widget_text"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:maxLines="1"
-        android:ellipsize="end" />
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:id="@+id/widget_balance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0,00 \u20ac"
+            android:textColor="@color/widget_balance_neg"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_label"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
 
 </LinearLayout>

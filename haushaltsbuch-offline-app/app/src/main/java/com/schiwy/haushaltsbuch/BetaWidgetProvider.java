@@ -73,6 +73,8 @@ public abstract class BetaWidgetProvider extends AppWidgetProvider {
         views.setTextColor(R.id.widget_balance, isPositive
                 ? context.getResources().getColor(R.color.widget_balance_pos)
                 : context.getResources().getColor(R.color.widget_balance_neg));
+        views.setInt(R.id.widget_balance_pill, "setBackgroundResource",
+                isPositive ? R.drawable.widget_amount_pill_pos : R.drawable.widget_amount_pill_neg);
 
         views.setOnClickPendingIntent(R.id.widget_plus_btn,
                 buildPendingIntent(context, 101, ACTION_ADD_EINNAHME));
