@@ -1206,6 +1206,9 @@
       <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Kontostand)</button>
       <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
 
+      <p class="chooser-group-label" style="margin-top:16px;">Kontostand: Dauerauftrag-Vorlagen</p>
+      <div id="betaTemplatesList"></div>
+
       <p class="chooser-group-label" style="margin-top:16px;">Wiederherstellen</p>
       <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
       <button id="importTriggerBtn" class="settings-btn">Sicherungsdatei auswählen…</button>
@@ -5146,6 +5149,10 @@ var nativeStorage = {
     ]},
     { version:99, date:'21.09.2026, 10:36 Uhr', items:[
       'Kontostand: Kleiner Spalt zwischen Header und Monats-Leiste behoben, durch den Inhalt dahinter durchschimmerte'
+    ]},
+    { version:100, date:'21.09.2026, 11:52 Uhr', items:[
+      'Kontostand: Neu hinzugefügte Einträge stehen jetzt oben am jeweiligen Tag, statt unten',
+      'Einstellungen: Neuer Bereich "Kontostand: Dauerauftrag-Vorlagen" zum Verwalten und Löschen nicht mehr benötigter Dauerauftrag-Vorlagen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5272,6 +5279,7 @@ var nativeStorage = {
 
   function renderBeta(){
     generateBetaRecurringOccurrences();
+    renderBetaTemplatesList();
     document.getElementById('betaMonthLabel').textContent = MONTH_NAMES[betaViewMonth];
     document.getElementById('betaYearLabel').textContent = betaViewYear;
 
@@ -5294,6 +5302,9 @@ var nativeStorage = {
     entries.forEach(function(e){
       if(!dayGroups[e.date]){ dayGroups[e.date] = []; dayOrder.push(e.date); }
       dayGroups[e.date].push(e);
+    });
+    Object.keys(dayGroups).forEach(function(key){
+      dayGroups[key].sort(function(a,b){ return b.id.localeCompare(a.id); });
     });
     dayOrder.sort(function(a,b){ return b.localeCompare(a); });
 
@@ -5538,6 +5549,18 @@ var nativeStorage = {
     generateBetaRecurringOccurrences();
     positionBetaMonthNav();
     window.addEventListener('resize', positionBetaMonthNav);
+
+    document.getElementById('betaTemplatesList').addEventListener('click', async function(e){
+      var btn = e.target.closest('[data-action="delete-beta-template"]');
+      if(!btn) return;
+      var tpl = state.betaEntries.filter(function(x){ return x.id === btn.dataset.id; })[0];
+      if(!tpl) return;
+      if(!await confirmDialog('"'+tpl.title+'" wirklich löschen? Bereits erzeugte Folgebuchungen bleiben erhalten, es werden aber keine neuen mehr angelegt.')) return;
+      state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== tpl.id; });
+      saveState();
+      renderBetaTemplatesList();
+      renderBeta();
+    });
 
     document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
     document.getElementById('betaFilterRow').addEventListener('click', function(e){
@@ -5786,6 +5809,29 @@ var nativeStorage = {
     updateBetaRecurringFieldsVisibility(true);
     var suggestBox = document.getElementById('betaTitleSuggestionsBox');
     if(suggestBox){ suggestBox.style.display = 'none'; suggestBox.innerHTML = ''; }
+  }
+
+  function renderBetaTemplatesList(){
+    var container = document.getElementById('betaTemplatesList');
+    if(!container) return;
+    var templates = state.betaEntries.filter(function(e){ return e.isRecurringTemplate; });
+    if(templates.length === 0){
+      container.innerHTML = '<div class="empty-state">Noch keine Dauerauftrag-Vorlagen vorhanden.</div>';
+      return;
+    }
+    var periodLabels = {weekly:'Jede Woche', biweekly:'Alle 2 Wochen', '4weekly':'Alle 4 Wochen', monthly:'Jeden Monat', '2monthly':'Alle 2 Monate', '3monthly':'Alle 3 Monate', '6monthly':'Alle 6 Monate', yearly:'Jedes Jahr'};
+    container.innerHTML = templates.map(function(t){
+      return '<div class="vc-card">'+
+               '<div class="vc-card-top">'+
+                 '<span class="vc-name">'+escapeHtml(t.title)+'</span>'+
+                 '<span class="vc-monthly" style="color:'+(t.type==='einnahme'?'var(--savings)':'var(--expense)')+';font-weight:700;">'+(t.type==='einnahme'?'+':'-')+fmtEUR(t.amount)+'</span>'+
+               '</div>'+
+               '<div style="color:var(--ink-soft);font-size:12.5px;margin-bottom:8px;">'+(periodLabels[t.recurrencePeriod]||'Jeden Monat')+(t.recurrenceEnd?(' · bis '+t.recurrenceEnd.split('-').reverse().join('.')):'')+'</div>'+
+               '<div class="vc-actions">'+
+                 '<button class="action-icon-btn danger" data-action="delete-beta-template" data-id="'+t.id+'" aria-label="Vorlage löschen" title="Vorlage löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
+               '</div>'+
+             '</div>';
+    }).join('');
   }
 
   function renderFuelTracker(){
