@@ -5137,6 +5137,9 @@ var nativeStorage = {
     ]},
     { version:96, date:'21.09.2026, 10:21 Uhr', items:[
       'Kontostand: Tagessaldo-Kopfzeile verschmilzt jetzt mit den Einträgen darunter (kein grauer Hintergrund mehr dazwischen) und ist deutlich kleiner, die einzelnen Einträge dafür minimal größer'
+    ]},
+    { version:97, date:'21.09.2026, 10:25 Uhr', items:[
+      'Kontostand: Tagessaldo-Betrag jetzt im App-Blau statt Rot/Grün je nach Vorzeichen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5304,7 +5307,7 @@ var nativeStorage = {
                       '<div class="beta-day-title">Tagessaldo</div>'+
                       '<div class="beta-day-sub">'+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear()+' ('+WEEKDAY_NAMES[d.getDay()]+')</div>'+
                     '</span>'+
-                    '<span class="beta-day-total" style="color:'+(dayTotal>=0?'var(--savings)':'var(--expense)')+';">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
+                    '<span class="beta-day-total" style="color:var(--hero-blue-text);">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
                   '</div>';
         dayEntries.forEach(function(e){
           var sign = betaTypeSign(e.type);
