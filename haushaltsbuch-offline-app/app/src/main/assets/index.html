@@ -1061,7 +1061,7 @@
 
         <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);"><input type="checkbox" id="betaReconciledInput" style="width:18px;height:18px;">Abgeglichen</label>
         <button type="submit">Speichern</button>
-        <button type="button" id="betaDeleteBtn" class="btn-cancel full" style="display:none;color:var(--expense);">Eintrag löschen</button>
+        <button type="button" id="betaDeleteBtn" class="full" style="display:none;background:var(--expense-soft);color:var(--expense);border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;cursor:pointer;">Eintrag löschen</button>
       </form>
     </div>
   </div>
@@ -5254,6 +5254,9 @@ var nativeStorage = {
     ]},
     { version:109, date:'21.09.2026, 16:59 Uhr', items:[
       'Kontostand-Widget: 3×1 und 2×1 nutzen jetzt dieselben Proportionen wie 4×1 (gleich große Ringe und Schrift) - nur die Breite passt sich an, 2×1 braucht dafür etwas mehr Mindestbreite'
+    ]},
+    { version:110, date:'21.09.2026, 17:58 Uhr', items:[
+      'Kontostand: "Eintrag löschen"-Button im Bearbeiten-Formular sieht jetzt genauso aus wie "Speichern" (gleiche Pillenform/Größe), nur in Rot statt Blau'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
