@@ -173,7 +173,7 @@
   .sub-nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:none;border-radius:11px;padding:11px 8px;font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;transition:background .15s ease, color .15s ease;}
   .sub-nav-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
 
-  .beta-month-nav{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:50;}
+  .beta-month-nav{display:flex;align-items:center;justify-content:space-between;position:fixed;left:0;right:0;top:82px;background:var(--paper);padding:10px 18px;z-index:50;max-width:540px;margin:0 auto;}
   .beta-month-label-btn{background:none;border:none;font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);cursor:pointer;padding:4px 2px;white-space:nowrap;flex-shrink:0;}
   #betaMonthPrev, #betaMonthNext{background:var(--surface);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0;}
   .beta-month-label{display:flex;gap:6px;align-items:baseline;justify-content:center;flex:1;min-width:0;overflow:hidden;}
@@ -737,6 +737,7 @@
           <div class="beta-month-label"><button type="button" id="betaMonthLabel" class="beta-month-label-btn"></button> <button type="button" id="betaYearLabel" class="beta-month-label-btn"></button></div>
           <button type="button" id="betaMonthNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
+        <div id="betaMonthNavPlaceholder" style="height:60px;"></div>
 
         <div id="betaFilterRow" class="sub-nav-row"></div>
         <div id="betaList"></div>
@@ -3578,6 +3579,16 @@ var nativeStorage = {
     if(speedDial) speedDial.classList.toggle('fab-tab-hidden', hideFab);
   }
 
+  function positionBetaMonthNav(){
+    var nav = document.querySelector('.beta-month-nav');
+    var header = document.querySelector('.ledger-header');
+    var placeholder = document.getElementById('betaMonthNavPlaceholder');
+    if(nav && header){
+      nav.style.top = header.offsetHeight + 'px';
+      if(placeholder) placeholder.style.height = (nav.offsetHeight || 60) + 'px';
+    }
+  }
+
   function positionBetaBalanceBar(){
     var bar = document.getElementById('betaBalanceBar');
     var navEl = document.querySelector('nav.tabs');
@@ -3602,6 +3613,7 @@ var nativeStorage = {
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
     if(tabName === 'beta'){
       positionBetaBalanceBar();
+      positionBetaMonthNav();
     } else {
       var fabEl = document.getElementById('addEntryFab');
       var dialEl = document.getElementById('fabSpeedDial');
@@ -5116,6 +5128,9 @@ var nativeStorage = {
     ]},
     { version:93, date:'21.09.2026, 10:04 Uhr', items:[
       'Kontostand: Einträge kompakter gestaltet, Tages-Kopfzeile jetzt mit Kästchen-Datum, "Tagessaldo" und vollem Datum inkl. Wochentag - angelehnt an das Referenz-Design'
+    ]},
+    { version:94, date:'21.09.2026, 10:10 Uhr', items:[
+      'Kontostand: Monat/Jahr/Pfeile verschwanden beim Scrollen tatsächlich hinter dem (ebenfalls fest stehenden) Header - jetzt fest positioniert direkt unterhalb des Headers, verschwindet nicht mehr'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5506,6 +5521,8 @@ var nativeStorage = {
 
   function setupBeta(){
     generateBetaRecurringOccurrences();
+    positionBetaMonthNav();
+    window.addEventListener('resize', positionBetaMonthNav);
 
     document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
     document.getElementById('betaFilterRow').addEventListener('click', function(e){
