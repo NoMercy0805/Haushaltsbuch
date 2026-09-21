@@ -1230,14 +1230,24 @@
       <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Kontostand)</button>
       <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
 
-      <p class="chooser-group-label" style="margin-top:16px;">Dauerauftrag-Vorlagen</p>
-      <div id="betaTemplatesList"></div>
-
-      <p class="chooser-group-label" style="margin-top:16px;">Titel-Vorschläge</p>
-      <div class="summary-card">
-        <p style="margin:0 0 4px;font-size:15px;">Nicht mehr benötigte Vorschläge (z.B. alte Titel wie "O2") lassen sich hier entfernen, ohne die dazugehörigen Einträge zu löschen.</p>
+      <div class="section-toggle-row" id="betaTemplatesHeader" style="margin-top:16px;">
+        <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></div>
+        <div class="section-toggle-text"><div class="section-toggle-title">Dauerauftrag-Vorlagen</div><div class="section-toggle-sub" id="betaTemplatesHeaderSub"></div></div>
+        <svg class="section-toggle-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div id="betaTitleSuggestionsSettings"></div>
+      <div id="betaTemplatesList" style="display:none;"></div>
+
+      <div class="section-toggle-row" id="betaTitleSuggestionsHeader">
+        <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+        <div class="section-toggle-text"><div class="section-toggle-title">Titel-Vorschläge</div><div class="section-toggle-sub" id="betaTitleSuggestionsHeaderSub"></div></div>
+        <svg class="section-toggle-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div id="betaTitleSuggestionsWrap" style="display:none;">
+        <div class="summary-card">
+          <p style="margin:0 0 4px;font-size:15px;">Nicht mehr benötigte Vorschläge (z.B. alte Titel wie "O2") lassen sich hier entfernen, ohne die dazugehörigen Einträge zu löschen.</p>
+        </div>
+        <div id="betaTitleSuggestionsSettings"></div>
+      </div>
     </div>
   </div>
 
@@ -1524,6 +1534,8 @@ var nativeStorage = {
   var showPaidLoansHistory = loadBoolPref('household-show-paid-loans', false);
   var showTilgungHistory = loadBoolPref('household-show-tilgung-history', false);
   var showPaidInvoicesHistory = loadBoolPref('household-show-paid-invoices', false);
+  var showBetaTemplates = loadBoolPref('household-show-beta-templates', false);
+  var showBetaTitleSuggestions = loadBoolPref('household-show-beta-title-suggestions', false);
   var showSparList = loadBoolPref('household-show-sparlist', true);
   function loadBoolPref(key, fallback){
     try{
@@ -5186,6 +5198,10 @@ var nativeStorage = {
     ]},
     { version:103, date:'21.09.2026, 12:05 Uhr', items:[
       'Kontostand: Eine Vorlage aus den Dauerauftrag-Vorlagen zu entfernen löscht nicht mehr den zugrundeliegenden Eintrag - er bleibt als normale Buchung erhalten, nur die Wiederholung wird gestoppt'
+    ]},
+    { version:104, date:'21.09.2026, 13:21 Uhr', items:[
+      'Einstellungen: Dauerauftrag-Vorlagen und Titel-Vorschläge sind jetzt einklappbar',
+      'Kontostand: Ausgeblendete Titel-Vorschläge verschwinden jetzt aus der Hauptliste und stehen stattdessen in einem eigenen "Ausgeblendet"-Bereich zum Wiederherstellen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5588,6 +5604,17 @@ var nativeStorage = {
     positionBetaMonthNav();
     window.addEventListener('resize', positionBetaMonthNav);
 
+    document.getElementById('betaTemplatesHeader').addEventListener('click', function(){
+      showBetaTemplates = !showBetaTemplates;
+      saveBoolPref('household-show-beta-templates', showBetaTemplates);
+      renderBetaTemplatesList();
+    });
+    document.getElementById('betaTitleSuggestionsHeader').addEventListener('click', function(){
+      showBetaTitleSuggestions = !showBetaTitleSuggestions;
+      saveBoolPref('household-show-beta-title-suggestions', showBetaTitleSuggestions);
+      renderBetaTitleSuggestionsSettings();
+    });
+
     document.getElementById('betaTemplatesList').addEventListener('click', async function(e){
       var btn = e.target.closest('[data-action="delete-beta-template"]');
       if(!btn) return;
@@ -5880,34 +5907,54 @@ var nativeStorage = {
 
   function renderBetaTitleSuggestionsSettings(){
     var container = document.getElementById('betaTitleSuggestionsSettings');
+    var headerSub = document.getElementById('betaTitleSuggestionsHeaderSub');
+    var header = document.getElementById('betaTitleSuggestionsHeader');
+    var wrap = document.getElementById('betaTitleSuggestionsWrap');
     if(!container) return;
+    if(header) header.classList.toggle('active', showBetaTitleSuggestions);
+    if(wrap) wrap.style.display = showBetaTitleSuggestions ? '' : 'none';
     var seen = {};
     var allTitles = [];
     state.betaEntries.forEach(function(e){
       if(!seen[e.title]){ seen[e.title] = true; allTitles.push(e.title); }
     });
-    allTitles.sort(function(a,b){ return a.localeCompare(b, 'de'); });
-    if(allTitles.length === 0){
-      container.innerHTML = '<div class="empty-state">Noch keine Titel vorhanden.</div>';
-      return;
-    }
-    container.innerHTML = '<div class="compact-list">'+allTitles.map(function(title){
-      var hidden = state.betaHiddenTitles.indexOf(title) !== -1;
+    var activeTitles = allTitles.filter(function(t){ return state.betaHiddenTitles.indexOf(t) === -1; }).sort(function(a,b){ return a.localeCompare(b, 'de'); });
+    var hiddenTitles = state.betaHiddenTitles.slice().sort(function(a,b){ return a.localeCompare(b, 'de'); });
+    if(headerSub) headerSub.textContent = activeTitles.length + ' aktiv'+(hiddenTitles.length ? ', '+hiddenTitles.length+' ausgeblendet' : '');
+
+    function row(title, hidden){
       return '<div class="compact-list-row" style="cursor:default;">'+
-               '<span class="compact-name-wrap"><span class="compact-name" style="'+(hidden?'color:var(--ink-soft);text-decoration:line-through;':'')+'">'+escapeHtml(title)+'</span></span>'+
+               '<span class="compact-name-wrap"><span class="compact-name" style="'+(hidden?'color:var(--ink-soft);':'')+'">'+escapeHtml(title)+'</span></span>'+
                '<button type="button" class="action-icon-btn '+(hidden?'gold':'danger')+'" data-action="'+(hidden?'restore-beta-title':'hide-beta-title')+'" data-title="'+escapeHtml(title)+'" style="margin-left:8px;" aria-label="'+(hidden?'Wiederherstellen':'Ausblenden')+'">'+
                  (hidden
                    ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg>'
                    : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>')+
                '</button>'+
              '</div>';
-    }).join('')+'</div>';
+    }
+
+    var html = '';
+    if(activeTitles.length === 0 && hiddenTitles.length === 0){
+      html = '<div class="empty-state">Noch keine Titel vorhanden.</div>';
+    } else {
+      html += '<div class="compact-list">'+(activeTitles.length ? activeTitles.map(function(t){ return row(t, false); }).join('') : '<div class="empty-state">Alle Titel sind ausgeblendet.</div>')+'</div>';
+      if(hiddenTitles.length > 0){
+        html += '<p class="chooser-group-label" style="margin-top:12px;font-size:12px;">Ausgeblendet</p>'+
+                '<div class="compact-list">'+hiddenTitles.map(function(t){ return row(t, true); }).join('')+'</div>';
+      }
+    }
+    container.innerHTML = html;
   }
 
   function renderBetaTemplatesList(){
     var container = document.getElementById('betaTemplatesList');
+    var headerSub = document.getElementById('betaTemplatesHeaderSub');
+    var header = document.getElementById('betaTemplatesHeader');
     if(!container) return;
+    if(header) header.classList.toggle('active', showBetaTemplates);
+    container.style.display = showBetaTemplates ? '' : 'none';
     var templates = state.betaEntries.filter(function(e){ return e.isRecurringTemplate; });
+    if(headerSub) headerSub.textContent = templates.length + ' aktiv';
     if(templates.length === 0){
       container.innerHTML = '<div class="empty-state">Noch keine Dauerauftrag-Vorlagen vorhanden.</div>';
       return;
