@@ -6,44 +6,44 @@
     android:background="@android:color/transparent"
     android:gravity="center_vertical"
     android:baselineAligned="false"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp"
     android:paddingTop="0dp"
     android:paddingBottom="0dp">
 
     <TextView
         android:id="@+id/widget_plus_btn"
-        android:layout_width="38dp"
-        android:layout_height="38dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:background="@drawable/widget_circle_plus"
         android:gravity="center"
         android:text="+"
         android:textColor="@color/widget_plus_bg"
-        android:textSize="18sp"
+        android:textSize="26sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/widget_minus_btn"
-        android:layout_width="38dp"
-        android:layout_height="38dp"
-        android:layout_marginStart="6dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="8dp"
         android:background="@drawable/widget_circle_minus"
         android:gravity="center"
         android:text="\u2212"
         android:textColor="@color/widget_minus_bg"
-        android:textSize="18sp"
+        android:textSize="26sp"
         android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/widget_balance_pill"
         android:layout_width="0dp"
-        android:layout_height="36dp"
+        android:layout_height="50dp"
         android:layout_weight="1"
         android:layout_marginStart="8dp"
         android:background="@drawable/widget_amount_pill_neg"
         android:gravity="center"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp">
 
         <TextView
             android:id="@+id/widget_balance"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:text="0,00 \u20ac"
             android:textColor="@color/widget_balance_neg"
-            android:textSize="13sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end" />
