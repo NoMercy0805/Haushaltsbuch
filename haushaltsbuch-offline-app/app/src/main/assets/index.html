@@ -182,12 +182,9 @@
   .beta-day-header .beta-day-title{font-size:14px;font-weight:800;color:var(--ink);}
   .beta-day-header .beta-day-total{font-size:15px;font-weight:800;}
   .beta-entry-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid var(--rule);}
-  .beta-entry-row.beta-unreconciled{background:var(--gold-soft);border-left:3px solid var(--gold);padding-left:13px;}
   .beta-filter-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--ink-soft);border:none;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;font-family:var(--sans);cursor:pointer;}
   .beta-filter-chip.active{background:var(--surface);color:var(--expense);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
   .beta-filter-chip[data-filter="all"].active{color:var(--ink);}
-  .tab-badge{position:absolute;top:2px;right:calc(50% - 20px);background:var(--expense);color:#fff;font-size:9.5px;font-weight:800;border-radius:50%;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 2px;}
-  nav.tabs button[data-tab="beta"]{overflow:visible;}
   .beta-entry-icon{width:22px;height:22px;border-radius:50%;border:2px solid var(--rule-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;background:none;padding:0;cursor:pointer;}
   .beta-entry-icon.reconciled{background:var(--ink-soft);border-color:var(--ink-soft);}
   .beta-entry-name-wrap{flex:1;min-width:0;overflow:hidden;}
@@ -543,7 +540,6 @@
     <nav class="tabs">
       <button data-tab="beta" class="tab active" aria-label="Kontostand">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="6" cy="18" rx="4" ry="1.6"/><path d="M2 18v-3"/><path d="M10 18v-3"/><ellipse cx="6" cy="15" rx="4" ry="1.6"/><ellipse cx="13" cy="20" rx="4" ry="1.6"/><path d="M9 20v-4"/><path d="M17 20v-4"/><ellipse cx="13" cy="16" rx="4" ry="1.6"/><ellipse cx="19" cy="17" rx="4" ry="1.6"/><path d="M15 17v-5"/><path d="M23 17v-5"/><ellipse cx="19" cy="12" rx="4" ry="1.6"/></svg>
-        <span id="betaTabBadge" class="tab-badge" style="display:none;"></span>
         <span>Kontostand</span>
       </button>
       <button data-tab="buchungen" class="tab">
@@ -5095,6 +5091,9 @@ var nativeStorage = {
     ]},
     { version:87, date:'21.09.2026, 08:35 Uhr', items:[
       'Kontostand: Filter-Chips "Alle"/"Nicht abgeglichen" haben jetzt passende Symbole, wie bei allen anderen Chips in der App'
+    ]},
+    { version:88, date:'21.09.2026, 08:43 Uhr', items:[
+      'Kontostand: roter Zähl-Punkt am Tab-Symbol und gelbe Zeilen-Hervorhebung bei nicht abgeglichenen Einträgen wieder entfernt - die Filter-Chips bleiben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5238,15 +5237,6 @@ var nativeStorage = {
       '<button type="button" class="beta-filter-chip'+(betaFilterMode==='all'?' active':'')+'" data-filter="all"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Alle</button>'+
       '<button type="button" class="beta-filter-chip'+(betaFilterMode==='unreconciled'?' active':'')+'" data-filter="unreconciled"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg>Nicht abgeglichen ('+unreconciledInMonth+')</button>';
 
-    var totalUnreconciled = state.betaEntries.filter(function(e){ return !e.reconciled; }).length;
-    var badge = document.getElementById('betaTabBadge');
-    if(totalUnreconciled > 0){
-      badge.textContent = totalUnreconciled > 99 ? '99+' : totalUnreconciled;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
-
     var dayGroups = {};
     var dayOrder = [];
     entries.forEach(function(e){
@@ -5271,7 +5261,7 @@ var nativeStorage = {
                   '</div>';
         dayEntries.forEach(function(e){
           var sign = betaTypeSign(e.type);
-          html += '<div class="beta-entry-row'+(e.reconciled?'':' beta-unreconciled')+'" data-id="'+e.id+'">'+
+          html += '<div class="beta-entry-row" data-id="'+e.id+'">'+
                     '<button type="button" class="beta-entry-icon'+(e.reconciled?' reconciled':'')+'" data-action="toggle-reconciled" data-id="'+e.id+'" aria-label="Abgleichen">'+(e.reconciled?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>'+
                     '<span class="beta-entry-name-wrap">'+
                       '<span class="beta-entry-name">'+escapeHtml(e.title)+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+'</span>'+
