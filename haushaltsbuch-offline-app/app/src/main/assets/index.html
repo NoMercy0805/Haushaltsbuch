@@ -3211,6 +3211,7 @@ var nativeStorage = {
                   '<input type="text" class="edit-name full" value="'+escapeHtml(loan.name)+'" placeholder="Bezeichnung">'+
                   '<div><label class="edit-field-label">Kreditsumme</label><input type="text" inputmode="decimal" data-cent-input class="edit-original" value="'+formatCentsToStr(Math.round(loan.originalAmount*100))+'" placeholder="Kreditsumme (€)"></div>'+
                   '<div><label class="edit-field-label">Rate pro Monat</label><input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(loan.monthlyPayment*100))+'" placeholder="Rate/Monat (€)"></div>'+
+                  '<div class="full"><label class="edit-field-label">Gesamtbetrag inkl. Zinsen (optional, laut Vertrag - macht den Tilgungsplan genauer)</label><input type="text" inputmode="decimal" data-cent-input class="edit-total-with-interest" value="'+(loan.totalWithInterest ? formatCentsToStr(Math.round(loan.totalWithInterest*100)) : '')+'" placeholder="z. B. 12.480,00"></div>'+
                   '<input type="number" step="1" min="1" class="edit-term-months full" value="'+prefillMonths+'" placeholder="Gesamtlaufzeit in Monaten (optional)">'+
                   '<div class="edit-actions">'+
                     '<button type="button" class="btn-cancel" data-action="cancel-edit-loan">Abbrechen</button>'+
@@ -4400,6 +4401,7 @@ var nativeStorage = {
         var name = row.querySelector('.edit-name').value.trim();
         var original = parseAmount(row.querySelector('.edit-original').value);
         var monthly = parseAmount(row.querySelector('.edit-monthly').value);
+        var totalWithInterestRaw = parseAmount(row.querySelector('.edit-total-with-interest').value);
         var termMonthsRaw = row.querySelector('.edit-term-months').value;
         var termMonths = termMonthsRaw ? parseInt(termMonthsRaw, 10) : NaN;
         if(loan && name && !isNaN(monthly)){
@@ -4412,9 +4414,8 @@ var nativeStorage = {
           loan.originalAmount = newOriginal;
           loan.monthlyPayment = monthly;
           loan.totalTermMonths = (!isNaN(termMonths) && termMonths > 0) ? termMonths : null;
-          if(loan.totalWithInterest){
-            loan.monthlyRate = solveLoanMonthlyRate(loan.originalAmount, loan.monthlyPayment, loan.totalWithInterest);
-          }
+          loan.totalWithInterest = isNaN(totalWithInterestRaw) ? null : totalWithInterestRaw;
+          loan.monthlyRate = loan.totalWithInterest ? solveLoanMonthlyRate(loan.originalAmount, loan.monthlyPayment, loan.totalWithInterest) : null;
         }
         editing.loan = null; saveState(); renderAll();
       } else if(action === 'pay-loan'){
@@ -5322,6 +5323,9 @@ var nativeStorage = {
     ]},
     { version:112, date:'21.09.2026, 19:48 Uhr', items:[
       'Kredite: Beim tatsächlichen Abhaken einer Zahlung wird jetzt (bei hinterlegtem Zinssatz) ebenfalls zwischen Zins- und Tilgungsanteil unterschieden, statt den kompletten Betrag von der Restschuld abzuziehen - Sondertilgungen über die reguläre Rate hinaus reduzieren weiterhin die Restschuld voll'
+    ]},
+    { version:113, date:'21.09.2026, 19:52 Uhr', items:[
+      'Kredite: "Gesamtbetrag inkl. Zinsen" lässt sich jetzt auch beim Bearbeiten eines bereits bestehenden Kredits nachtragen, nicht nur beim Neuanlegen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
