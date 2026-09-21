@@ -390,13 +390,13 @@
   .vc-detail-row .val{font-family:var(--mono);font-weight:700;color:var(--ink);}
   .vc-buffer.pos{color:var(--savings) !important;}
   .vc-buffer.neg{color:var(--expense) !important;}
-  .vc-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:0;flex-wrap:wrap;max-height:0;overflow:hidden;opacity:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
+  .vc-actions{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin-top:0;flex-wrap:wrap;max-height:0;overflow:hidden;opacity:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .vc-card.expanded > .vc-actions,
   .loan-card.expanded > .vc-actions{max-height:72px;opacity:1;margin-top:14px;}
   .loan-history-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .25s ease, margin-top .25s ease;margin-top:0;}
   .loan-card.expanded .loan-history-wrap{max-height:1000px;opacity:1;margin-top:6px;}
   .vc-card, .loan-card{cursor:pointer;}
-  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:64px;height:36px;padding:0 20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:40px;height:36px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
   .action-icon-btn.danger{color:var(--expense);background:var(--expense-soft);}
   .action-icon-btn.neutral{color:var(--ink-soft);background:var(--paper);}
   .action-icon-btn.gold{color:var(--gold);background:var(--gold-soft);}
@@ -5432,6 +5432,9 @@ var nativeStorage = {
     ]},
     { version:118, date:'21.09.2026, 20:55 Uhr', items:[
       'Kredite: Neuer "Abgleichen"-Button bei Krediten mit Zinssatz - trägst du die Restschuld laut Bank ein, berechnet die App daraus automatisch einen präziseren Zinssatz für künftige Buchungen, statt die Abweichung einfach nur einmalig zu überschreiben'
+    ]},
+    { version:119, date:'21.09.2026, 21:00 Uhr', items:[
+      'Kredite: "Löschen" ist bei fünf Buttons (mit "Abgleichen") in eine zweite Zeile gerutscht - Buttons jetzt kompakter, damit alle fünf nebeneinander in eine Zeile passen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
