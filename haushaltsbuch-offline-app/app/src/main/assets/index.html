@@ -135,14 +135,14 @@
     box-shadow:0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.14);
   }
   header.ledger-header, nav.tabs, .hero-card, .settings-panel, .confirm-card, .fab-speed-dial .fab-option,
-  .beta-month-nav, #betaBalanceBar, .sub-nav-row, .beta-filter-chip, .year-chip, .car-chip, .range-chip{
+  .beta-month-nav, #betaBalanceBar, .sub-nav-row, .year-chip, .car-chip, .range-chip{
     backdrop-filter:blur(14px) !important;-webkit-backdrop-filter:blur(14px) !important;
     border:1px solid rgba(255,255,255,0.5) !important;
   }
   html[data-theme="dark"] header.ledger-header, html[data-theme="dark"] nav.tabs, html[data-theme="dark"] .hero-card,
   html[data-theme="dark"] .settings-panel, html[data-theme="dark"] .confirm-card, html[data-theme="dark"] .fab-speed-dial .fab-option,
   html[data-theme="dark"] .beta-month-nav, html[data-theme="dark"] #betaBalanceBar, html[data-theme="dark"] .sub-nav-row,
-  html[data-theme="dark"] .beta-filter-chip, html[data-theme="dark"] .year-chip, html[data-theme="dark"] .car-chip, html[data-theme="dark"] .range-chip{
+  html[data-theme="dark"] .year-chip, html[data-theme="dark"] .car-chip, html[data-theme="dark"] .range-chip{
     border:1px solid rgba(255,255,255,0.16) !important;
   }
 
@@ -5438,6 +5438,9 @@ var nativeStorage = {
     ]},
     { version:120, date:'21.09.2026, 21:08 Uhr', items:[
       'Kredite: Die fünf Aktions-Buttons waren zwar in einer Zeile, aber winzig und rechtsbündig mit viel Leerraum links - verteilen sich jetzt gleichmäßig über die ganze Breite und sind wieder etwas größer'
+    ]},
+    { version:121, date:'21.09.2026, 23:13 Uhr', items:[
+      'Kontostand: Filter-Chips ("Alle"/"Nicht abgeglichen") hatten versehentlich einen extra Rahmen vom Liquid-Glass-Umbau, den die Chips bei Buchungen nicht hatten - jetzt wieder identisch'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
