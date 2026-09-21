@@ -76,8 +76,6 @@ public abstract class BetaWidgetProvider extends AppWidgetProvider {
         views.setInt(R.id.widget_balance_pill, "setBackgroundResource",
                 isPositive ? R.drawable.widget_amount_pill_pos : R.drawable.widget_amount_pill_neg);
 
-        views.setOnClickPendingIntent(R.id.widget_plus_btn,
-                buildPendingIntent(context, 101, ACTION_ADD_EINNAHME));
         views.setOnClickPendingIntent(R.id.widget_minus_btn,
                 buildPendingIntent(context, 102, ACTION_ADD_AUSGABE));
         PendingIntent openPending = buildPendingIntent(context, 103, ACTION_OPEN);
