@@ -5498,6 +5498,10 @@ var nativeStorage = {
     { version:125, date:'21.09.2026, 23:35 Uhr', items:[
       'Kontostand-Widget: Button zeigt wieder "+/-" als Beschriftung (Funktion bleibt: öffnet immer "Neue Ausgabe")',
       'Kontostand-Widget: Button und Betrags-Anzeige nutzen jetzt die tatsächlich verfügbare Höhe des Launchers komplett aus, statt sich an einer festen Mindestgröße zu orientieren'
+    ]},
+    { version:126, date:'21.09.2026, 23:41 Uhr', items:[
+      'Kontostand-Widget: match_parent-Höhe wieder zurückgenommen (hat auf Samsung-Launchern zu lang gezogenen Ovalen statt Kreisen geführt) - Button und Betrag haben jetzt wieder eine feste, kompakte Höhe, ähnlich dem Referenz-Widget',
+      'Kontostand-Widget: Button ist jetzt ein echter Kreis (gleich breit wie hoch) statt oval, und im App-Blau statt Rot'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;

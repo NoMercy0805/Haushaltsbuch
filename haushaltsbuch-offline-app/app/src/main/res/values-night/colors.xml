@@ -8,4 +8,6 @@
     <color name="widget_balance_neg">#FF5B42</color>
     <color name="widget_label">#8E9098</color>
     <color name="widget_text">#F2F2F4</color>
+    <color name="widget_toggle_bg">#5B9CFF</color>
+    <color name="widget_toggle_soft">#1B2A4A</color>
 </resources>
