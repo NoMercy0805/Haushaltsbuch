@@ -3,4 +3,5 @@
     <string name="widget_desc_2x1">Kontostand klein (2×1)</string>
     <string name="widget_desc_3x1">Kontostand mittel (3×1)</string>
     <string name="widget_desc_4x1">Kontostand groß (4×1)</string>
+    <string name="widget_desc_5x1">Kontostand extra groß (5×1)</string>
 </resources>

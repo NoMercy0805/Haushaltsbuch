@@ -41,6 +41,7 @@ public abstract class BetaWidgetProvider extends AppWidgetProvider {
         updateForClass(context, mgr, BetaWidgetProvider2x1.class, R.layout.beta_widget_2x1);
         updateForClass(context, mgr, BetaWidgetProvider3x1.class, R.layout.beta_widget_3x1);
         updateForClass(context, mgr, BetaWidgetProvider4x1.class, R.layout.beta_widget_4x1);
+        updateForClass(context, mgr, BetaWidgetProvider5x1.class, R.layout.beta_widget_4x1);
     }
 
     private static void updateForClass(Context context, AppWidgetManager mgr, Class<?> providerClass, int layoutId) {
