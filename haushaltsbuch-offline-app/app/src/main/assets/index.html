@@ -4456,10 +4456,14 @@ var nativeStorage = {
         if(!dateStr || isNaN(amount) || amount<=0) return;
         var wasActiveBeforePay = loan2.remainingBalance > 0;
         var principalReduction = amount;
-        if(loan2.monthlyRate){
-          // Zinsbewusste Aufteilung: nur der Zins- UND Tilgungsanteil der
-          // regulaeren Rate wird ermittelt, Betraege darueber hinaus
-          // (Sondertilgung) reduzieren die Restschuld komplett.
+        if(loan2.monthlyRate && amount >= loan2.monthlyPayment - 0.005){
+          // Zinsbewusste Aufteilung gilt nur, wenn dieser Eintrag mindestens
+          // die volle reguläre Rate umfasst (reprsentiert dann einen echten
+          // Monatszyklus). Kleinere Extra-Buchungen (z.B. eine separat
+          // eingetragene Sondertilgung von 3€) wuerden sonst faelschlich
+          // nochmal mit Zinsen fuer denselben Zeitraum belastet, obwohl die
+          // reguläre Rate diesen Monat schon separat verbucht wurde -
+          // solche Betraege reduzieren die Restschuld deshalb komplett.
           var interestPortion = roundCents(loan2.remainingBalance * loan2.monthlyRate);
           var regularAmount = Math.min(amount, loan2.monthlyPayment);
           var regularPrincipal = Math.max(0, roundCents(regularAmount - interestPortion));
@@ -4468,7 +4472,7 @@ var nativeStorage = {
         }
         loan2.remainingBalance = roundCents(Math.max(0, loan2.remainingBalance - principalReduction));
         if(loan2.remainingBalance <= 0 && !loan2.paidOffDate) loan2.paidOffDate = todayISO();
-        state.loanPayments.push({id:genId(), loanId:id, date:dateStr, amount:amount, type:'payment'});
+        state.loanPayments.push({id:genId(), loanId:id, date:dateStr, amount:amount, type:'payment', principalReduction:principalReduction});
         payingLoan = null;
         saveState(); renderAll();
         if(wasActiveBeforePay && loan2.remainingBalance <= 0) await offerAddFreedRateToTilgung(loan2);
@@ -4517,7 +4521,14 @@ var nativeStorage = {
               affectedLoan.remainingBalance = roundCents(Math.max(0, affectedLoan.remainingBalance - deletedPayment.amount));
               affectedLoan.originalAmount = roundCents(Math.max(0, affectedLoan.originalAmount - deletedPayment.amount));
             } else {
-              affectedLoan.remainingBalance = roundCents(affectedLoan.remainingBalance + deletedPayment.amount);
+              // Falls der tatsaechliche Tilgungsanteil gespeichert wurde
+              // (zinsbewusste Buchungen), diesen zurückrechnen statt den
+              // vollen Zahlungsbetrag - sonst wird bei Loeschen mehr
+              // zurueckgebucht, als urspruenglich tatsaechlich abgezogen
+              // wurde. Bei aelteren Eintraegen (ohne dieses Feld) wird der
+              // volle Betrag verwendet, wie bisher.
+              var reversalAmount = (typeof deletedPayment.principalReduction === 'number') ? deletedPayment.principalReduction : deletedPayment.amount;
+              affectedLoan.remainingBalance = roundCents(affectedLoan.remainingBalance + reversalAmount);
             }
           }
         }
@@ -5361,6 +5372,10 @@ var nativeStorage = {
     { version:116, date:'21.09.2026, 20:21 Uhr', items:[
       'Kredite: Alle vier Aktions-Buttons (Bearbeiten, Erhöhen, Rate buchen, Löschen) haben jetzt eine kleine Beschriftung darunter',
       'Kredite: Die angezeigte Restlaufzeit "wackelt" nicht mehr bei jeder kleinen Sondertilgung - Extra-Beträge werden erst berücksichtigt, sobald sie zusammen mindestens eine volle Rate ergeben. Die tatsächliche Restschuld bleibt davon unberührt und ist immer exakt'
+    ]},
+    { version:117, date:'21.09.2026, 20:27 Uhr', items:[
+      'Wichtiger Fix bei Krediten mit Zinssatz: Kleine, separat gebuchte Extra-Beträge (z.B. eine 3€-Testbuchung) wurden fälschlich nochmal mit Zinsen für denselben Zeitraum belastet und dadurch teils gar nicht von der Restschuld abgezogen - jetzt reduzieren Beträge unter der regulären Rate die Restschuld immer komplett',
+      'Fix: Eine Buchung zu löschen rechnete bisher den vollen Zahlungsbetrag zurück, auch wenn wegen der Zinsberechnung tatsächlich weniger abgezogen worden war - das führte zu einer zu hohen Restschuld nach dem Löschen. Wird jetzt korrekt zurückgerechnet'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
