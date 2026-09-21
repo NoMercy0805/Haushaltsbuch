@@ -1595,6 +1595,7 @@ var nativeStorage = {
     try{ nativeStorage.setItem(key, value ? '1' : '0'); }catch(err){}
   }
   var payingLoan = null;
+  var reconcilingLoan = null;
   var increasingLoan = null;
   var payingVc = null;
   var editingPotCarryover = false;
@@ -3247,11 +3248,13 @@ var nativeStorage = {
                     '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Bearbeiten</span></span>'+
                     '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Schulden erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Erhöhen</span></span>'+
                     '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Rate buchen</span></span>'+
+                    (loan.monthlyRate ? '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Abgleichen</span></span>' : '')+
                     '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Löschen</span></span>'+
                   '</div>'+
                   renderLoanHistory(loan.id)+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
                   (increasingLoan === loan.id ? renderIncreaseLoanForm(loan) : '')+
+                  (reconcilingLoan === loan.id ? renderReconcileLoanForm(loan) : '')+
                 '</div>';
       }
     });
@@ -3305,6 +3308,17 @@ var nativeStorage = {
              '<div class="edit-actions">'+
                '<button type="button" class="btn-cancel" data-action="cancel-pay-loan">Abbrechen</button>'+
                '<button type="button" class="btn-save" data-action="confirm-pay-loan" data-id="'+loan.id+'">Buchen</button>'+
+             '</div>'+
+           '</div>';
+  }
+
+  function renderReconcileLoanForm(loan){
+    return '<div class="edit-row" data-id="'+loan.id+'" style="background:var(--primary-soft);">'+
+             '<div class="full" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;">Aktuelle Restschuld laut Bank/Kontoauszug eintragen - die App berechnet daraus automatisch einen genaueren Zinssatz für künftige Buchungen.</div>'+
+             '<input type="text" inputmode="decimal" data-cent-input class="reconcile-balance full" placeholder="Restschuld laut Bank (€)">'+
+             '<div class="edit-actions">'+
+               '<button type="button" class="btn-cancel" data-action="cancel-reconcile-loan">Abbrechen</button>'+
+               '<button type="button" class="btn-save" data-action="confirm-reconcile-loan" data-id="'+loan.id+'">Abgleichen</button>'+
              '</div>'+
            '</div>';
   }
@@ -4443,10 +4457,15 @@ var nativeStorage = {
         }
         editing.loan = null; saveState(); renderAll();
       } else if(action === 'pay-loan'){
-        editing.loan = null; increasingLoan = null;
+        editing.loan = null; increasingLoan = null; reconcilingLoan = null;
         payingLoan = id; renderKredite(); focusEditRow(id);
       } else if(action === 'cancel-pay-loan'){
         payingLoan = null; renderKredite();
+      } else if(action === 'reconcile-loan'){
+        editing.loan = null; increasingLoan = null; payingLoan = null;
+        reconcilingLoan = id; renderKredite(); focusEditRow(id);
+      } else if(action === 'cancel-reconcile-loan'){
+        reconcilingLoan = null; renderKredite();
       } else if(action === 'confirm-pay-loan'){
         var payRow = btn.closest('.edit-row');
         var loan2 = state.loans.filter(function(x){return x.id===id;})[0];
@@ -4476,6 +4495,37 @@ var nativeStorage = {
         payingLoan = null;
         saveState(); renderAll();
         if(wasActiveBeforePay && loan2.remainingBalance <= 0) await offerAddFreedRateToTilgung(loan2);
+      } else if(action === 'confirm-reconcile-loan'){
+        var reconRow = btn.closest('.edit-row');
+        var loan3 = state.loans.filter(function(x){return x.id===id;})[0];
+        if(!loan3) return;
+        var enteredBalance = parseAmount(reconRow.querySelector('.reconcile-balance').value);
+        if(isNaN(enteredBalance) || enteredBalance < 0) return;
+        var checkpointBalance = (typeof loan3.lastReconciledBalance === 'number') ? loan3.lastReconciledBalance : loan3.originalAmount;
+        var checkpointDate = loan3.lastReconciledDate || '0000-00-00';
+        var paymentsSince = state.loanPayments.filter(function(p){
+          return p.loanId === id && p.type === 'payment' && (p.date||'') > checkpointDate;
+        });
+        var paymentsSum = paymentsSince.reduce(function(s,p){ return s+p.amount; }, 0);
+        var actualPrincipalReduction = roundCents(checkpointBalance - enteredBalance);
+        // Nur neu berechnen, wenn es ueberhaupt Zahlungen seit dem letzten
+        // Abgleich gab und die Restschuld sich plausibel (nicht erhoeht) hat -
+        // sonst bleibt der bisherige Zinssatz einfach unveraendert.
+        if(paymentsSince.length > 0 && actualPrincipalReduction > 0 && actualPrincipalReduction < paymentsSum){
+          var impliedTotalInterest = roundCents(paymentsSum - actualPrincipalReduction);
+          var avgBalance = (checkpointBalance + enteredBalance) / 2;
+          var avgInterestPerPayment = impliedTotalInterest / paymentsSince.length;
+          var impliedRate = avgBalance > 0 ? (avgInterestPerPayment / avgBalance) : null;
+          if(impliedRate && isFinite(impliedRate) && impliedRate > 0 && impliedRate < 0.05){
+            loan3.monthlyRate = impliedRate;
+          }
+        }
+        loan3.remainingBalance = enteredBalance;
+        loan3.lastReconciledBalance = enteredBalance;
+        loan3.lastReconciledDate = todayISO();
+        if(loan3.remainingBalance <= 0 && !loan3.paidOffDate) loan3.paidOffDate = todayISO();
+        reconcilingLoan = null;
+        saveState(); renderAll();
       } else if(action === 'payoff-loan'){
         if(!await confirmDialog('Diesen Kredit wirklich als vorzeitig abbezahlt markieren? Die Restschuld wird auf 0 gesetzt.')) return;
         var payoffLoan = state.loans.filter(function(x){return x.id===id;})[0];
@@ -4557,7 +4607,7 @@ var nativeStorage = {
     {name:'variableCosts', columns:['id','name','monthlyAmount','actualAmount','interval','dueMonth','dueYear']},
     {name:'variableContributions', columns:['id','date','amount','note']},
     {name:'variablePayments', columns:['id','itemId','itemName','date','amount']},
-    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct','totalWithInterest','monthlyRate']},
+    {name:'loans', columns:['id','name','originalAmount','remainingBalance','monthlyPayment','totalTermMonths','paidOffDate','carryoverPct','totalWithInterest','monthlyRate','lastReconciledBalance','lastReconciledDate']},
     {name:'loanPayments', columns:['id','loanId','date','amount','type']},
     {name:'savings', columns:['id','date','amount','type','comment']},
     {name:'cars', columns:['id','name']},
@@ -4681,6 +4731,9 @@ var nativeStorage = {
         obj.totalWithInterest = (!isNaN(parsedTotalWithInterest) && parsedTotalWithInterest > 0) ? parsedTotalWithInterest : null;
         var parsedMonthlyRate = parseFloat(obj.monthlyRate);
         obj.monthlyRate = (!isNaN(parsedMonthlyRate) && parsedMonthlyRate > 0) ? parsedMonthlyRate : null;
+        var parsedLastReconciled = parseFloat(obj.lastReconciledBalance);
+        obj.lastReconciledBalance = isNaN(parsedLastReconciled) ? null : parsedLastReconciled;
+        if(!obj.lastReconciledDate) obj.lastReconciledDate = null;
       } else if(currentTable === 'fuelLogs'){
         obj.liters = parseFloat(obj.liters) || 0;
         obj.pricePerLiter = parseFloat(obj.pricePerLiter) || 0;
@@ -5376,6 +5429,9 @@ var nativeStorage = {
     { version:117, date:'21.09.2026, 20:27 Uhr', items:[
       'Wichtiger Fix bei Krediten mit Zinssatz: Kleine, separat gebuchte Extra-Beträge (z.B. eine 3€-Testbuchung) wurden fälschlich nochmal mit Zinsen für denselben Zeitraum belastet und dadurch teils gar nicht von der Restschuld abgezogen - jetzt reduzieren Beträge unter der regulären Rate die Restschuld immer komplett',
       'Fix: Eine Buchung zu löschen rechnete bisher den vollen Zahlungsbetrag zurück, auch wenn wegen der Zinsberechnung tatsächlich weniger abgezogen worden war - das führte zu einer zu hohen Restschuld nach dem Löschen. Wird jetzt korrekt zurückgerechnet'
+    ]},
+    { version:118, date:'21.09.2026, 20:55 Uhr', items:[
+      'Kredite: Neuer "Abgleichen"-Button bei Krediten mit Zinssatz - trägst du die Restschuld laut Bank ein, berechnet die App daraus automatisch einen präziseren Zinssatz für künftige Buchungen, statt die Abweichung einfach nur einmalig zu überschreiben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
