@@ -173,7 +173,7 @@
   .sub-nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:none;border-radius:11px;padding:11px 8px;font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;transition:background .15s ease, color .15s ease;}
   .sub-nav-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
 
-  .beta-month-nav{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:15;}
+  .beta-month-nav{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:50;}
   .beta-month-label-btn{background:none;border:none;font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);cursor:pointer;padding:4px 2px;white-space:nowrap;flex-shrink:0;}
   #betaMonthPrev, #betaMonthNext{background:var(--surface);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0;}
   .beta-month-label{display:flex;gap:6px;align-items:baseline;justify-content:center;flex:1;min-width:0;overflow:hidden;}
@@ -5104,6 +5104,11 @@ var nativeStorage = {
     { version:91, date:'21.09.2026, 09:38 Uhr', items:[
       'Kontostand: Seitliches Wischen wechselt jetzt auch zwischen "Alle" und "Nicht abgeglichen", wie bei den anderen Unteransichten',
       'Kontostand: Beim Markieren eines Eintrags als abgeglichen fragt die App jetzt erst nach, um versehentliches Abgleichen zu vermeiden - beim Zurücksetzen bleibt es ohne Nachfrage'
+    ]},
+    { version:92, date:'21.09.2026, 10:00 Uhr', items:[
+      'Kontostand: Monat/Pfeile bleiben beim Scrollen zuverlässiger oben (höherer z-index)',
+      'Kontostand-Widget zeigt jetzt immer den Kontostand des aktuellen Monats, unabhängig davon, welcher Monat gerade in der App durchgeblättert wird',
+      'Kontostand springt beim Zurückkehren zur App (z.B. nach dem Wechsel zu einer anderen App) automatisch wieder auf den aktuellen Monat'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5294,7 +5299,11 @@ var nativeStorage = {
     barEl.classList.toggle('positive', balance >= 0);
     document.getElementById('betaBalanceValue').textContent = fmtEUR(balance);
     if(window.AndroidBridge && typeof window.AndroidBridge.updateBetaWidgetBalance === 'function'){
-      try{ window.AndroidBridge.updateBetaWidgetBalance((balance>=0?'':'-')+fmtEUR(Math.abs(balance)), balance>=0); }catch(e){}
+      var todayForWidget = new Date();
+      var widgetCutoff = new Date(todayForWidget.getFullYear(), todayForWidget.getMonth()+1, 0, 23, 59, 59);
+      var widgetBalance = state.betaEntries.filter(function(e){ return parseISO(e.date) <= widgetCutoff; })
+        .reduce(function(s,e){ return s + betaTypeSign(e.type)*e.amount; }, 0);
+      try{ window.AndroidBridge.updateBetaWidgetBalance((widgetBalance>=0?'':'-')+fmtEUR(Math.abs(widgetBalance)), widgetBalance>=0); }catch(e){}
     }
     var firstOfMonth = new Date(betaViewYear, betaViewMonth, 1);
     var lastOfMonth = new Date(betaViewYear, betaViewMonth+1, 0);
@@ -6096,6 +6105,14 @@ var nativeStorage = {
     }
     document.addEventListener('visibilitychange', function(){
       if(document.hidden) performAutoBackup();
+    });
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden){
+        var now = new Date();
+        betaViewMonth = now.getMonth();
+        betaViewYear = now.getFullYear();
+        renderBeta();
+      }
     });
     setInterval(performAutoBackup, 10 * 60 * 1000);
   }
