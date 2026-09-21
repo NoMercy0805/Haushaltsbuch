@@ -3584,7 +3584,7 @@ var nativeStorage = {
     var header = document.querySelector('.ledger-header');
     var placeholder = document.getElementById('betaMonthNavPlaceholder');
     if(nav && header){
-      nav.style.top = header.offsetHeight + 'px';
+      nav.style.top = (header.offsetHeight - 2) + 'px';
       if(placeholder) placeholder.style.height = (nav.offsetHeight || 60) + 'px';
     }
   }
@@ -5143,6 +5143,9 @@ var nativeStorage = {
     ]},
     { version:98, date:'21.09.2026, 10:32 Uhr', items:[
       'Kontostand: Tagessaldo-Kopfzeile wieder auf die ursprüngliche, größere Größe zurückgesetzt'
+    ]},
+    { version:99, date:'21.09.2026, 10:36 Uhr', items:[
+      'Kontostand: Kleiner Spalt zwischen Header und Monats-Leiste behoben, durch den Inhalt dahinter durchschimmerte'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
