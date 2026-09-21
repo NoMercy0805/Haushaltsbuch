@@ -4430,7 +4430,18 @@ var nativeStorage = {
         var amount = parseAmount(payRow.querySelector('.pay-amount').value);
         if(!dateStr || isNaN(amount) || amount<=0) return;
         var wasActiveBeforePay = loan2.remainingBalance > 0;
-        loan2.remainingBalance = roundCents(Math.max(0, loan2.remainingBalance - amount));
+        var principalReduction = amount;
+        if(loan2.monthlyRate){
+          // Zinsbewusste Aufteilung: nur der Zins- UND Tilgungsanteil der
+          // regulaeren Rate wird ermittelt, Betraege darueber hinaus
+          // (Sondertilgung) reduzieren die Restschuld komplett.
+          var interestPortion = roundCents(loan2.remainingBalance * loan2.monthlyRate);
+          var regularAmount = Math.min(amount, loan2.monthlyPayment);
+          var regularPrincipal = Math.max(0, roundCents(regularAmount - interestPortion));
+          var extraAmount = Math.max(0, roundCents(amount - loan2.monthlyPayment));
+          principalReduction = roundCents(regularPrincipal + extraAmount);
+        }
+        loan2.remainingBalance = roundCents(Math.max(0, loan2.remainingBalance - principalReduction));
         if(loan2.remainingBalance <= 0 && !loan2.paidOffDate) loan2.paidOffDate = todayISO();
         state.loanPayments.push({id:genId(), loanId:id, date:dateStr, amount:amount, type:'payment'});
         payingLoan = null;
@@ -5308,6 +5319,9 @@ var nativeStorage = {
     { version:111, date:'21.09.2026, 19:45 Uhr', items:[
       'Kredite: Neues optionales Feld "Gesamtbetrag inkl. Zinsen" beim Anlegen - daraus wird intern der Zinssatz berechnet, damit der Tilgungsplan zwischen Zins- und Tilgungsanteil jeder Rate unterscheidet und genauer rechnet. Ohne Angabe bleibt alles wie bisher (lineare Berechnung)',
       'Kredite: Laufzeit und Monatsrate stehen jetzt nebeneinander im Formular, jeweils mit eigener Beschreibung'
+    ]},
+    { version:112, date:'21.09.2026, 19:48 Uhr', items:[
+      'Kredite: Beim tatsächlichen Abhaken einer Zahlung wird jetzt (bei hinterlegtem Zinssatz) ebenfalls zwischen Zins- und Tilgungsanteil unterschieden, statt den kompletten Betrag von der Restschuld abzuziehen - Sondertilgungen über die reguläre Rate hinaus reduzieren weiterhin die Restschuld voll'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
