@@ -14,10 +14,10 @@
 <style>
   :root{
     --paper:#F2F2F5;
-    --surface:rgba(255,255,255,0.55);
-    --surface-2:rgba(255,255,255,0.7);
+    --surface:rgba(255,255,255,0.78);
+    --surface-2:rgba(255,255,255,0.88);
     --ink:#191A1C;
-    --ink-soft:#8B8D91;
+    --ink-soft:#6E7074;
     --rule:#EBEBEE;
     --rule-strong:#DADADE;
     --expense:#F0421F;
@@ -58,10 +58,10 @@
   }
   html[data-theme="dark"]{
     --paper:#0F1013;
-    --surface:rgba(255,255,255,0.09);
-    --surface-2:rgba(255,255,255,0.13);
+    --surface:rgba(28,29,34,0.72);
+    --surface-2:rgba(36,37,43,0.82);
     --ink:#F2F2F4;
-    --ink-soft:#8E9098;
+    --ink-soft:#A9ABB2;
     --rule:#33343B;
     --rule-strong:#45464E;
     --expense:#FF5B42;
@@ -121,7 +121,7 @@
   #betaMonthPrev, #betaMonthNext, .bar-chart, .beta-day-group, .btn-cancel, .chart-block,
   .compact-list, .fab-option-label, .invoice-check, .list-card, .loan-card, .section-toggle-row,
   .settings-icon-btn, .stat, .summary-card, .vc-card, .widget-order-row{
-    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,0.5);
     box-shadow:0 6px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
   }
@@ -136,7 +136,7 @@
   }
   header.ledger-header, nav.tabs, .hero-card, .settings-panel, .confirm-card, .fab-speed-dial .fab-option,
   .beta-month-nav, #betaBalanceBar, .sub-nav-row, .beta-filter-chip, .year-chip, .car-chip, .range-chip{
-    backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;
+    backdrop-filter:blur(14px) !important;-webkit-backdrop-filter:blur(14px) !important;
     border:1px solid rgba(255,255,255,0.5) !important;
   }
   html[data-theme="dark"] header.ledger-header, html[data-theme="dark"] nav.tabs, html[data-theme="dark"] .hero-card,
@@ -5242,6 +5242,9 @@ var nativeStorage = {
     ]},
     { version:105, date:'21.09.2026, 15:36 Uhr', items:[
       'Großer Design-Umbau: "Liquid Glass"-Optik über die ganze App - durchscheinende, mattierte Karten mit Blur-Effekt und Lichtrand über einem Grau-Verlauf-Hintergrund mit weichen Farbflecken, sowohl im Hell- als auch im Dunkelmodus. Betrifft Header, Tab-Leiste, Hero-Karten, Listen, Buttons und Einstellungen-Fenster gleichermaßen'
+    ]},
+    { version:106, date:'21.09.2026, 15:47 Uhr', items:[
+      'Liquid Glass: Kontraste verbessert - Karten sind jetzt deutlich blickdichter (weniger durchsichtig), Blur-Stärke reduziert, graue Texte etwas dunkler (hell) bzw. heller (dunkel) für bessere Lesbarkeit'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
