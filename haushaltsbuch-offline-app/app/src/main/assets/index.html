@@ -371,7 +371,7 @@
   .compact-list-row .compact-amount.income{color:var(--savings);}
   .compact-list-row .compact-amount.expense{color:var(--ink);}
   .compact-list-row .compact-actions{display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;width:100%;max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
-  .compact-list-row.expanded .compact-actions{max-height:60px;opacity:1;margin-top:10px;}
+  .compact-list-row.expanded .compact-actions{max-height:78px;opacity:1;margin-top:10px;}
   .compact-group-header{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--paper);}
   .car-chip{display:inline-flex;align-items:center;gap:7px;background:var(--paper);color:var(--ink-soft);font-size:13px;font-weight:700;padding:10px 16px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;flex-shrink:0;transition:background .15s ease, color .15s ease, box-shadow .15s ease;}
   .car-chip svg{opacity:0.7;flex-shrink:0;}
@@ -392,11 +392,12 @@
   .vc-buffer.neg{color:var(--expense) !important;}
   .vc-actions{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:0;flex-wrap:wrap;max-height:0;overflow:hidden;opacity:0;transition:max-height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .vc-card.expanded > .vc-actions,
-  .loan-card.expanded > .vc-actions{max-height:72px;opacity:1;margin-top:14px;}
+  .loan-card.expanded > .vc-actions{max-height:82px;opacity:1;margin-top:14px;}
   .loan-history-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .25s ease, margin-top .25s ease;margin-top:0;}
   .loan-card.expanded .loan-history-wrap{max-height:1000px;opacity:1;margin-top:6px;}
   .vc-card, .loan-card{cursor:pointer;}
-  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+  .action-icon-btn::after{content:attr(aria-label);position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;font-size:9.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;pointer-events:none;}
   .action-icon-btn.danger{color:var(--expense);background:var(--expense-soft);}
   .action-icon-btn.neutral{color:var(--ink-soft);background:var(--paper);}
   .action-icon-btn.gold{color:var(--gold);background:var(--gold-soft);}
@@ -3245,11 +3246,11 @@ var nativeStorage = {
                   '<div class="loan-sub" style="margin-top:6px;"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
                   '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
-                    '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Bearbeiten</span></span>'+
-                    '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Schulden erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Erhöhen</span></span>'+
-                    '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Rate buchen</span></span>'+
-                    (loan.monthlyRate ? '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Abgleichen</span></span>' : '')+
-                    '<span style="display:flex;flex-direction:column;align-items:center;gap:3px;"><button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button><span style="font-size:10px;color:var(--ink-soft);">Löschen</span></span>'+
+                    '<button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
+                    '<button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>'+
+                    '<button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'+
+                    (loan.monthlyRate ? '<button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button>' : '')+
+                    '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
                   '</div>'+
                   renderLoanHistory(loan.id)+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
@@ -5441,6 +5442,9 @@ var nativeStorage = {
     ]},
     { version:121, date:'21.09.2026, 23:13 Uhr', items:[
       'Kontostand: Filter-Chips ("Alle"/"Nicht abgeglichen") hatten versehentlich einen extra Rahmen vom Liquid-Glass-Umbau, den die Chips bei Buchungen nicht hatten - jetzt wieder identisch'
+    ]},
+    { version:122, date:'21.09.2026, 23:17 Uhr', items:[
+      'Alle Bearbeiten/Löschen/Sonstiges-Icon-Buttons in der ganzen App zeigen jetzt automatisch eine kleine Beschriftung darunter (wie bisher schon bei Kredite) - betrifft Einnahmen, Fixkosten, Rechnungen, Variable Kosten, Buchungen, Spartopf, Tanken und mehr'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
