@@ -5183,6 +5183,9 @@ var nativeStorage = {
     ]},
     { version:102, date:'21.09.2026, 12:02 Uhr', items:[
       'Einstellungen: CSV-Import, Dauerauftrag-Vorlagen und Titel-Vorschläge für Kontostand haben jetzt einen eigenen Menüpunkt "Kontostand", statt unter Backup zu stehen'
+    ]},
+    { version:103, date:'21.09.2026, 12:05 Uhr', items:[
+      'Kontostand: Eine Vorlage aus den Dauerauftrag-Vorlagen zu entfernen löscht nicht mehr den zugrundeliegenden Eintrag - er bleibt als normale Buchung erhalten, nur die Wiederholung wird gestoppt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5590,8 +5593,11 @@ var nativeStorage = {
       if(!btn) return;
       var tpl = state.betaEntries.filter(function(x){ return x.id === btn.dataset.id; })[0];
       if(!tpl) return;
-      if(!await confirmDialog('"'+tpl.title+'" wirklich löschen? Bereits erzeugte Folgebuchungen bleiben erhalten, es werden aber keine neuen mehr angelegt.')) return;
-      state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== tpl.id; });
+      if(!await confirmDialog('"'+tpl.title+'" wirklich aus den Vorlagen entfernen? Der Eintrag selbst und bereits erzeugte Folgebuchungen bleiben erhalten, es werden nur keine neuen mehr angelegt.', {icon:'🔁', confirmLabel:'Entfernen'})) return;
+      delete tpl.isRecurringTemplate;
+      delete tpl.recurrencePeriod;
+      delete tpl.recurrenceEnd;
+      tpl.recurring = false;
       saveState();
       renderBetaTemplatesList();
       renderBeta();
@@ -5915,7 +5921,7 @@ var nativeStorage = {
                '</div>'+
                '<div style="color:var(--ink-soft);font-size:12.5px;margin-bottom:8px;">'+(periodLabels[t.recurrencePeriod]||'Jeden Monat')+(t.recurrenceEnd?(' · bis '+t.recurrenceEnd.split('-').reverse().join('.')):'')+'</div>'+
                '<div class="vc-actions">'+
-                 '<button class="action-icon-btn danger" data-action="delete-beta-template" data-id="'+t.id+'" aria-label="Vorlage löschen" title="Vorlage löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
+                 '<button class="action-icon-btn danger" data-action="delete-beta-template" data-id="'+t.id+'" aria-label="Aus Vorlagen entfernen" title="Aus Vorlagen entfernen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
                '</div>'+
              '</div>';
     }).join('');
