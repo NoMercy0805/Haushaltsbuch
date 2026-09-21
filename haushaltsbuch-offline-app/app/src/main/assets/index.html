@@ -157,7 +157,7 @@
     transition:transform .2s ease, opacity .2s ease;
     box-shadow:0 4px 16px rgba(0,0,0,0.12),0 1px 4px rgba(0,0,0,0.08);}
   nav.tabs.keyboard-hidden{transform:translateY(140%);opacity:0;pointer-events:none;}
-  nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;background:none;border:none;border-radius:20px;font-family:var(--serif);font-weight:700;font-size:10.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;border-bottom:none;transition:background .15s,color .15s;}
+  nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;background:none;border:none;border-radius:20px;font-family:var(--serif);font-weight:700;font-size:10.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;border-bottom:none;transition:background .15s,color .15s;position:relative;}
   nav.tabs button span{overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   nav.tabs button svg{flex-shrink:0;}
   nav.tabs button.active{color:var(--primary);border-bottom-color:transparent;background:none;box-shadow:none;}
@@ -182,6 +182,12 @@
   .beta-day-header .beta-day-title{font-size:14px;font-weight:800;color:var(--ink);}
   .beta-day-header .beta-day-total{font-size:15px;font-weight:800;}
   .beta-entry-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid var(--rule);}
+  .beta-entry-row.beta-unreconciled{background:var(--gold-soft);border-left:3px solid var(--gold);padding-left:13px;}
+  .beta-filter-chip{background:var(--surface);color:var(--ink-soft);border:none;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;font-family:var(--sans);cursor:pointer;}
+  .beta-filter-chip.active{background:var(--surface);color:var(--expense);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+  .beta-filter-chip[data-filter="all"].active{color:var(--ink);}
+  .tab-badge{position:absolute;top:2px;right:calc(50% - 20px);background:var(--expense);color:#fff;font-size:9.5px;font-weight:800;border-radius:50%;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 2px;}
+  nav.tabs button[data-tab="beta"]{overflow:visible;}
   .beta-entry-icon{width:22px;height:22px;border-radius:50%;border:2px solid var(--rule-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;background:none;padding:0;cursor:pointer;}
   .beta-entry-icon.reconciled{background:var(--ink-soft);border-color:var(--ink-soft);}
   .beta-entry-name-wrap{flex:1;min-width:0;overflow:hidden;}
@@ -537,6 +543,7 @@
     <nav class="tabs">
       <button data-tab="beta" class="tab active" aria-label="Kontostand">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="6" cy="18" rx="4" ry="1.6"/><path d="M2 18v-3"/><path d="M10 18v-3"/><ellipse cx="6" cy="15" rx="4" ry="1.6"/><ellipse cx="13" cy="20" rx="4" ry="1.6"/><path d="M9 20v-4"/><path d="M17 20v-4"/><ellipse cx="13" cy="16" rx="4" ry="1.6"/><ellipse cx="19" cy="17" rx="4" ry="1.6"/><path d="M15 17v-5"/><path d="M23 17v-5"/><ellipse cx="19" cy="12" rx="4" ry="1.6"/></svg>
+        <span id="betaTabBadge" class="tab-badge" style="display:none;"></span>
         <span>Kontostand</span>
       </button>
       <button data-tab="buchungen" class="tab">
@@ -733,6 +740,7 @@
           <button type="button" id="betaMonthNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
 
+        <div id="betaFilterRow" style="display:flex;gap:8px;margin-bottom:14px;"></div>
         <div id="betaList"></div>
       </section>
 
@@ -5081,6 +5089,9 @@ var nativeStorage = {
     ]},
     { version:85, date:'20.09.2026, 23:20 Uhr', items:[
       'Kontostand-Widget: Höhe manuell per Ziehen anpassbar (vorher nur Breite) - Android-Launcher binden die Höhe oft an eine feste Raster-Zeile, die sich über minHeight allein nicht unterschreiten lässt'
+    ]},
+    { version:86, date:'21.09.2026, 08:32 Uhr', items:[
+      'Kontostand: nicht abgeglichene Einträge sind jetzt gelb hervorgehoben, neue Filter-Chips "Alle"/"Nicht abgeglichen" oben in der Liste, sowie ein roter Zähl-Punkt am Kontostand-Symbol in der Tab-Leiste (zählt über alle Monate hinweg)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5200,6 +5211,7 @@ var nativeStorage = {
   var betaViewYear = new Date().getFullYear();
   var editingBetaId = null;
   var betaKnownTitles = [];
+  var betaFilterMode = 'all'; // 'all' oder 'unreconciled'
   var editingBetaScope = 'this'; // 'this' oder 'following'
 
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
@@ -5214,6 +5226,24 @@ var nativeStorage = {
       return d.getMonth() === betaViewMonth && d.getFullYear() === betaViewYear;
     });
 
+    var unreconciledInMonth = entries.filter(function(e){ return !e.reconciled; }).length;
+    if(betaFilterMode === 'unreconciled'){
+      entries = entries.filter(function(e){ return !e.reconciled; });
+    }
+
+    document.getElementById('betaFilterRow').innerHTML =
+      '<button type="button" class="beta-filter-chip'+(betaFilterMode==='all'?' active':'')+'" data-filter="all">Alle</button>'+
+      '<button type="button" class="beta-filter-chip'+(betaFilterMode==='unreconciled'?' active':'')+'" data-filter="unreconciled">Nicht abgeglichen ('+unreconciledInMonth+')</button>';
+
+    var totalUnreconciled = state.betaEntries.filter(function(e){ return !e.reconciled; }).length;
+    var badge = document.getElementById('betaTabBadge');
+    if(totalUnreconciled > 0){
+      badge.textContent = totalUnreconciled > 99 ? '99+' : totalUnreconciled;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+
     var dayGroups = {};
     var dayOrder = [];
     entries.forEach(function(e){
@@ -5224,7 +5254,7 @@ var nativeStorage = {
 
     var listEl = document.getElementById('betaList');
     if(dayOrder.length === 0){
-      listEl.innerHTML = '<div class="empty-state">Noch keine Einträge in diesem Monat.</div>';
+      listEl.innerHTML = '<div class="empty-state">'+(betaFilterMode==='unreconciled'?'Alles in diesem Monat ist abgeglichen.':'Noch keine Einträge in diesem Monat.')+'</div>';
     } else {
       var html = '';
       dayOrder.forEach(function(dateKey){
@@ -5238,7 +5268,7 @@ var nativeStorage = {
                   '</div>';
         dayEntries.forEach(function(e){
           var sign = betaTypeSign(e.type);
-          html += '<div class="beta-entry-row" data-id="'+e.id+'">'+
+          html += '<div class="beta-entry-row'+(e.reconciled?'':' beta-unreconciled')+'" data-id="'+e.id+'">'+
                     '<button type="button" class="beta-entry-icon'+(e.reconciled?' reconciled':'')+'" data-action="toggle-reconciled" data-id="'+e.id+'" aria-label="Abgleichen">'+(e.reconciled?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>'+
                     '<span class="beta-entry-name-wrap">'+
                       '<span class="beta-entry-name">'+escapeHtml(e.title)+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+'</span>'+
@@ -5455,6 +5485,12 @@ var nativeStorage = {
     generateBetaRecurringOccurrences();
 
     document.getElementById('betaMonthPrev').addEventListener('click', function(){ switchBetaMonth(-1); });
+    document.getElementById('betaFilterRow').addEventListener('click', function(e){
+      var btn = e.target.closest('[data-filter]');
+      if(!btn) return;
+      betaFilterMode = btn.dataset.filter;
+      renderBeta();
+    });
     document.getElementById('betaMonthNext').addEventListener('click', function(){ switchBetaMonth(1); });
 
     document.getElementById('betaMonthLabel').addEventListener('click', openBetaMonthPicker);
