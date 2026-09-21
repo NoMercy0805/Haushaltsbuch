@@ -396,7 +396,9 @@
   .loan-history-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .25s ease, margin-top .25s ease;margin-top:0;}
   .loan-card.expanded .loan-history-wrap{max-height:1000px;opacity:1;margin-top:6px;}
   .vc-card, .loan-card{cursor:pointer;}
-  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .action-icon-btn-wrap{display:inline-flex;flex-direction:column;align-items:center;gap:3px;}
+  .action-icon-btn-label{font-size:9.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;}
   .action-icon-btn::after{content:attr(aria-label);position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;font-size:9.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;pointer-events:none;}
   .action-icon-btn.danger{color:var(--expense);background:var(--expense-soft);}
   .action-icon-btn.neutral{color:var(--ink-soft);background:var(--paper);}
@@ -1721,6 +1723,45 @@ var nativeStorage = {
   // (z.B. 0.1+0.2 !== 0.3) - wichtig bei wiederholten Restschuld-Berechnungen.
   function roundCents(value){ return Math.round((value + Number.EPSILON) * 100) / 100; }
   function escapeHtml(s){ var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  // Umwickelt jeden .action-icon-btn im DOM mit einer kleinen Beschriftung
+  // darunter (aus dem vorhandenen aria-label). Laeuft ueber einen
+  // MutationObserver, damit es unabhaengig davon funktioniert, welche
+  // render-Funktion den Button gerade erzeugt hat - kein einzelnes Anfassen
+  // jedes Buttons noetig.
+  function labelActionIconButtons(root){
+    (root || document).querySelectorAll('.action-icon-btn').forEach(function(btn){
+      if(btn.parentElement && btn.parentElement.classList.contains('action-icon-btn-wrap')) return;
+      var label = btn.getAttribute('aria-label') || '';
+      if(!label) return;
+      var wrap = document.createElement('span');
+      wrap.className = 'action-icon-btn-wrap';
+      btn.parentNode.insertBefore(wrap, btn);
+      wrap.appendChild(btn);
+      var labelEl = document.createElement('span');
+      labelEl.className = 'action-icon-btn-label';
+      labelEl.textContent = label;
+      wrap.appendChild(labelEl);
+    });
+  }
+  function setupActionIconButtonLabels(){
+    var appRoot = document.getElementById('app');
+    if(!appRoot) return;
+    labelActionIconButtons(appRoot);
+    var observer = new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        m.addedNodes.forEach(function(node){
+          if(node.nodeType !== 1) return;
+          if(node.classList && node.classList.contains('action-icon-btn') && (!node.parentElement || !node.parentElement.classList.contains('action-icon-btn-wrap'))){
+            labelActionIconButtons(node.parentNode);
+          } else if(node.querySelector){
+            labelActionIconButtons(node);
+          }
+        });
+      });
+    });
+    observer.observe(appRoot, {childList:true, subtree:true});
+  }
 
   // Erzeugt ein CSS conic-gradient aus Segmenten [{color, value}] fuer ein Kreisdiagramm
   function buildConicGradient(segments){
@@ -3842,6 +3883,7 @@ var nativeStorage = {
     setupTabVisibilityToggles();
     setupOverviewWidgetToggles();
     setupSettingsNavigation();
+    setupActionIconButtonLabels();
     applyTabVisibility();
     var initialActiveBtn = document.querySelector('nav.tabs button.active');
     if(initialActiveBtn) switchToTab(initialActiveBtn.dataset.tab);
@@ -5445,6 +5487,9 @@ var nativeStorage = {
     ]},
     { version:122, date:'21.09.2026, 23:17 Uhr', items:[
       'Alle Bearbeiten/Löschen/Sonstiges-Icon-Buttons in der ganzen App zeigen jetzt automatisch eine kleine Beschriftung darunter (wie bisher schon bei Kredite) - betrifft Einnahmen, Fixkosten, Rechnungen, Variable Kosten, Buchungen, Spartopf, Tanken und mehr'
+    ]},
+    { version:123, date:'21.09.2026, 23:22 Uhr', items:[
+      'Fix: Die automatischen Button-Beschriftungen aus Version 122 haben in der App gar nicht funktioniert (CSS-Ansatz wurde von der WebView nicht unterstützt) - jetzt über eine zuverlässigere Methode direkt im Code umgesetzt, betrifft wieder alle Icon-Buttons in der ganzen App inkl. Kredite'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
