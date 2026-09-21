@@ -178,11 +178,11 @@
   #betaMonthPrev, #betaMonthNext{background:var(--surface);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0;}
   .beta-month-label{display:flex;gap:6px;align-items:baseline;justify-content:center;flex:1;min-width:0;overflow:hidden;}
   .beta-day-group{background:var(--surface);border-radius:var(--radius);margin-bottom:3px;overflow:hidden;}
-  .beta-day-header{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);}
-  .beta-day-box{width:24px;height:24px;border-radius:6px;border:1.3px solid var(--rule-strong);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ink);flex-shrink:0;}
+  .beta-day-header{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--hero-blue-grad);}
+  .beta-day-box{width:24px;height:24px;border-radius:6px;border:1.3px solid var(--hero-blue-text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--hero-blue-text);flex-shrink:0;}
   .beta-day-header .beta-day-text{flex:1;min-width:0;}
-  .beta-day-header .beta-day-title{font-size:9.5px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:0.02em;}
-  .beta-day-header .beta-day-sub{font-size:9px;color:var(--ink-soft);}
+  .beta-day-header .beta-day-title{font-size:9.5px;font-weight:800;color:var(--hero-blue-text);text-transform:uppercase;letter-spacing:0.02em;}
+  .beta-day-header .beta-day-sub{font-size:9px;color:var(--hero-blue-sub);}
   .beta-day-header .beta-day-total{font-size:12px;font-weight:800;}
   .beta-entry-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--rule);}
   .beta-filter-chip{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:none;border-radius:11px;padding:11px 8px;font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;transition:background .15s ease, color .15s ease;}
@@ -5139,7 +5139,7 @@ var nativeStorage = {
       'Kontostand: Tagessaldo-Kopfzeile verschmilzt jetzt mit den Einträgen darunter (kein grauer Hintergrund mehr dazwischen) und ist deutlich kleiner, die einzelnen Einträge dafür minimal größer'
     ]},
     { version:97, date:'21.09.2026, 10:25 Uhr', items:[
-      'Kontostand: Tagessaldo-Betrag jetzt im App-Blau statt Rot/Grün je nach Vorzeichen'
+      'Kontostand: Hintergrund der Tagessaldo-Kopfzeile jetzt im App-Blau, damit man einen neuen Tag sofort erkennt (Beträge zeigen weiterhin Rot/Grün je nach Vorzeichen)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5307,7 +5307,7 @@ var nativeStorage = {
                       '<div class="beta-day-title">Tagessaldo</div>'+
                       '<div class="beta-day-sub">'+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear()+' ('+WEEKDAY_NAMES[d.getDay()]+')</div>'+
                     '</span>'+
-                    '<span class="beta-day-total" style="color:var(--hero-blue-text);">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
+                    '<span class="beta-day-total" style="color:'+(dayTotal>=0?'var(--savings)':'var(--expense)')+';">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
                   '</div>';
         dayEntries.forEach(function(e){
           var sign = betaTypeSign(e.type);
