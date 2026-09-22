@@ -1724,45 +1724,6 @@ var nativeStorage = {
   function roundCents(value){ return Math.round((value + Number.EPSILON) * 100) / 100; }
   function escapeHtml(s){ var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-  // Umwickelt jeden .action-icon-btn im DOM mit einer kleinen Beschriftung
-  // darunter (aus dem vorhandenen aria-label). Laeuft ueber einen
-  // MutationObserver, damit es unabhaengig davon funktioniert, welche
-  // render-Funktion den Button gerade erzeugt hat - kein einzelnes Anfassen
-  // jedes Buttons noetig.
-  function labelActionIconButtons(root){
-    (root || document).querySelectorAll('.action-icon-btn').forEach(function(btn){
-      if(btn.parentElement && btn.parentElement.classList.contains('action-icon-btn-wrap')) return;
-      var label = btn.getAttribute('aria-label') || '';
-      if(!label) return;
-      var wrap = document.createElement('span');
-      wrap.className = 'action-icon-btn-wrap';
-      btn.parentNode.insertBefore(wrap, btn);
-      wrap.appendChild(btn);
-      var labelEl = document.createElement('span');
-      labelEl.className = 'action-icon-btn-label';
-      labelEl.textContent = label;
-      wrap.appendChild(labelEl);
-    });
-  }
-  function setupActionIconButtonLabels(){
-    var appRoot = document.getElementById('app');
-    if(!appRoot) return;
-    labelActionIconButtons(appRoot);
-    var observer = new MutationObserver(function(mutations){
-      mutations.forEach(function(m){
-        m.addedNodes.forEach(function(node){
-          if(node.nodeType !== 1) return;
-          if(node.classList && node.classList.contains('action-icon-btn') && (!node.parentElement || !node.parentElement.classList.contains('action-icon-btn-wrap'))){
-            labelActionIconButtons(node.parentNode);
-          } else if(node.querySelector){
-            labelActionIconButtons(node);
-          }
-        });
-      });
-    });
-    observer.observe(appRoot, {childList:true, subtree:true});
-  }
-
   // Erzeugt ein CSS conic-gradient aus Segmenten [{color, value}] fuer ein Kreisdiagramm
   function buildConicGradient(segments){
     var total = segments.reduce(function(a,s){ return a+s.value; }, 0);
@@ -3287,11 +3248,11 @@ var nativeStorage = {
                   '<div class="loan-sub" style="margin-top:6px;"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
                   '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
-                    '<button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'+
-                    '<button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>'+
-                    '<button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'+
-                    (loan.monthlyRate ? '<button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button>' : '')+
-                    '<button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'+
+                    '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span class="action-icon-btn-label">Bearbeiten</span></span>'+
+                    '<span class="action-icon-btn-wrap"><button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><span class="action-icon-btn-label">Erhöhen</span></span>'+
+                    '<span class="action-icon-btn-wrap"><button class="action-icon-btn" data-action="pay-loan" data-id="'+loan.id+'" aria-label="Rate buchen" title="Rate buchen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button><span class="action-icon-btn-label">Rate buchen</span></span>'+
+                    (loan.monthlyRate ? '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button><span class="action-icon-btn-label">Abgleichen</span></span>' : '')+
+                    '<span class="action-icon-btn-wrap"><button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button><span class="action-icon-btn-label">Löschen</span></span>'+
                   '</div>'+
                   renderLoanHistory(loan.id)+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
@@ -3883,7 +3844,6 @@ var nativeStorage = {
     setupTabVisibilityToggles();
     setupOverviewWidgetToggles();
     setupSettingsNavigation();
-    setupActionIconButtonLabels();
     applyTabVisibility();
     var initialActiveBtn = document.querySelector('nav.tabs button.active');
     if(initialActiveBtn) switchToTab(initialActiveBtn.dataset.tab);
@@ -5524,6 +5484,9 @@ var nativeStorage = {
     ]},
     { version:130, date:'22.09.2026, 12:39 Uhr', items:[
       'Kredite: Entfernst du "Gesamtbetrag inkl. Zinsen" bei einem Kredit wieder, wird die Restschuld jetzt automatisch neu und rein linear aus der kompletten Zahlungshistorie berechnet - dadurch verschwinden Reste einer vorherigen zinsbewussten Berechnung automatisch, ohne dass du selbst nachrechnen musst'
+    ]},
+    { version:131, date:'22.09.2026, 12:43 Uhr', items:[
+      'Wichtiger Fix: Die automatische Button-Beschriftung aus Version 122/123 hat dazu geführt, dass eingeklappte, eigentlich unsichtbare Beschriftungen als graue Textreste zwischen den Karten durchschimmerten (betraf Kredite, Variable Kosten und weitere Bereiche) - komplett zurückgenommen. Kredite behält seine Beschriftungen über einen anderen, bewährten Weg, alle anderen Bereiche haben vorerst wieder unbeschriftete Icons'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
