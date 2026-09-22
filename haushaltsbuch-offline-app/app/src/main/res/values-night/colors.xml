@@ -10,4 +10,6 @@
     <color name="widget_text">#F2F2F4</color>
     <color name="widget_toggle_bg">#5B9CFF</color>
     <color name="widget_toggle_soft">#1B2A4A</color>
+    <color name="widget_cover_bg">#3A3B42</color>
+    <color name="widget_cover_dots">#A9ABB2</color>
 </resources>

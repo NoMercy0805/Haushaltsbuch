@@ -66,5 +66,9 @@
                 android:resource="@xml/beta_widget_info_5x1" />
         </receiver>
 
+        <receiver
+            android:name=".HaushaltsbuchBetaWidgetReceiver"
+            android:exported="false" />
+
     </application>
 </manifest>
