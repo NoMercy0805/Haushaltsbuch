@@ -108,8 +108,8 @@
   .vc-card:active, .loan-card:active, .fristen-card:active, .time-card:active, .set-item:active{transform:scale(0.985);}
   input, select, textarea{scroll-margin-bottom:24px;}
   html,body{margin:0;padding:0;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
-  body{background:linear-gradient(150deg,#F3F4F6 0%,#E5E7EB 40%,#D1D5DB 70%,#C4CAD3 100%);color:var(--ink);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative;}
-  html[data-theme="dark"] body{background:linear-gradient(150deg,#1F2226 0%,#2C3038 40%,#3A3F48 70%,#484F5A 100%);}
+  body{background:#C4CAD3;color:var(--ink);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative;}
+  html[data-theme="dark"] body{background:#484F5A;}
   body::before, body::after{content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
   body::before{top:-80px;left:-60px;width:280px;height:280px;background:rgba(255,255,255,0.5);filter:blur(60px);}
   body::after{bottom:60px;right:-70px;width:300px;height:300px;background:#9CA3AF;opacity:0.3;filter:blur(70px);}
@@ -5492,6 +5492,9 @@ var nativeStorage = {
     ]},
     { version:133, date:'22.09.2026, 12:57 Uhr', items:[
       'Alle Icon-Buttons in der ganzen App (Einnahmen, Fixkosten, Rechnungen, Variable Kosten, Buchungen, Spartopf, Tanken, abbezahlte Kredite) haben jetzt Beschriftungen wie bisher schon bei Kredite - diesmal direkt und fest im Code statt automatisch, damit kein Gekritzel-Problem mehr auftreten kann'
+    ]},
+    { version:134, date:'22.09.2026, 15:36 Uhr', items:[
+      'Hintergrund war ein diagonaler Verlauf (oben hell, unten dunkler) - jetzt überall einheitlich im dunkleren Ton, wie er vorher nur unten sichtbar war'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
