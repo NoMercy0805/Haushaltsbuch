@@ -11,6 +11,6 @@
     <color name="widget_text">#191A1C</color>
     <color name="widget_toggle_bg">#1268FF</color>
     <color name="widget_toggle_soft">#D9E7FF</color>
-    <color name="widget_cover_bg">#D8DADE</color>
-    <color name="widget_cover_dots">#8B8D91</color>
+    <color name="widget_cover_bg">@color/widget_toggle_soft</color>
+    <color name="widget_cover_dots">@color/widget_toggle_bg</color>
 </resources>
