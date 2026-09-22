@@ -16,6 +16,7 @@
     --paper:#F2F2F5;
     --surface:rgba(255,255,255,0.78);
     --surface-2:rgba(255,255,255,0.88);
+    --surface-solid:rgba(255,255,255,0.97);
     --ink:#191A1C;
     --ink-soft:#6E7074;
     --rule:#EBEBEE;
@@ -60,6 +61,7 @@
     --paper:#0F1013;
     --surface:rgba(28,29,34,0.72);
     --surface-2:rgba(36,37,43,0.82);
+    --surface-solid:rgba(30,31,36,0.97);
     --ink:#F2F2F4;
     --ink-soft:#A9ABB2;
     --rule:#33343B;
@@ -1048,7 +1050,7 @@
         </div>
         <div class="full" style="position:relative;">
           <input type="text" id="betaTitleInput" placeholder="Titel" style="width:100%;box-sizing:border-box;" required autocomplete="off">
-          <div id="betaTitleSuggestionsBox" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:20;overflow:hidden;"></div>
+          <div id="betaTitleSuggestionsBox" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface-solid);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:20;overflow:hidden;"></div>
         </div>
         <div class="full" id="betaDateLabelWrap" style="font-size:12px;color:var(--ink-soft);margin:2px 0 -8px;">Datum</div>
         <input type="date" id="betaDateInput" class="full" required>
@@ -5504,6 +5506,9 @@ var nativeStorage = {
     ]},
     { version:137, date:'22.09.2026, 21:26 Uhr', items:[
       'Kontostand-Widget: Punkte-Abdeckung hat jetzt auch den blauen Rand, passend zum +/- Button'
+    ]},
+    { version:138, date:'22.09.2026, 21:32 Uhr', items:[
+      'Kontostand: Titel-Vorschläge beim Eintippen (das Dropdown unter dem Titel-Feld) sind jetzt deutlich blickdichter, statt der durchsichtigen Glas-Oberfläche - dadurch in Hell- und Dunkelmodus besser lesbar'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
