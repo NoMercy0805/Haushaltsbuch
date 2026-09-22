@@ -4487,6 +4487,7 @@ var nativeStorage = {
         var termMonths = termMonthsRaw ? parseInt(termMonthsRaw, 10) : NaN;
         if(loan && name && !isNaN(monthly)){
           loan.name = name;
+          var hadInterestBefore = !!loan.totalWithInterest;
           var newOriginal = isNaN(original) ? 0 : original;
           // Aendert sich die Kreditsumme, verschiebt sich die Restschuld um den gleichen Betrag,
           // damit der bereits gezahlte Anteil (Kreditsumme minus Restschuld) unveraendert bleibt.
@@ -4497,6 +4498,15 @@ var nativeStorage = {
           loan.totalTermMonths = (!isNaN(termMonths) && termMonths > 0) ? termMonths : null;
           loan.totalWithInterest = isNaN(totalWithInterestRaw) ? null : totalWithInterestRaw;
           loan.monthlyRate = loan.totalWithInterest ? solveLoanMonthlyRate(loan.originalAmount, loan.monthlyPayment, loan.totalWithInterest) : null;
+          if(hadInterestBefore && !loan.totalWithInterest){
+            // Zinsverfolgung wurde entfernt - Restschuld neu rein linear aus
+            // der kompletten Zahlungshistorie berechnen, damit keine Reste
+            // der vorherigen zinsbewussten Berechnung zurueckbleiben.
+            var loanHistory = state.loanPayments.filter(function(p){ return p.loanId === loan.id; });
+            var paidSum = loanHistory.filter(function(p){ return p.type === 'payment'; }).reduce(function(s,p){ return s+p.amount; }, 0);
+            var increaseSum = loanHistory.filter(function(p){ return p.type === 'increase'; }).reduce(function(s,p){ return s+p.amount; }, 0);
+            loan.remainingBalance = roundCents(Math.max(0, loan.originalAmount - paidSum + increaseSum));
+          }
         }
         editing.loan = null; saveState(); renderAll();
       } else if(action === 'pay-loan'){
@@ -5511,6 +5521,9 @@ var nativeStorage = {
     ]},
     { version:129, date:'21.09.2026, 23:55 Uhr', items:[
       'Kontostand-Widget: Neue Größe 5×1 hinzugefügt (nutzt dasselbe, bereits an die Breite anpassungsfähige 4×1-Layout - der Betrag bekommt dadurch noch mehr Platz)'
+    ]},
+    { version:130, date:'22.09.2026, 12:39 Uhr', items:[
+      'Kredite: Entfernst du "Gesamtbetrag inkl. Zinsen" bei einem Kredit wieder, wird die Restschuld jetzt automatisch neu und rein linear aus der kompletten Zahlungshistorie berechnet - dadurch verschwinden Reste einer vorherigen zinsbewussten Berechnung automatisch, ohne dass du selbst nachrechnen musst'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
