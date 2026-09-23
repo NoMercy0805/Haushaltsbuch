@@ -15,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
-import android.widget.RemoteViews;
 
 /**
  * Zeigt den Kontostand als dauerhafte, farbig eingefaerbte Benachrichtigung
@@ -151,19 +150,10 @@ public class KontostandForegroundService extends Service {
             if (logo != null) builder.setLargeIcon(logo);
         } catch (Exception ignored) {}
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            int stripColor = Color.WHITE;
-            RemoteViews collapsedView = new RemoteViews(getPackageName(), R.layout.notification_kontostand_collapsed);
-            collapsedView.setInt(R.id.notif_accent_strip, "setBackgroundColor", stripColor);
-
-            RemoteViews expandedView = new RemoteViews(getPackageName(), R.layout.notification_kontostand_expanded);
-            expandedView.setInt(R.id.notif_accent_strip, "setBackgroundColor", stripColor);
-            expandedView.setTextViewText(R.id.notif_amount, balanceText);
-
-            builder.setStyle(new Notification.DecoratedCustomViewStyle());
-            builder.setCustomContentView(collapsedView);
-            builder.setCustomBigContentView(expandedView);
-        }
+        String signLabel = isPositive ? "Im Plus" : "Im Minus";
+        builder.setStyle(new Notification.BigTextStyle()
+                .bigText(signLabel)
+                .setBigContentTitle(balanceText));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setColorized(true);
