@@ -62,18 +62,14 @@ public class KontostandNotificationHelper {
             if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
             PendingIntent contentIntent = PendingIntent.getActivity(context, 4711, openIntent, flags);
 
-            String expandedText = (isPositive ? "Im Plus: " : "Im Minus: ") + balanceText;
-            android.text.SpannableString spannableExpanded = new android.text.SpannableString(expandedText);
-            int amountStart = expandedText.length() - balanceText.length();
-            spannableExpanded.setSpan(new android.text.style.RelativeSizeSpan(1.5f),
-                    amountStart, expandedText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableExpanded.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
-                    amountStart, expandedText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            String signLabel = isPositive ? "Im Plus" : "Im Minus";
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification_small)
                     .setContentTitle("Kontostand")
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(spannableExpanded))
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                            .bigText(signLabel)
+                            .setBigContentTitle(balanceText))
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
