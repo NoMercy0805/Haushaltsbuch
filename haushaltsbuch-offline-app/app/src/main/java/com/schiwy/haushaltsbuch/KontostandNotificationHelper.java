@@ -1,6 +1,5 @@
 package com.schiwy.haushaltsbuch;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,16 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 
 /**
  * Zeigt den Kontostand als dauerhafte (ongoing), nicht wegwischbare
- * Benachrichtigung an. Im eingeklappten Zustand ist nur ein kurzer Hinweis
- * sichtbar ("Kontostand"), erst beim Herunterziehen (Expand) erscheint der
- * eigentliche Betrag - dafuer wird der Betrag ausschliesslich ueber den
- * BigTextStyle-Zusatztext gesetzt, der nur in der ausgeklappten Ansicht
- * angezeigt wird, waehrend Titel/Kurztext im eingeklappten Zustand knapp
- * bleiben.
+ * Benachrichtigung an - Design 2 ("Farbiger Akzent"): ein farbiger Rand links
+ * (Rot bei Minus, Gruen bei Plus), eingeklappt nur der Titel "Kontostand",
+ * ausgeklappt zusaetzlich der Betrag als farbige Pille. App-Icon und
+ * App-Name kommen automatisch von Android selbst (DecoratedCustomViewStyle) -
+ * die eigenen Layouts zeigen nur noch die Kontostand-spezifischen Inhalte,
+ * ohne das doppelt zu wiederholen.
  */
 public class KontostandNotificationHelper {
 
@@ -59,13 +59,25 @@ public class KontostandNotificationHelper {
             if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
             PendingIntent contentIntent = PendingIntent.getActivity(context, 4711, openIntent, flags);
 
-            String expandedText = (isPositive ? "Im Plus: " : "Im Minus: ") + balanceText;
+            int accentColor = isPositive
+                    ? context.getResources().getColor(R.color.widget_balance_pos)
+                    : context.getResources().getColor(R.color.widget_balance_neg);
+            int pillDrawable = isPositive ? R.drawable.widget_amount_pill_pos : R.drawable.widget_amount_pill_neg;
+
+            RemoteViews collapsed = new RemoteViews(context.getPackageName(), R.layout.notification_kontostand_collapsed);
+            collapsed.setInt(R.id.notif_accent_strip, "setBackgroundColor", accentColor);
+
+            RemoteViews expanded = new RemoteViews(context.getPackageName(), R.layout.notification_kontostand_expanded);
+            expanded.setInt(R.id.notif_accent_strip, "setBackgroundColor", accentColor);
+            expanded.setTextViewText(R.id.notif_amount, balanceText);
+            expanded.setTextColor(R.id.notif_amount, accentColor);
+            expanded.setInt(R.id.notif_amount, "setBackgroundResource", pillDrawable);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(context.getApplicationInfo().icon)
-                    .setContentTitle("Haushaltsbuch+")
-                    .setContentText("Kontostand")
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(expandedText))
+                    .setCustomContentView(collapsed)
+                    .setCustomBigContentView(expanded)
+                    .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
