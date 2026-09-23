@@ -24,7 +24,7 @@ import androidx.core.app.NotificationCompat;
  */
 public class KontostandNotificationHelper {
 
-    private static final String CHANNEL_ID = "kontostand_balance_channel_v2";
+    private static final String CHANNEL_ID = "kontostand_balance_channel_v3";
     public static final int NOTIFICATION_ID = 4711;
 
     private static void toast(final Context context, final String msg) {
@@ -45,7 +45,7 @@ public class KontostandNotificationHelper {
                 NotificationChannel channel = new NotificationChannel(
                         CHANNEL_ID,
                         "Kontostand",
-                        NotificationManager.IMPORTANCE_LOW);
+                        NotificationManager.IMPORTANCE_DEFAULT);
                 channel.setDescription("Zeigt deinen aktuellen Kontostand dauerhaft an");
                 channel.setShowBadge(false);
                 manager.createNotificationChannel(channel);
@@ -109,7 +109,7 @@ public class KontostandNotificationHelper {
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
                     .setContentIntent(contentIntent)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setCategory(NotificationCompat.CATEGORY_STATUS);
 
             manager.notify(NOTIFICATION_ID, builder.build());
