@@ -5566,6 +5566,9 @@ var nativeStorage = {
     ]},
     { version:153, date:'23.09.2026, 15:02 Uhr', items:[
       'Kontostand-Benachrichtigung: Das ursprünglich geplante Design (weißer Akzent-Rand links + Betrag als halbtransparente weiße Pille) ist jetzt umgesetzt, da der neue Hintergrunddienst custom Layouts zuverlässig rendert'
+    ]},
+    { version:154, date:'23.09.2026, 15:09 Uhr', items:[
+      'Wichtiger Absturz-Fix: Der neue Kontostand-Hintergrunddienst konnte die App zum Abstürzen bringen, wenn Android das Starten aus dem Hintergrund verweigert (z.B. wenn die App gerade nicht aktiv geöffnet ist) - jetzt an mehreren Stellen abgesichert, damit sowas nie mehr zu einem Absturz führt, sondern die Aktualisierung höchstens einmal ausfällt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;

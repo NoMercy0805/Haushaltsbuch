@@ -157,13 +157,21 @@ public class WebAppInterface {
     }
 
     private void startOrUpdateKontostandService(String balanceText, boolean isPositive) {
-        android.content.Intent intent = new android.content.Intent(context, KontostandForegroundService.class);
-        intent.putExtra(KontostandForegroundService.EXTRA_BALANCE_TEXT, balanceText);
-        intent.putExtra(KontostandForegroundService.EXTRA_IS_POSITIVE, isPositive);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
+        try {
+            android.content.Intent intent = new android.content.Intent(context, KontostandForegroundService.class);
+            intent.putExtra(KontostandForegroundService.EXTRA_BALANCE_TEXT, balanceText);
+            intent.putExtra(KontostandForegroundService.EXTRA_IS_POSITIVE, isPositive);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+        } catch (Exception ignored) {
+            // Android verbietet in manchen Situationen das (Neu-)Starten eines
+            // Foreground Service aus dem Hintergrund heraus und wirft dann eine
+            // Ausnahme (z.B. ForegroundServiceStartNotAllowedException) - das
+            // darf die App niemals zum Absturz bringen, die Aktualisierung
+            // faellt dann einfach fuer diesen einen Aufruf aus.
         }
     }
 

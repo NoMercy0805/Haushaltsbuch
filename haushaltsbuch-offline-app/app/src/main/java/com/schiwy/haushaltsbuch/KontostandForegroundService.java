@@ -52,15 +52,17 @@ public class KontostandForegroundService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        createChannelIfNeeded();
-        registerReceiver(
-                dismissReceiver,
-                new IntentFilter(ACTION_DISMISSED),
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                        ? Context.RECEIVER_NOT_EXPORTED
-                        : 0
-        );
-        receiverRegistered = true;
+        try {
+            createChannelIfNeeded();
+            registerReceiver(
+                    dismissReceiver,
+                    new IntentFilter(ACTION_DISMISSED),
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                            ? Context.RECEIVER_NOT_EXPORTED
+                            : 0
+            );
+            receiverRegistered = true;
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -69,20 +71,48 @@ public class KontostandForegroundService extends Service {
             balanceText = intent.getStringExtra(EXTRA_BALANCE_TEXT);
             isPositive = intent.getBooleanExtra(EXTRA_IS_POSITIVE, true);
         }
+        Notification notification;
+        try {
+            notification = buildNotification();
+        } catch (Exception e) {
+            // Sicherheitsnetz: startForeground() MUSS in jedem Fall aufgerufen
+            // werden (Android erzwingt das mit Zeitlimit, sonst stuerzt die App
+            // ab) - schlaegt der Aufbau der eigentlichen Benachrichtigung aus
+            // irgendeinem Grund fehl, wird ersatzweise eine ganz einfache
+            // Standard-Benachrichtigung gezeigt, statt die App abstuerzen zu
+            // lassen.
+            notification = buildFallbackNotification();
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, buildNotification(),
+            startForeground(NOTIFICATION_ID, notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         } else {
-            startForeground(NOTIFICATION_ID, buildNotification());
+            startForeground(NOTIFICATION_ID, notification);
         }
         return START_STICKY;
     }
 
-    private void repostNow() {
-        NotificationManager manager = getSystemService(NotificationManager.class);
-        if (manager != null) {
-            manager.notify(NOTIFICATION_ID, buildNotification());
+    private Notification buildFallbackNotification() {
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
         }
+        builder.setContentTitle("Kontostand")
+                .setContentText(balanceText)
+                .setSmallIcon(R.drawable.ic_notification_small)
+                .setOngoing(true);
+        return builder.build();
+    }
+
+    private void repostNow() {
+        try {
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.notify(NOTIFICATION_ID, buildNotification());
+            }
+        } catch (Exception ignored) {}
     }
 
     private Notification buildNotification() {
