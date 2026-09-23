@@ -63,12 +63,17 @@ public class KontostandNotificationHelper {
             PendingIntent contentIntent = PendingIntent.getActivity(context, 4711, openIntent, flags);
 
             String expandedText = (isPositive ? "Im Plus: " : "Im Minus: ") + balanceText;
+            android.text.SpannableString spannableExpanded = new android.text.SpannableString(expandedText);
+            int amountStart = expandedText.length() - balanceText.length();
+            spannableExpanded.setSpan(new android.text.style.RelativeSizeSpan(1.5f),
+                    amountStart, expandedText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableExpanded.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                    amountStart, expandedText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification_small)
-                    .setContentTitle("Haushaltsbuch+")
-                    .setContentText("Kontostand")
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(expandedText))
+                    .setContentTitle("Kontostand")
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(spannableExpanded))
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
