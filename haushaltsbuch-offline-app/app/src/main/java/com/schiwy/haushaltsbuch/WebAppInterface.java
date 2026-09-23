@@ -94,7 +94,8 @@ public class WebAppInterface {
     // Wird von der Web-App aufgerufen, sobald sich der Kontostand im Beta-Tab
     // aendert (renderBeta) - speichert den fertig formatierten Text fuer das
     // Widget zwischen und stoesst ein sofortiges Neuzeichnen an. Ist die
-    // Kontostand-Benachrichtigung aktiviert, wird sie ebenfalls aktualisiert.
+    // Kontostand-Benachrichtigung aktiviert, wird der laufende Foreground
+    // Service ebenfalls mit dem neuen Betrag aktualisiert.
     @JavascriptInterface
     public void updateBetaWidgetBalance(final String balanceText, final boolean isPositive) {
         try {
@@ -106,16 +107,17 @@ public class WebAppInterface {
                     .apply();
             BetaWidgetProvider.updateAll(context);
             if (isKontostandNotificationEnabled()) {
-                KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
+                startOrUpdateKontostandService(balanceText, isPositive);
             }
         } catch (Exception ignored) {}
     }
 
     // Schaltet die dauerhafte, nicht wegwischbare Kontostand-Benachrichtigung
-    // ein oder aus. Beim Einschalten wird - falls noetig (Android 13+) - die
-    // Benachrichtigungsberechtigung angefragt; die Benachrichtigung selbst
-    // erscheint dann beim naechsten Kontostand-Update (oder sofort, falls
-    // die Berechtigung schon erteilt ist).
+    // ein oder aus (als echter Foreground Service, damit Einfaerbung und das
+    // custom Layout zuverlaessig funktionieren). Beim Einschalten wird -
+    // falls noetig (Android 13+) - die Benachrichtigungsberechtigung
+    // angefragt; der Dienst startet dann sofort (oder sobald die Berechtigung
+    // erteilt wird).
     @JavascriptInterface
     public void setKontostandNotificationEnabled(final boolean enabled) {
         try {
@@ -130,19 +132,19 @@ public class WebAppInterface {
                         if (alreadyGranted) {
                             showKontostandNotificationIfEnabled();
                         }
-                        // Falls die Berechtigung erst noch angefragt wurde, zeigt
-                        // MainActivity.onRequestPermissionsResult die Benachrichtigung
-                        // an, sobald der Nutzer sie erteilt hat.
+                        // Falls die Berechtigung erst noch angefragt wurde, startet
+                        // MainActivity.onRequestPermissionsResult den Dienst, sobald
+                        // der Nutzer sie erteilt hat.
                     }
                 });
             } else {
-                KontostandNotificationHelper.cancel(context);
+                context.stopService(new android.content.Intent(context, KontostandForegroundService.class));
             }
         } catch (Exception ignored) {}
     }
 
-    // Zeigt die Kontostand-Benachrichtigung sofort mit dem zuletzt bekannten
-    // Betrag, falls die Einstellung aktiviert ist. Wird direkt beim
+    // Startet den Kontostand-Foreground-Service sofort mit dem zuletzt
+    // bekannten Betrag, falls die Einstellung aktiviert ist. Wird direkt beim
     // Aktivieren aufgerufen (wenn die Berechtigung schon vorliegt) und von
     // MainActivity nach erteilter Berechtigung erneut aufgerufen.
     public void showKontostandNotificationIfEnabled() {
@@ -151,7 +153,18 @@ public class WebAppInterface {
                 BetaWidgetProvider.PREFS_NAME, android.content.Context.MODE_PRIVATE);
         String balanceText = prefs.getString(BetaWidgetProvider.KEY_BALANCE, "0,00 \u20ac");
         boolean isPositive = prefs.getBoolean(BetaWidgetProvider.KEY_POSITIVE, true);
-        KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
+        startOrUpdateKontostandService(balanceText, isPositive);
+    }
+
+    private void startOrUpdateKontostandService(String balanceText, boolean isPositive) {
+        android.content.Intent intent = new android.content.Intent(context, KontostandForegroundService.class);
+        intent.putExtra(KontostandForegroundService.EXTRA_BALANCE_TEXT, balanceText);
+        intent.putExtra(KontostandForegroundService.EXTRA_IS_POSITIVE, isPositive);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
     }
 
     @JavascriptInterface
