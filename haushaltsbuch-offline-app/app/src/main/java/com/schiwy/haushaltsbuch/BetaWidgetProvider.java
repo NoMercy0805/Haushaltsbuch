@@ -52,6 +52,21 @@ public abstract class BetaWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    // Raeumt den pro-Widget gespeicherten "aufgedeckt"-Zustand auf, sobald
+    // ein Widget vom Homescreen entfernt wird - sonst bliebe dieser kleine
+    // Wert dauerhaft ungenutzt in den SharedPreferences liegen.
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            for (int widgetId : appWidgetIds) {
+                editor.remove(revealedKey(widgetId));
+            }
+            editor.apply();
+        } catch (Exception ignored) {}
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);

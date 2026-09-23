@@ -5585,6 +5585,9 @@ var nativeStorage = {
     ]},
     { version:159, date:'23.09.2026, 16:01 Uhr', items:[
       'Wichtiger Fix: Beim Bearbeiten eines Dauerauftrags mit "Diesen und alle folgenden" und anschließendem Löschen wurde bisher nur der eine Termin entfernt - die Vorlage blieb aktiv und erzeugte im Folgemonat weiterhin neue Buchungen. Jetzt werden korrekt auch alle folgenden Termine entfernt und keine neuen mehr erzeugt, während bereits vergangene Termine der Serie erhalten bleiben'
+    ]},
+    { version:160, date:'23.09.2026, 16:11 Uhr', items:[
+      'Kontostand-Widget: Entfernst du ein Widget vom Homescreen, wird jetzt auch der zugehörige, nicht mehr gebrauchte gespeicherte Zustand (aufgedeckt/verdeckt) aufgeräumt, statt dauerhaft ungenutzt liegen zu bleiben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
