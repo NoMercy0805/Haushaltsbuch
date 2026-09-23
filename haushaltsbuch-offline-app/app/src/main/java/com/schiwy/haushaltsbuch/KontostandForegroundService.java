@@ -159,6 +159,18 @@ public class KontostandForegroundService extends Service {
             builder.setColorized(true);
         }
 
+        Intent addAusgabeIntent = new Intent(this, MainActivity.class);
+        addAusgabeIntent.setAction(Intent.ACTION_MAIN);
+        addAusgabeIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        addAusgabeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        addAusgabeIntent.putExtra(BetaWidgetProvider.EXTRA_BETA_ACTION, BetaWidgetProvider.ACTION_ADD_AUSGABE);
+        PendingIntent addAusgabePending = PendingIntent.getActivity(this, 1, addAusgabeIntent, flags);
+        builder.addAction(new Notification.Action.Builder(
+                android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_notification_small),
+                "+/-",
+                addAusgabePending
+        ).build());
+
         return builder.build();
     }
 
