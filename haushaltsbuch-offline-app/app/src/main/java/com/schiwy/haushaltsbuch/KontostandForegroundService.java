@@ -151,12 +151,13 @@ public class KontostandForegroundService extends Service {
         } catch (Exception ignored) {}
 
         String signLabel = isPositive ? "Im Plus" : "Im Minus";
-        android.text.SpannableString coloredAmount = new android.text.SpannableString(balanceText);
-        coloredAmount.setSpan(new android.text.style.ForegroundColorSpan(Color.parseColor(accentHex)),
-                0, balanceText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         builder.setStyle(new Notification.BigTextStyle()
                 .bigText(signLabel)
-                .setBigContentTitle(coloredAmount));
+                .setBigContentTitle(balanceText));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setColorized(true);
+        }
 
         return builder.build();
     }
