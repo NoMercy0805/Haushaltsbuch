@@ -64,11 +64,17 @@ public class KontostandNotificationHelper {
 
             String expandedText = (isPositive ? "Im Plus: " : "Im Minus: ") + balanceText;
 
+            int accentColor = isPositive
+                    ? context.getResources().getColor(R.color.widget_balance_pos)
+                    : context.getResources().getColor(R.color.widget_balance_neg);
+
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification_small)
                     .setContentTitle("Haushaltsbuch+")
                     .setContentText("Kontostand")
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(expandedText))
+                    .setColor(accentColor)
+                    .setColorized(true)
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
