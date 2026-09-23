@@ -15,23 +15,26 @@ import androidx.core.app.NotificationCompat;
 
 /**
  * Zeigt den Kontostand als dauerhafte (ongoing), nicht wegwischbare
- * Benachrichtigung an - Design 2 ("Farbiger Akzent"): ein farbiger Rand links
- * (Rot bei Minus, Gruen bei Plus), eingeklappt nur der Titel "Kontostand",
- * ausgeklappt zusaetzlich der Betrag als farbige Pille. App-Icon und
- * App-Name kommen automatisch von Android selbst (DecoratedCustomViewStyle) -
- * die eigenen Layouts zeigen nur noch die Kontostand-spezifischen Inhalte,
- * ohne das doppelt zu wiederholen.
+ * Benachrichtigung an - Design 2 ("Farbiger Akzent").
  *
- * CHANNEL_ID traegt ein "_v2"-Suffix: falls ein Nutzer den Kanal waehrend
- * frueherer Tests in den Android-Einstellungen blockiert hat, wuerde ein
- * erneutes Erstellen mit derselben ID die Blockierung NICHT aufheben (das
- * verhindert Android absichtlich) - ein neuer Kanalname startet dagegen
- * wieder mit den Standardeinstellungen (aktiviert).
+ * Enthaelt vorerst sichtbare Diagnose-Meldungen (Toast) an mehreren Stellen,
+ * damit beim naechsten Testlauf auf dem Geraet genau erkennbar ist, an
+ * welcher Stelle es fehlschlaegt - werden entfernt, sobald das Problem
+ * gefunden ist.
  */
 public class KontostandNotificationHelper {
 
     private static final String CHANNEL_ID = "kontostand_balance_channel_v2";
     public static final int NOTIFICATION_ID = 4711;
+
+    private static void toast(final Context context, final String msg) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 
     public static void ensureChannel(Context context) {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -55,26 +58,22 @@ public class KontostandNotificationHelper {
             if (Build.VERSION.SDK_INT >= 33) {
                 if (context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
                         != PackageManager.PERMISSION_GRANTED) {
+                    toast(context, "Diagnose: Keine Benachrichtigungs-Berechtigung erteilt (POST_NOTIFICATIONS fehlt).");
                     return;
                 }
             }
             ensureChannel(context);
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (manager == null) return;
+            if (manager == null) {
+                toast(context, "Diagnose: NotificationManager ist null.");
+                return;
+            }
 
             if (Build.VERSION.SDK_INT >= 26) {
                 NotificationChannel channel = manager.getNotificationChannel(CHANNEL_ID);
                 if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    final Context appContext = context;
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(appContext,
-                                    "Kontostand-Benachrichtigung ist in den Android-Einstellungen blockiert. Bitte in Einstellungen \u2192 Apps \u2192 Haushaltsbuch+ \u2192 Benachrichtigungen \u2192 \"Kontostand\" wieder einschalten.",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    });
+                    toast(context, "Diagnose: Kanal \"Kontostand\" ist in den Android-Einstellungen blockiert (Importance NONE).");
                     return;
                 }
             }
@@ -114,7 +113,10 @@ public class KontostandNotificationHelper {
                     .setCategory(NotificationCompat.CATEGORY_STATUS);
 
             manager.notify(NOTIFICATION_ID, builder.build());
-        } catch (Exception ignored) {}
+            toast(context, "Diagnose: notify() wurde ohne Fehler aufgerufen.");
+        } catch (Exception e) {
+            toast(context, "Diagnose-Fehler: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     public static void cancel(Context context) {
