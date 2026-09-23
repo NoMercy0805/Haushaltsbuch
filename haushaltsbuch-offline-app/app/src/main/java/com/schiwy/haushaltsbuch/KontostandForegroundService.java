@@ -155,10 +155,6 @@ public class KontostandForegroundService extends Service {
                 .bigText(signLabel)
                 .setBigContentTitle(balanceText));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setColorized(true);
-        }
-
         return builder.build();
     }
 
