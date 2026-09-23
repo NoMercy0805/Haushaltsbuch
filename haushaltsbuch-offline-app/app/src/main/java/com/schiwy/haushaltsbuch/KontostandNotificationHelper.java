@@ -7,7 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 /**
@@ -18,10 +21,16 @@ import androidx.core.app.NotificationCompat;
  * App-Name kommen automatisch von Android selbst (DecoratedCustomViewStyle) -
  * die eigenen Layouts zeigen nur noch die Kontostand-spezifischen Inhalte,
  * ohne das doppelt zu wiederholen.
+ *
+ * CHANNEL_ID traegt ein "_v2"-Suffix: falls ein Nutzer den Kanal waehrend
+ * frueherer Tests in den Android-Einstellungen blockiert hat, wuerde ein
+ * erneutes Erstellen mit derselben ID die Blockierung NICHT aufheben (das
+ * verhindert Android absichtlich) - ein neuer Kanalname startet dagegen
+ * wieder mit den Standardeinstellungen (aktiviert).
  */
 public class KontostandNotificationHelper {
 
-    private static final String CHANNEL_ID = "kontostand_balance_channel";
+    private static final String CHANNEL_ID = "kontostand_balance_channel_v2";
     public static final int NOTIFICATION_ID = 4711;
 
     public static void ensureChannel(Context context) {
@@ -50,6 +59,25 @@ public class KontostandNotificationHelper {
                 }
             }
             ensureChannel(context);
+
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager == null) return;
+
+            if (Build.VERSION.SDK_INT >= 26) {
+                NotificationChannel channel = manager.getNotificationChannel(CHANNEL_ID);
+                if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                    final Context appContext = context;
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(appContext,
+                                    "Kontostand-Benachrichtigung ist in den Android-Einstellungen blockiert. Bitte in Einstellungen \u2192 Apps \u2192 Haushaltsbuch+ \u2192 Benachrichtigungen \u2192 \"Kontostand\" wieder einschalten.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    return;
+                }
+            }
 
             Intent openIntent = new Intent(context, MainActivity.class);
             openIntent.setAction(Intent.ACTION_MAIN);
@@ -85,10 +113,7 @@ public class KontostandNotificationHelper {
                     .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setCategory(NotificationCompat.CATEGORY_STATUS);
 
-            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (manager != null) {
-                manager.notify(NOTIFICATION_ID, builder.build());
-            }
+            manager.notify(NOTIFICATION_ID, builder.build());
         } catch (Exception ignored) {}
     }
 

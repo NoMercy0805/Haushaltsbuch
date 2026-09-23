@@ -5533,6 +5533,9 @@ var nativeStorage = {
     ]},
     { version:142, date:'23.09.2026, 09:36 Uhr', items:[
       'Wichtiger Fix: Beim ersten Aktivieren der Kontostand-Benachrichtigung wurde die Anzeige versucht, bevor die Berechtigung überhaupt erteilt war (noch während der Dialog offen war) - sie erschien dadurch erst beim nächsten Kontostand-Update, statt sofort. Jetzt erscheint sie sofort, sobald du die Berechtigung erlaubst'
+    ]},
+    { version:143, date:'23.09.2026, 09:46 Uhr', items:[
+      'Kontostand-Benachrichtigung: Falls der Benachrichtigungs-Kanal durch frühere Tests blockiert wurde, hilft erneutes Erlauben der Berechtigung allein nicht (Android hebt eine Kanal-Blockierung nicht automatisch auf) - der Kanal wird jetzt frisch mit neuem Namen angelegt, dadurch wieder standardmäßig aktiviert. Zusätzlich gibt es jetzt eine Meldung, falls der Kanal doch noch blockiert sein sollte, statt dass einfach nichts passiert'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
