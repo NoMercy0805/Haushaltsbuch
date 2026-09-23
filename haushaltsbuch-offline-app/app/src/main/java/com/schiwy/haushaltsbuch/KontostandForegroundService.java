@@ -122,9 +122,14 @@ public class KontostandForegroundService extends Service {
         } catch (Exception ignored) {}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            int stripColor = Color.WHITE;
             RemoteViews collapsedView = new RemoteViews(getPackageName(), R.layout.notification_kontostand_collapsed);
+            collapsedView.setInt(R.id.notif_accent_strip, "setBackgroundColor", stripColor);
+
             RemoteViews expandedView = new RemoteViews(getPackageName(), R.layout.notification_kontostand_expanded);
+            expandedView.setInt(R.id.notif_accent_strip, "setBackgroundColor", stripColor);
             expandedView.setTextViewText(R.id.notif_amount, balanceText);
+
             builder.setStyle(new Notification.DecoratedCustomViewStyle());
             builder.setCustomContentView(collapsedView);
             builder.setCustomBigContentView(expandedView);
