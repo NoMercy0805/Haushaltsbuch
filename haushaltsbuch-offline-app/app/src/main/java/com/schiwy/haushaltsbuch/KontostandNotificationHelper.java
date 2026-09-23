@@ -7,34 +7,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.widget.RemoteViews;
-import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 /**
  * Zeigt den Kontostand als dauerhafte (ongoing), nicht wegwischbare
- * Benachrichtigung an - Design 2 ("Farbiger Akzent").
- *
- * Enthaelt vorerst sichtbare Diagnose-Meldungen (Toast) an mehreren Stellen,
- * damit beim naechsten Testlauf auf dem Geraet genau erkennbar ist, an
- * welcher Stelle es fehlschlaegt - werden entfernt, sobald das Problem
- * gefunden ist.
+ * Benachrichtigung an. Nutzt bewusst den STANDARD-Benachrichtigungsstil
+ * (BigTextStyle) statt custom RemoteViews-Layouts: Custom Layouts werden im
+ * SystemUI-Prozess gerendert, nicht im eigenen App-Prozess - schlaegt das
+ * dort fehl, kommt in der App selbst KEIN Fehler an (notify() meldet trotzdem
+ * Erfolg), was das Problem unsichtbar und schwer diagnostizierbar macht. Der
+ * Standardstil ist zuverlaessig und wird von jedem Launcher korrekt
+ * gerendert.
  */
 public class KontostandNotificationHelper {
 
-    private static final String CHANNEL_ID = "kontostand_balance_channel_v3";
+    private static final String CHANNEL_ID = "kontostand_balance_channel_v4";
     public static final int NOTIFICATION_ID = 4711;
-
-    private static void toast(final Context context, final String msg) {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-            }
-        });
-    }
 
     public static void ensureChannel(Context context) {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -58,25 +46,13 @@ public class KontostandNotificationHelper {
             if (Build.VERSION.SDK_INT >= 33) {
                 if (context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
                         != PackageManager.PERMISSION_GRANTED) {
-                    toast(context, "Diagnose: Keine Benachrichtigungs-Berechtigung erteilt (POST_NOTIFICATIONS fehlt).");
                     return;
                 }
             }
             ensureChannel(context);
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (manager == null) {
-                toast(context, "Diagnose: NotificationManager ist null.");
-                return;
-            }
-
-            if (Build.VERSION.SDK_INT >= 26) {
-                NotificationChannel channel = manager.getNotificationChannel(CHANNEL_ID);
-                if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    toast(context, "Diagnose: Kanal \"Kontostand\" ist in den Android-Einstellungen blockiert (Importance NONE).");
-                    return;
-                }
-            }
+            if (manager == null) return;
 
             Intent openIntent = new Intent(context, MainActivity.class);
             openIntent.setAction(Intent.ACTION_MAIN);
@@ -86,25 +62,13 @@ public class KontostandNotificationHelper {
             if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
             PendingIntent contentIntent = PendingIntent.getActivity(context, 4711, openIntent, flags);
 
-            int accentColor = isPositive
-                    ? context.getResources().getColor(R.color.widget_balance_pos)
-                    : context.getResources().getColor(R.color.widget_balance_neg);
-            int pillDrawable = isPositive ? R.drawable.widget_amount_pill_pos : R.drawable.widget_amount_pill_neg;
-
-            RemoteViews collapsed = new RemoteViews(context.getPackageName(), R.layout.notification_kontostand_collapsed);
-            collapsed.setInt(R.id.notif_accent_strip, "setBackgroundColor", accentColor);
-
-            RemoteViews expanded = new RemoteViews(context.getPackageName(), R.layout.notification_kontostand_expanded);
-            expanded.setInt(R.id.notif_accent_strip, "setBackgroundColor", accentColor);
-            expanded.setTextViewText(R.id.notif_amount, balanceText);
-            expanded.setTextColor(R.id.notif_amount, accentColor);
-            expanded.setInt(R.id.notif_amount, "setBackgroundResource", pillDrawable);
+            String expandedText = (isPositive ? "Im Plus: " : "Im Minus: ") + balanceText;
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification_small)
-                    .setCustomContentView(collapsed)
-                    .setCustomBigContentView(expanded)
-                    .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                    .setContentTitle("Haushaltsbuch+")
+                    .setContentText("Kontostand")
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(expandedText))
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(false)
@@ -113,10 +77,7 @@ public class KontostandNotificationHelper {
                     .setCategory(NotificationCompat.CATEGORY_STATUS);
 
             manager.notify(NOTIFICATION_ID, builder.build());
-            toast(context, "Diagnose: notify() wurde ohne Fehler aufgerufen.");
-        } catch (Exception e) {
-            toast(context, "Diagnose-Fehler: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
     }
 
     public static void cancel(Context context) {
