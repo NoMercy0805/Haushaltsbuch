@@ -5582,6 +5582,9 @@ var nativeStorage = {
     { version:158, date:'23.09.2026, 15:45 Uhr', items:[
       'Kontostand-Benachrichtigung: Einfärbung komplett entfernt, schlichte Optik ohne Rot/Grün',
       'Statusleisten-Symbol von den drei Münzen auf ein Geldbeutel-Symbol umgestellt'
+    ]},
+    { version:159, date:'23.09.2026, 16:01 Uhr', items:[
+      'Wichtiger Fix: Beim Bearbeiten eines Dauerauftrags mit "Diesen und alle folgenden" und anschließendem Löschen wurde bisher nur der eine Termin entfernt - die Vorlage blieb aktiv und erzeugte im Folgemonat weiterhin neue Buchungen. Jetzt werden korrekt auch alle folgenden Termine entfernt und keine neuen mehr erzeugt, während bereits vergangene Termine der Serie erhalten bleiben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -6147,11 +6150,47 @@ var nativeStorage = {
     document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
       if(!editingBetaId) return;
       var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
-      var msg = (entry && entry.isRecurringTemplate)
-        ? 'Diesen Dauerauftrag wirklich löschen? Bereits erzeugte Folgebuchungen bleiben erhalten, es werden aber keine neuen mehr angelegt.'
-        : 'Diesen Eintrag wirklich löschen?';
+      if(!entry) return;
+      var isPartOfSeries = entry.isRecurringTemplate || entry.recurringGroupId;
+      var deleteFollowing = editingBetaScope === 'following' && isPartOfSeries;
+
+      var msg;
+      if(deleteFollowing){
+        msg = 'Diesen und alle folgenden Termine dieses Dauerauftrags wirklich löschen? Es werden auch keine neuen mehr erzeugt.';
+      } else if(entry.isRecurringTemplate){
+        msg = 'Diesen Dauerauftrag wirklich löschen? Bereits erzeugte Folgebuchungen bleiben erhalten, es werden aber keine neuen mehr angelegt.';
+      } else {
+        msg = 'Diesen Eintrag wirklich löschen?';
+      }
       if(!await confirmDialog(msg)) return;
-      state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== editingBetaId; });
+
+      if(deleteFollowing){
+        // Vorlage ermitteln (entry selbst, oder darueber verknuepft) und alle
+        // bereits erzeugten Folgetermine ab diesem Datum entfernen. Die
+        // Vorlage selbst wird nur geloescht, wenn ihr eigenes Datum ebenfalls
+        // in diesem Zeitraum liegt - sonst bleibt sie fuer die Vergangenheit
+        // bestehen, bekommt aber ein Enddatum kurz vor diesem Termin, damit
+        // ab hier keine neuen Termine mehr erzeugt werden.
+        var tplId = entry.isRecurringTemplate ? entry.id : entry.recurringGroupId;
+        var fromDate = entry.date;
+        var tpl = state.betaEntries.filter(function(x){ return x.id === tplId; })[0];
+        state.betaEntries = state.betaEntries.filter(function(x){
+          if(x.id === tplId) return true;
+          if(x.recurringGroupId === tplId && x.date >= fromDate) return false;
+          return true;
+        });
+        if(tpl){
+          if(tpl.date >= fromDate){
+            state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== tplId; });
+          } else {
+            var dayBefore = new Date(fromDate+'T00:00:00');
+            dayBefore.setDate(dayBefore.getDate() - 1);
+            tpl.recurrenceEnd = localDateStr(dayBefore);
+          }
+        }
+      } else {
+        state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== editingBetaId; });
+      }
       saveState();
       document.getElementById('addBetaOverlay').classList.remove('open');
       resetBetaForm();
