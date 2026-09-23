@@ -89,9 +89,12 @@ public class WebAppInterface {
 
     // ---------- Beta-Widget (4x1 Homescreen-Widget) ----------
 
+    private static final String KEY_KONTOSTAND_NOTIFICATION = "kontostand_notification_enabled";
+
     // Wird von der Web-App aufgerufen, sobald sich der Kontostand im Beta-Tab
     // aendert (renderBeta) - speichert den fertig formatierten Text fuer das
-    // Widget zwischen und stoesst ein sofortiges Neuzeichnen an.
+    // Widget zwischen und stoesst ein sofortiges Neuzeichnen an. Ist die
+    // Kontostand-Benachrichtigung aktiviert, wird sie ebenfalls aktualisiert.
     @JavascriptInterface
     public void updateBetaWidgetBalance(final String balanceText, final boolean isPositive) {
         try {
@@ -102,7 +105,44 @@ public class WebAppInterface {
                     .putBoolean(BetaWidgetProvider.KEY_POSITIVE, isPositive)
                     .apply();
             BetaWidgetProvider.updateAll(context);
+            if (isKontostandNotificationEnabled()) {
+                KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
+            }
         } catch (Exception ignored) {}
+    }
+
+    // Schaltet die dauerhafte, nicht wegwischbare Kontostand-Benachrichtigung
+    // ein oder aus. Beim Einschalten wird - falls noetig (Android 13+) - die
+    // Benachrichtigungsberechtigung angefragt; die Benachrichtigung selbst
+    // erscheint dann beim naechsten Kontostand-Update (oder sofort, falls
+    // die Berechtigung schon erteilt ist).
+    @JavascriptInterface
+    public void setKontostandNotificationEnabled(final boolean enabled) {
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences(
+                    BetaWidgetProvider.PREFS_NAME, android.content.Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_KONTOSTAND_NOTIFICATION, enabled).apply();
+            if (enabled) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        activity.requestNotificationPermissionIfNeeded();
+                        String balanceText = prefs.getString(BetaWidgetProvider.KEY_BALANCE, "0,00 \u20ac");
+                        boolean isPositive = prefs.getBoolean(BetaWidgetProvider.KEY_POSITIVE, true);
+                        KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
+                    }
+                });
+            } else {
+                KontostandNotificationHelper.cancel(context);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
+    public boolean isKontostandNotificationEnabled() {
+        android.content.SharedPreferences prefs = context.getSharedPreferences(
+                BetaWidgetProvider.PREFS_NAME, android.content.Context.MODE_PRIVATE);
+        return prefs.getBoolean(KEY_KONTOSTAND_NOTIFICATION, false);
     }
 
     // ---------- Manuelles Backup (Downloads) ----------

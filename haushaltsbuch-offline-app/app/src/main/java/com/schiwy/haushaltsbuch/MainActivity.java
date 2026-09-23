@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 777;
     private static final int FOLDER_PICKER_REQUEST = 778;
     private static final int STORAGE_PERMISSION_REQUEST = 502;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 503;
 
     private static final String DOWNLOAD_HOOK_JS =
         "(function(){" +
@@ -153,6 +154,20 @@ public class MainActivity extends Activity {
                 requestPermissions(
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         STORAGE_PERMISSION_REQUEST);
+            }
+        }
+    }
+
+    // Ab Android 13 (API 33) braucht das Anzeigen einer Benachrichtigung eine
+    // explizite Laufzeit-Berechtigung. Wird von WebAppInterface aufgerufen,
+    // wenn der Nutzer die Kontostand-Benachrichtigung aktiviert.
+    public void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST);
             }
         }
     }

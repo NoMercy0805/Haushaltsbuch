@@ -1282,6 +1282,18 @@
       <button type="button" id="betaImportBtn" class="settings-btn">CSV importieren (Kontostand)</button>
       <input type="file" id="betaImportFile" accept=".csv" style="display:none;">
 
+      <p class="chooser-group-label">Benachrichtigung</p>
+      <div class="summary-card">
+        <div class="tab-visibility-row">
+          <span>Kontostand dauerhaft anzeigen</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="kontostandNotificationToggle">
+            <span class="track"></span><span class="thumb"></span>
+          </label>
+        </div>
+        <p style="margin:8px 0 0;font-size:13px;color:var(--ink-soft);">Zeigt den Kontostand als dauerhafte Benachrichtigung, die sich nicht wegwischen lässt. Eingeklappt ist nur "Kontostand" sichtbar, der Betrag erscheint erst beim Herunterziehen der Benachrichtigung.</p>
+      </div>
+
       <div class="section-toggle-row" id="betaTemplatesHeader" style="margin-top:16px;">
         <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></div>
         <div class="section-toggle-text"><div class="section-toggle-title">Dauerauftrag-Vorlagen</div><div class="section-toggle-sub" id="betaTemplatesHeaderSub"></div></div>
@@ -5509,6 +5521,9 @@ var nativeStorage = {
     ]},
     { version:138, date:'22.09.2026, 21:32 Uhr', items:[
       'Kontostand: Titel-Vorschläge beim Eintippen (das Dropdown unter dem Titel-Feld) sind jetzt deutlich blickdichter, statt der durchsichtigen Glas-Oberfläche - dadurch in Hell- und Dunkelmodus besser lesbar'
+    ]},
+    { version:139, date:'23.09.2026, 09:10 Uhr', items:[
+      'Neu: Kontostand als dauerhafte Benachrichtigung (Einstellungen → Kontostand → Benachrichtigung) - lässt sich nicht wegwischen, eingeklappt ist nur "Kontostand" sichtbar, der Betrag erscheint erst beim Herunterziehen. Ab Android 13 wird dafür einmalig die Benachrichtigungsberechtigung angefragt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -5998,6 +6013,22 @@ var nativeStorage = {
     document.getElementById('betaImportBtn').addEventListener('click', function(){
       document.getElementById('betaImportFile').click();
     });
+
+    // Kontostand-Benachrichtigung: Anfangszustand aus der Android-Seite
+    // laden (die Berechtigung/Einstellung lebt dort, nicht im JS-Storage),
+    // und bei Aenderung dorthin zurueckmelden.
+    (function(){
+      var notifToggle = document.getElementById('kontostandNotificationToggle');
+      if(!notifToggle) return;
+      if(window.AndroidBridge && typeof window.AndroidBridge.isKontostandNotificationEnabled === 'function'){
+        try{ notifToggle.checked = !!window.AndroidBridge.isKontostandNotificationEnabled(); }catch(e){}
+      }
+      notifToggle.addEventListener('change', function(){
+        if(window.AndroidBridge && typeof window.AndroidBridge.setKontostandNotificationEnabled === 'function'){
+          try{ window.AndroidBridge.setKontostandNotificationEnabled(this.checked); }catch(e){}
+        }
+      });
+    })();
     document.getElementById('betaImportFile').addEventListener('change', async function(e){
       var file = e.target.files[0];
       if(!file) return;
