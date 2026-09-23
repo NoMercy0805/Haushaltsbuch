@@ -160,14 +160,30 @@ public class MainActivity extends Activity {
 
     // Ab Android 13 (API 33) braucht das Anzeigen einer Benachrichtigung eine
     // explizite Laufzeit-Berechtigung. Wird von WebAppInterface aufgerufen,
-    // wenn der Nutzer die Kontostand-Benachrichtigung aktiviert.
-    public void requestNotificationPermissionIfNeeded() {
+    // wenn der Nutzer die Kontostand-Benachrichtigung aktiviert. Gibt true
+    // zurueck, wenn die Berechtigung schon vorhanden ist (oder gar nicht
+    // noetig, Android < 13) - dann kann die Benachrichtigung sofort gezeigt
+    // werden, ohne auf den Dialog zu warten.
+    public boolean requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(
                         new String[]{Manifest.permission.POST_NOTIFICATIONS},
                         NOTIFICATION_PERMISSION_REQUEST);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (granted && bridge != null) {
+                bridge.showKontostandNotificationIfEnabled();
             }
         }
     }

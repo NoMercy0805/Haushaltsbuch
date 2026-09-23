@@ -126,16 +126,32 @@ public class WebAppInterface {
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        activity.requestNotificationPermissionIfNeeded();
-                        String balanceText = prefs.getString(BetaWidgetProvider.KEY_BALANCE, "0,00 \u20ac");
-                        boolean isPositive = prefs.getBoolean(BetaWidgetProvider.KEY_POSITIVE, true);
-                        KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
+                        boolean alreadyGranted = activity.requestNotificationPermissionIfNeeded();
+                        if (alreadyGranted) {
+                            showKontostandNotificationIfEnabled();
+                        }
+                        // Falls die Berechtigung erst noch angefragt wurde, zeigt
+                        // MainActivity.onRequestPermissionsResult die Benachrichtigung
+                        // an, sobald der Nutzer sie erteilt hat.
                     }
                 });
             } else {
                 KontostandNotificationHelper.cancel(context);
             }
         } catch (Exception ignored) {}
+    }
+
+    // Zeigt die Kontostand-Benachrichtigung sofort mit dem zuletzt bekannten
+    // Betrag, falls die Einstellung aktiviert ist. Wird direkt beim
+    // Aktivieren aufgerufen (wenn die Berechtigung schon vorliegt) und von
+    // MainActivity nach erteilter Berechtigung erneut aufgerufen.
+    public void showKontostandNotificationIfEnabled() {
+        if (!isKontostandNotificationEnabled()) return;
+        android.content.SharedPreferences prefs = context.getSharedPreferences(
+                BetaWidgetProvider.PREFS_NAME, android.content.Context.MODE_PRIVATE);
+        String balanceText = prefs.getString(BetaWidgetProvider.KEY_BALANCE, "0,00 \u20ac");
+        boolean isPositive = prefs.getBoolean(BetaWidgetProvider.KEY_POSITIVE, true);
+        KontostandNotificationHelper.showOrUpdate(context, balanceText, isPositive);
     }
 
     @JavascriptInterface

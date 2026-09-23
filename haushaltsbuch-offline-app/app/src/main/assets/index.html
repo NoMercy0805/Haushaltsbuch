@@ -5530,6 +5530,9 @@ var nativeStorage = {
     ]},
     { version:141, date:'23.09.2026, 09:30 Uhr', items:[
       'Kontostand-Benachrichtigung: Eigenes, einfaches weißes Symbol für die Statusleiste (oben neben der Uhrzeit), statt dem vollen, bunten App-Icon, das Android sonst unschön in einen weißen Klecks umwandelt'
+    ]},
+    { version:142, date:'23.09.2026, 09:36 Uhr', items:[
+      'Wichtiger Fix: Beim ersten Aktivieren der Kontostand-Benachrichtigung wurde die Anzeige versucht, bevor die Berechtigung überhaupt erteilt war (noch während der Dialog offen war) - sie erschien dadurch erst beim nächsten Kontostand-Update, statt sofort. Jetzt erscheint sie sofort, sobald du die Berechtigung erlaubst'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
