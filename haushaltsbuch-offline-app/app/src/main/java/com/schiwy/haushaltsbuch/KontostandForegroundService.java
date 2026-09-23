@@ -133,7 +133,7 @@ public class KontostandForegroundService extends Service {
             builder = new Notification.Builder(this);
         }
 
-        String accentHex = isPositive ? "#22A559" : "#E5484D";
+        String accentHex = isPositive ? "#DCF5E4" : "#FBE2E2";
 
         builder
                 .setContentTitle("Haushaltsbuch+")
@@ -154,6 +154,10 @@ public class KontostandForegroundService extends Service {
         builder.setStyle(new Notification.BigTextStyle()
                 .bigText(signLabel)
                 .setBigContentTitle(balanceText));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setColorized(true);
+        }
 
         return builder.build();
     }
