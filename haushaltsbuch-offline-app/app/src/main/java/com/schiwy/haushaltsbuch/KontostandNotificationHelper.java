@@ -74,7 +74,7 @@ public class KontostandNotificationHelper {
             expanded.setInt(R.id.notif_amount, "setBackgroundResource", pillDrawable);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(context.getApplicationInfo().icon)
+                    .setSmallIcon(R.drawable.ic_notification_small)
                     .setCustomContentView(collapsed)
                     .setCustomBigContentView(expanded)
                     .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
