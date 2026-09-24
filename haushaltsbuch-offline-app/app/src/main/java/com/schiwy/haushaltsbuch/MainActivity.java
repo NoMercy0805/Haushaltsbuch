@@ -56,6 +56,9 @@ public class MainActivity extends Activity {
 
         webView = new WebView(this);
         webView.setFitsSystemWindows(true);
+        boolean isNightMode = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+        webView.setBackgroundColor(isNightMode ? 0xFF484F5A : 0xFFC4CAD3);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();

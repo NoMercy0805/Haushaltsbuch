@@ -1,0 +1,11 @@
+<resources>
+    <!-- Dunkelmodus-Variante: verhindert einen hellen/weissen Aufblitzer beim
+         Start, wenn das System im Dunkelmodus laeuft - Fensterhintergrund
+         entspricht dem tatsaechlichen dunklen App-Hintergrund. -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:statusBarColor">#0F1013</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#484F5A</item>
+        <item name="android:datePickerDialogTheme">@style/AppDatePickerDialogTheme</item>
+    </style>
+</resources>
