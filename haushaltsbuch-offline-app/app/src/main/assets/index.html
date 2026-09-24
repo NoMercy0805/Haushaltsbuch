@@ -203,6 +203,8 @@
 
   main{flex:1;padding:0 18px 110px;}
   .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:tabFadeIn .22s ease;}
+  @keyframes tabFadeIn{from{opacity:0;}to{opacity:1;}}
   .tab-panel.active{display:block;animation:fade .18s ease;}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
 
@@ -5606,6 +5608,9 @@ var nativeStorage = {
     ]},
     { version:166, date:'25.09.2026, 00:13 Uhr', items:[
       'Fix: Kurzes weißes Aufblitzen beim Öffnen der App - der Fenster-Hintergrund war noch auf eine alte, helle Farbe eingestellt und passte nicht mehr zum aktuellen (dunkleren) App-Hintergrund. Fenster- und WebView-Hintergrund sind jetzt für Hell- und Dunkelmodus separat richtig eingestellt'
+    ]},
+    { version:167, date:'25.09.2026, 00:40 Uhr', items:[
+      'Tab-Wechsel (Kontostand/Buchungen/Variable Kosten/Kredite/Tanken) hat den Inhalt bisher hart umgeschaltet - jetzt mit einer sanften Einblend-Animation, ähnlich wie bei iOS-Übergängen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
