@@ -119,20 +119,33 @@
   html[data-theme="dark"] body::after{bottom:60px;right:-70px;width:300px;height:300px;background:#6B7280;opacity:0.35;filter:blur(70px);}
   #app{max-width:540px;margin:0 auto;min-height:100vh;background:transparent;display:flex;flex-direction:column;position:relative;z-index:1;}
 
-  /* Liquid-Glass-Effekt fuer alle Karten/Flaechen mit --surface-Hintergrund */
-  #betaMonthPrev, #betaMonthNext, .bar-chart, .beta-day-group, .btn-cancel, .chart-block,
-  .compact-list, .fab-option-label, .invoice-check, .list-card, .loan-card, .section-toggle-row,
-  .settings-icon-btn, .stat, .summary-card, .vc-card, .widget-order-row{
+  /* Liquid-Glass-Effekt NUR noch bei Einzel-Elementen (nicht bei sich
+     wiederholenden Karten wie Tages-Gruppen/Kredit-Karten/Variable-Kosten-Karten) -
+     backdrop-filter ist eine der teuersten CSS-Eigenschaften und faellt bei
+     wiederholenden Karten (mehrere gleichzeitig sichtbar beim Scrollen) kaum
+     auf, da der Hintergrund ohnehin flach ist - daher hier bewusst entfernt
+     fuer bessere Scroll-Performance, ohne sichtbaren Unterschied. */
+  #betaMonthPrev, #betaMonthNext, .fab-option-label, .settings-icon-btn, .widget-order-row{
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,0.5);
     box-shadow:0 6px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
   }
-  html[data-theme="dark"] #betaMonthPrev, html[data-theme="dark"] #betaMonthNext, html[data-theme="dark"] .bar-chart,
-  html[data-theme="dark"] .beta-day-group, html[data-theme="dark"] .btn-cancel, html[data-theme="dark"] .chart-block,
-  html[data-theme="dark"] .compact-list, html[data-theme="dark"] .fab-option-label, html[data-theme="dark"] .invoice-check,
+  .bar-chart, .beta-day-group, .btn-cancel, .chart-block,
+  .compact-list, .invoice-check, .list-card, .loan-card, .section-toggle-row,
+  .stat, .summary-card, .vc-card{
+    background:var(--surface-solid);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:0 6px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  html[data-theme="dark"] #betaMonthPrev, html[data-theme="dark"] #betaMonthNext, html[data-theme="dark"] .fab-option-label,
+  html[data-theme="dark"] .settings-icon-btn, html[data-theme="dark"] .widget-order-row{
+    border:1px solid rgba(255,255,255,0.16);
+    box-shadow:0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+  html[data-theme="dark"] .bar-chart, html[data-theme="dark"] .beta-day-group, html[data-theme="dark"] .btn-cancel,
+  html[data-theme="dark"] .chart-block, html[data-theme="dark"] .compact-list, html[data-theme="dark"] .invoice-check,
   html[data-theme="dark"] .list-card, html[data-theme="dark"] .loan-card, html[data-theme="dark"] .section-toggle-row,
-  html[data-theme="dark"] .settings-icon-btn, html[data-theme="dark"] .stat, html[data-theme="dark"] .summary-card,
-  html[data-theme="dark"] .vc-card, html[data-theme="dark"] .widget-order-row{
+  html[data-theme="dark"] .stat, html[data-theme="dark"] .summary-card, html[data-theme="dark"] .vc-card{
     border:1px solid rgba(255,255,255,0.16);
     box-shadow:0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.14);
   }
@@ -5619,6 +5632,9 @@ var nativeStorage = {
     ]},
     { version:168, date:'25.09.2026, 18:29 Uhr', items:[
       'Kontostand: Unter der Monatsanzeige steht jetzt klein "Einnahmen +X € · Ausgaben -Y €" - nur für den aktuell angezeigten Monat'
+    ]},
+    { version:169, date:'25.09.2026, 19:05 Uhr', items:[
+      'Performance: Der Weichzeichner-Effekt (Liquid Glass) ist bei sich wiederholenden Karten (Kontostand-Tage, Kredite, Variable Kosten) entfernt - das ist eine der teuersten CSS-Eigenschaften und musste bei vielen gleichzeitig sichtbaren Karten laufend neu berechnet werden. Optisch kaum ein Unterschied (flacher Hintergrund dahinter), sollte sich aber beim Scrollen flüssiger anfühlen. Kopfzeile, Tab-Leiste und Chips behalten den Glas-Effekt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
