@@ -162,7 +162,8 @@
   }
   /* Uebersicht/Diagramm/Einstellungen (alle nutzen .settings-panel): bewusst
      komplett blickdicht statt durchscheinend, da das dort irritiert hat. */
-  .settings-panel{background:var(--paper) !important;border:1px solid rgba(255,255,255,0.5) !important;}
+  .settings-panel{background:#FFFFFF !important;border:1px solid rgba(255,255,255,0.5) !important;}
+  html[data-theme="dark"] .settings-panel{background:#1C1D22 !important;}
   html[data-theme="dark"] .settings-panel{border:1px solid rgba(255,255,255,0.16) !important;}
 
   header.ledger-header{background:rgba(255,255,255,0.16);color:var(--ink);padding:calc(env(safe-area-inset-top, 0px) + 22px) 20px 10px;border-bottom:none;position:sticky;top:0;z-index:100;overflow:hidden;}
@@ -333,7 +334,8 @@
   .summary-row .val.pos{color:var(--savings);}
   .summary-row .val.neg{color:var(--expense);}
 
-  .entry-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--paper);border:none;border-radius:var(--radius);padding:18px;margin-bottom:20px;box-shadow:none;}
+  .entry-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#FFFFFF;border:none;border-radius:var(--radius);padding:18px;margin-bottom:20px;box-shadow:none;}
+  html[data-theme="dark"] .entry-form{background:#1C1D22;}
   .entry-form input, .entry-form select{font-family:var(--sans);font-size:16px;padding:14px 16px;border:none;border-radius:16px;background:var(--paper);color:var(--ink);width:100%;}
   .entry-form .full{grid-column:1 / -1;}
   .entry-form button[type="submit"]{grid-column:1 / -1;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;}
@@ -5650,6 +5652,9 @@ var nativeStorage = {
     ]},
     { version:173, date:'25.09.2026, 22:49 Uhr', items:[
       'Tab-Wechsel: Einblend-Dauer verkürzt (0,22s auf 0,14s), wirkt dadurch etwas knackiger/direkter'
+    ]},
+    { version:174, date:'25.09.2026, 22:54 Uhr', items:[
+      'Wichtiger Kontrast-Fix: Beim Blickdicht-Machen von neuen Eintrag-Formularen und Übersicht/Diagramm/Einstellungen hatten diese versehentlich dieselbe Farbe wie viele ihrer eigenen Buttons/Eingabefelder (beide nutzten --paper) - dadurch waren Eingabefelder, Chips und Icon-Buttons darin kaum noch als eigene Elemente erkennbar. Jetzt mit eigener, unterscheidbarer Hintergrundfarbe behoben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
