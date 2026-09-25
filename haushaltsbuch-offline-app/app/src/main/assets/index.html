@@ -3466,6 +3466,11 @@ var nativeStorage = {
       var visible = getVisibleTabOrder();
       if(visible.length > 0) switchToTab(visible[0]);
     }
+    // Sichtbare Tabs koennen die Hoehe der unteren Leiste veraendern - Saldo-
+    // Leiste und Monatsnavigation hier gezielt neu positionieren, damit das
+    // beim normalen Tab-Wechsel nicht bei jedem einzelnen Mal noetig ist.
+    positionBetaBalanceBar();
+    positionBetaMonthNav();
   }
 
   function setupTabVisibilityToggles(){
@@ -3795,10 +3800,7 @@ var nativeStorage = {
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
-    if(tabName === 'beta'){
-      positionBetaBalanceBar();
-      positionBetaMonthNav();
-    } else {
+    if(tabName !== 'beta'){
       var fabEl = document.getElementById('addEntryFab');
       var dialEl = document.getElementById('fabSpeedDial');
       if(fabEl) fabEl.style.removeProperty('--beta-bar-extra');
@@ -5658,6 +5660,9 @@ var nativeStorage = {
     ]},
     { version:175, date:'25.09.2026, 22:57 Uhr', items:[
       'Nachgerechnet: Der Farbabstand aus Version 174 war mit nur 5% viel zu gering, um zuverlässig als getrennte Fläche erkennbar zu sein - jetzt deutlich stärkerer Abstand (ca. 13%), zusätzlich haben Eingabefelder in Formularen jetzt einen sichtbaren Rahmen als zusätzliche, robuste Absicherung, unabhängig vom Farbton'
+    ]},
+    { version:176, date:'25.09.2026, 23:13 Uhr', items:[
+      'Performance: Tab-Wechsel zu Kontostand hat bisher bei JEDEM Wechsel die Position von Monatsnavigation und Saldo-Leiste neu berechnet (erzwingt teure Layout-Neuvermessung) - das passiert jetzt nur noch beim App-Start und wenn sich die sichtbaren Tabs in den Einstellungen ändern, nicht mehr bei jedem einzelnen Wechsel. Sollte den Tab-Wechsel spürbar flüssiger machen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
