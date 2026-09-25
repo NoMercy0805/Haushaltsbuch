@@ -220,7 +220,7 @@
 
   main{flex:1;padding:0 18px 110px;}
   .tab-panel{display:none;}
-  .tab-panel.active{display:block;animation:tabFadeIn .22s ease;}
+  .tab-panel.active{display:block;animation:tabFadeIn .14s ease;}
   @keyframes tabFadeIn{from{opacity:0;}to{opacity:1;}}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
 
@@ -5647,6 +5647,9 @@ var nativeStorage = {
     ]},
     { version:172, date:'25.09.2026, 22:44 Uhr', items:[
       'Wichtiger Fix: Die Wisch-Animation aus Version 171 hat das Layout durcheinandergebracht (Inhalt verschoben, Hero-Karte bei Kredite/Tanken falsch platziert) - komplett zurückgenommen, zurück auf die einfache, bewährte Einblend-Animation'
+    ]},
+    { version:173, date:'25.09.2026, 22:49 Uhr', items:[
+      'Tab-Wechsel: Einblend-Dauer verkürzt (0,22s auf 0,14s), wirkt dadurch etwas knackiger/direkter'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
