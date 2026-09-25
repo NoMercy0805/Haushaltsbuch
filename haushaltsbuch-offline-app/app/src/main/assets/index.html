@@ -218,10 +218,17 @@
   nav.tabs button.active{color:var(--primary);border-bottom-color:transparent;background:none;box-shadow:none;}
   nav.tabs button.active svg{stroke-width:2.6;}
 
-  main{flex:1;padding:0 18px 110px;}
+  main{flex:1;padding:0 18px 110px;position:relative;overflow-x:hidden;}
   .tab-panel{display:none;}
-  .tab-panel.active{display:block;animation:tabFadeIn .22s ease;}
-  @keyframes tabFadeIn{from{opacity:0;}to{opacity:1;}}
+  .tab-panel.active{display:block;}
+  .tab-panel.tab-slide-out-left{display:block;position:absolute;top:0;left:18px;right:18px;animation:tabSlideOutLeft .26s var(--ios-ease) forwards;pointer-events:none;}
+  .tab-panel.tab-slide-out-right{display:block;position:absolute;top:0;left:18px;right:18px;animation:tabSlideOutRight .26s var(--ios-ease) forwards;pointer-events:none;}
+  .tab-panel.tab-slide-in-left{animation:tabSlideInLeft .26s var(--ios-ease);}
+  .tab-panel.tab-slide-in-right{animation:tabSlideInRight .26s var(--ios-ease);}
+  @keyframes tabSlideOutLeft{from{transform:translateX(0);opacity:1;}to{transform:translateX(-28px);opacity:0;}}
+  @keyframes tabSlideOutRight{from{transform:translateX(0);opacity:1;}to{transform:translateX(28px);opacity:0;}}
+  @keyframes tabSlideInLeft{from{transform:translateX(28px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  @keyframes tabSlideInRight{from{transform:translateX(-28px);opacity:0;}to{transform:translateX(0);opacity:1;}}
   .tab-panel.active{display:block;animation:fade .18s ease;}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
 
@@ -3789,10 +3796,42 @@ var nativeStorage = {
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
     var panel = document.getElementById('tab-'+tabName);
     if(!panel) return;
+
+    var oldActiveBtn = document.querySelector('nav.tabs button.active');
+    var oldTabName = oldActiveBtn ? oldActiveBtn.dataset.tab : null;
+    var oldPanel = (oldTabName && oldTabName !== tabName) ? document.getElementById('tab-'+oldTabName) : null;
+
+    // Richtung anhand der Tab-Reihenfolge bestimmen: nach "weiter rechts"
+    // wischt der Inhalt nach links raus/rein, nach "weiter links" umgekehrt -
+    // wie bei iOS-Uebergaengen.
+    var direction = 1;
+    if(oldTabName && oldTabName !== tabName){
+      var oldIdx = TAB_ORDER.indexOf(oldTabName);
+      var newIdx = TAB_ORDER.indexOf(tabName);
+      if(oldIdx !== -1 && newIdx !== -1) direction = newIdx > oldIdx ? 1 : -1;
+    }
+
     document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
-    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){
+      if(p !== oldPanel) p.classList.remove('active');
+    });
     if(btn) btn.classList.add('active');
+
+    if(oldPanel && oldPanel.classList.contains('active')){
+      oldPanel.classList.remove('active');
+      oldPanel.classList.add(direction > 0 ? 'tab-slide-out-left' : 'tab-slide-out-right');
+      (function(p){
+        setTimeout(function(){
+          p.classList.remove('tab-slide-out-left', 'tab-slide-out-right');
+        }, 280);
+      })(oldPanel);
+    }
+
+    panel.classList.remove('tab-slide-in-left', 'tab-slide-in-right');
+    void panel.offsetWidth; // Reflow erzwingen, damit die Animation bei jedem Wechsel neu startet
     panel.classList.add('active');
+    panel.classList.add(direction > 0 ? 'tab-slide-in-left' : 'tab-slide-in-right');
+
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
     if(tabName === 'beta'){
       positionBetaBalanceBar();
@@ -5642,6 +5681,9 @@ var nativeStorage = {
     ]},
     { version:170, date:'25.09.2026, 22:35 Uhr', items:[
       'Übersicht, Diagramm, Einstellungen und alle Formulare zum Hinzufügen neuer Einträge sind jetzt komplett blickdicht statt durchscheinend - das leichte Durchscheinen dort wurde als irritierend empfunden'
+    ]},
+    { version:171, date:'25.09.2026, 22:37 Uhr', items:[
+      'Tab-Wechsel hat jetzt eine richtungsabhängige Wisch-Animation (aktueller Inhalt wischt raus, neuer wischt rein) statt nur einem einfachen Einblenden - je nachdem, ob man zu einem "weiter rechts" oder "weiter links" liegenden Tab wechselt, wie bei iOS-Übergängen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
