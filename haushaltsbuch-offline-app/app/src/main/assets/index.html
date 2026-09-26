@@ -423,7 +423,7 @@
   .loan-history-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .25s ease, margin-top .25s ease;margin-top:0;}
   .loan-card.expanded .loan-history-wrap{max-height:1000px;opacity:1;margin-top:6px;}
   .vc-card, .loan-card{cursor:pointer;}
-  .action-icon-btn{background:var(--primary-soft);border:none;color:var(--primary);cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .action-icon-btn{background:var(--primary);border:none;color:#fff;cursor:pointer;min-width:48px;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
   .action-icon-btn-wrap{display:inline-flex;flex-direction:column;align-items:center;gap:3px;}
   .action-icon-btn-label{font-size:9.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;}
   .action-icon-btn.danger{color:#fff;background:var(--expense);}
@@ -5721,6 +5721,9 @@ var nativeStorage = {
     ]},
     { version:189, date:'26.09.2026, 17:11 Uhr', items:[
       'Fix: Löschen-Button bei unbezahlten Krediten war schlecht sichtbar, weil die ganze Karte bei unbezahlten Krediten dieselbe rote Tönung bekommt wie der Button selbst - Löschen-Button jetzt in vollem Rot mit weißem Symbol statt zartem Rot-auf-Rot. Gleiches beim goldenen "Erhöhen"-Button behoben (gleiches Problem bei der Bearbeiten-Zeile)'
+    ]},
+    { version:190, date:'26.09.2026, 17:16 Uhr', items:[
+      '"Als bezahlt buchen" (Variable Kosten) und "Rate buchen" (Kredite) waren in beiden Modi grenzwertig sichtbar, im Dunkelmodus besonders schwach - jetzt volles Blau mit weißem Symbol statt zartem Blau-auf-Blau'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
