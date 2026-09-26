@@ -2653,7 +2653,7 @@ var nativeStorage = {
       '<div class="hero-card-value">'+fmtEUR(potBalance)+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Sparbedarf/Monat</div><div class="hero-card-sub-value">'+fmtEUR(monthlyNeed)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Ausgegeben</div><div class="hero-card-sub-value">'+fmtEUR(paymentTotal)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('potSummary');
 
@@ -2673,7 +2673,6 @@ var nativeStorage = {
       '<div class="hero-card-value">'+fmtEUR(sum(state.variableCosts,'monthlyAmount'))+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kostenarten</div><div class="hero-card-sub-value">'+state.variableCosts.length+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Gesamt Puffer</div><div class="hero-card-sub-value">'+fmtEUR(potBalance)+'</div></div>'+
       '</div>';
     if(state.variableCosts.length === 0){
       vcContainer.innerHTML = '<div class="empty-state">Noch keine Kostenarten angelegt.</div>';
@@ -3631,7 +3630,7 @@ var nativeStorage = {
       return {
         tab:'variabel', subView:'spartopf', color:'blue', value: fmtEUR(potBalance),
         label:'Rest im Spartopf',
-        subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Sparbedarf/Monat', v:fmtEUR(monthlyNeed)} ],
+        subs: [ {l:'Eingezahlt', v:fmtEUR(contribTotal)}, {l:'Ausgegeben', v:fmtEUR(paymentTotal)} ],
         icon:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 11v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>'
       };
     },
@@ -5692,6 +5691,10 @@ var nativeStorage = {
     ]},
     { version:181, date:'26.09.2026, 10:14 Uhr', items:[
       'Kostenarten-Hero-Karte: Zusätzliche Anzeige "Gesamt Puffer" neben Kostenarten - zeigt direkt, wie viel im Spartopf übrig ist (wird automatisch mit jeder Ausgabe verrechnet)'
+    ]},
+    { version:182, date:'26.09.2026, 10:27 Uhr', items:[
+      'Kostenarten-Hero-Karte: "Gesamt Puffer"-Anzeige wieder entfernt',
+      'Spartopf-Karte: "Sparbedarf/Monat" durch "Ausgegeben" ersetzt (zeigt, was bisher aus dem Spartopf bezahlt wurde)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
