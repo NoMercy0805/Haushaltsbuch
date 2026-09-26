@@ -364,7 +364,8 @@
   .invoice-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--rule-strong);background:var(--surface);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;}
   .invoice-check.checked{background:var(--savings);border-color:var(--savings);color:#fff;}
   .row-actions{display:flex;gap:4px;flex-shrink:0;}
-  .icon-btn{background:var(--paper);border:none;border-radius:50%;color:var(--ink-soft);font-size:17px;cursor:pointer;padding:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .icon-btn{background:#FFFFFF;border:none;border-radius:50%;color:#3A3B40;font-size:17px;cursor:pointer;padding:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;line-height:1;}
+  html[data-theme="dark"] .icon-btn{background:#52545C;color:#F0F0F2;}
   .icon-btn:hover{color:var(--primary);background:var(--primary-soft);}
   .icon-btn.delete-icon:hover{color:var(--expense);background:var(--expense-soft);}
   .empty-state{text-align:center;color:var(--ink-soft);font-size:15.5px;padding:34px 10px;font-family:var(--serif);font-weight:600;}
@@ -382,7 +383,8 @@
   .edit-row .edit-actions{grid-column:1 / -1;display:flex;gap:10px;justify-content:flex-end;margin-top:2px;}
   .edit-row .edit-actions button{border:none;border-radius:999px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;}
   .btn-save{background:var(--primary);color:#fff;}
-  .btn-cancel{background:var(--surface);color:var(--ink-soft);border:none !important;}
+  .btn-cancel{background:#FFFFFF;color:#3A3B40;border:none !important;}
+  html[data-theme="dark"] .btn-cancel{background:#52545C;color:#F0F0F2;}
 
   .vc-card{background:var(--surface);border:none;border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;box-shadow:none;}
   .compact-list{background:var(--surface);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
@@ -545,7 +547,8 @@
   .confirm-message{font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--ink);margin:0 0 22px;line-height:1.4;}
   .confirm-actions{display:flex;gap:10px;}
   .confirm-btn{flex:1;border:none;border-radius:999px;padding:14px 10px;font-family:var(--serif);font-weight:700;font-size:15px;cursor:pointer;}
-  .confirm-btn-cancel{background:var(--paper);color:var(--ink);}
+  .confirm-btn-cancel{background:#FFFFFF;color:#3A3B40;}
+  html[data-theme="dark"] .confirm-btn-cancel{background:#52545C;color:#F0F0F2;}
   .confirm-btn-danger{background:var(--expense);color:#fff;}
   #betaTitleSuggestionsBox{max-height:220px;overflow-y:auto;}
   .beta-recurring-choice-btn{display:block;width:100%;text-align:left;background:none;border:none;padding:14px 4px;font-size:15px;font-family:var(--sans);color:var(--ink);cursor:pointer;}
@@ -5712,6 +5715,9 @@ var nativeStorage = {
     ]},
     { version:187, date:'26.09.2026, 16:37 Uhr', items:[
       'Der Rahmen bei allen Buttons ist wieder komplett entfernt - stattdessen haben die Bearbeiten/Löschen-Buttons jetzt kräftigere, klar unterscheidbare Farben (statt eines Rahmens), sowohl im Hell- als auch im Dunkelmodus'
+    ]},
+    { version:188, date:'26.09.2026, 16:42 Uhr', items:[
+      'Kontrast-Nachprüfung: "Abbrechen"-Buttons in Bearbeiten-Formularen, der Info-Button beim Tilgungsplan und der Lösch-Button bei Kreditraten hatten denselben grenzwertigen Kontrast wie zuvor die Bearbeiten-Buttons - alle jetzt mit denselben kräftigeren Farben behoben'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
