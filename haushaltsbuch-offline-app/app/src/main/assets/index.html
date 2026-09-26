@@ -963,13 +963,18 @@
   <div id="addContribOverlay" class="settings-overlay">
     <div class="settings-panel">
       <div class="settings-panel-head">
-        <h2>Einzahlung in den Spartopf</h2>
+        <h2>Spartopf-Buchung</h2>
         <button class="settings-close-btn" data-close-form="addContribOverlay" aria-label="Schließen">×</button>
       </div>
       <form id="contribForm" class="entry-form">
+        <div class="full" style="display:flex;gap:8px;">
+          <button type="button" id="contribTypeIn" class="sub-nav-btn active" data-contrib-type="in" style="flex:1;">Einzahlung</button>
+          <button type="button" id="contribTypeOut" class="sub-nav-btn" data-contrib-type="out" style="flex:1;">Ausgabe</button>
+        </div>
+        <input type="text" id="contribName" placeholder="Bezeichnung (optional)" class="full" style="display:none;">
         <input type="date" id="contribDate" required>
         <input type="text" inputmode="decimal" data-cent-input id="contribAmount" placeholder="Betrag (€)" step="0.01" required>
-        <button type="submit">Einzahlen</button>
+        <button type="submit" id="contribSubmitBtn">Einzahlen</button>
       </form>
     </div>
   </div>
@@ -4208,13 +4213,33 @@ var nativeStorage = {
       renderVariabel();
     });
 
+    var contribType = 'in';
+    document.getElementById('contribTypeIn').addEventListener('click', function(){
+      contribType = 'in';
+      this.classList.add('active');
+      document.getElementById('contribTypeOut').classList.remove('active');
+      document.getElementById('contribName').style.display = 'none';
+      document.getElementById('contribSubmitBtn').textContent = 'Einzahlen';
+    });
+    document.getElementById('contribTypeOut').addEventListener('click', function(){
+      contribType = 'out';
+      this.classList.add('active');
+      document.getElementById('contribTypeIn').classList.remove('active');
+      document.getElementById('contribName').style.display = '';
+      document.getElementById('contribSubmitBtn').textContent = 'Ausgeben';
+    });
     document.getElementById('contribForm').addEventListener('submit', function(e){
       e.preventDefault();
       var date = document.getElementById('contribDate').value;
       var amount = parseAmount(document.getElementById('contribAmount').value);
       if(!date || isNaN(amount) || amount<=0) return;
-      state.variableContributions.push({id:genId(), date:date, amount:amount, note:''});
-      try{ nativeStorage.setItem('household-last-contrib-amount', String(amount)); }catch(err){}
+      if(contribType === 'out'){
+        var outName = document.getElementById('contribName').value.trim();
+        state.variablePayments.push({id:genId(), itemId:null, itemName:outName || 'Ausgabe', date:date, amount:amount});
+      } else {
+        state.variableContributions.push({id:genId(), date:date, amount:amount, note:''});
+        try{ nativeStorage.setItem('household-last-contrib-amount', String(amount)); }catch(err){}
+      }
       saveState(); renderAll();
       document.getElementById('addContribOverlay').classList.remove('open');
     });
@@ -5724,6 +5749,9 @@ var nativeStorage = {
     ]},
     { version:190, date:'26.09.2026, 17:16 Uhr', items:[
       '"Als bezahlt buchen" (Variable Kosten) und "Rate buchen" (Kredite) waren in beiden Modi grenzwertig sichtbar, im Dunkelmodus besonders schwach - jetzt volles Blau mit weißem Symbol statt zartem Blau-auf-Blau'
+    ]},
+    { version:191, date:'26.09.2026, 21:50 Uhr', items:[
+      'Spartopf: Beim "+"-Button kann jetzt zwischen Einzahlung und Ausgabe gewählt werden - bei Ausgabe mit frei wählbarer Bezeichnung, ohne dass sie an eine bestimmte Kostenart gebunden sein muss'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
