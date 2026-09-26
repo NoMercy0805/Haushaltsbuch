@@ -3800,7 +3800,10 @@ var nativeStorage = {
     if(btn) btn.classList.add('active');
     panel.classList.add('active');
     document.getElementById('betaBalanceBar').style.display = (tabName === 'beta') ? 'flex' : 'none';
-    if(tabName !== 'beta'){
+    if(tabName === 'beta'){
+      positionBetaBalanceBar();
+      positionBetaMonthNav();
+    } else {
       var fabEl = document.getElementById('addEntryFab');
       var dialEl = document.getElementById('fabSpeedDial');
       if(fabEl) fabEl.style.removeProperty('--beta-bar-extra');
@@ -5663,6 +5666,9 @@ var nativeStorage = {
     ]},
     { version:176, date:'25.09.2026, 23:13 Uhr', items:[
       'Performance: Tab-Wechsel zu Kontostand hat bisher bei JEDEM Wechsel die Position von Monatsnavigation und Saldo-Leiste neu berechnet (erzwingt teure Layout-Neuvermessung) - das passiert jetzt nur noch beim App-Start und wenn sich die sichtbaren Tabs in den Einstellungen ändern, nicht mehr bei jedem einzelnen Wechsel. Sollte den Tab-Wechsel spürbar flüssiger machen'
+    ]},
+    { version:177, date:'26.09.2026, 08:27 Uhr', items:[
+      'Fix: Tab-Wechsel hat im Dunkelmodus kurz geblitzt, vermutlich durch die Positions-Optimierung aus Version 176 (veraltete zwischengespeicherte Position statt Neuberechnung) - Optimierung zurückgenommen, da sie ohnehin keinen spürbaren Geschwindigkeitsvorteil brachte'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
