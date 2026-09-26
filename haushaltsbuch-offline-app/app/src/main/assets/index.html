@@ -112,6 +112,7 @@
   html,body{margin:0;padding:0;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   body{background:#C4CAD3;color:var(--ink);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative;}
   html[data-theme="dark"] body{background:#484F5A;}
+  html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);}
   body::before, body::after{content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
   body::before{top:-80px;left:-60px;width:280px;height:280px;background:rgba(255,255,255,0.5);filter:blur(60px);}
   body::after{bottom:60px;right:-70px;width:300px;height:300px;background:#9CA3AF;opacity:0.3;filter:blur(70px);}
@@ -5752,6 +5753,9 @@ var nativeStorage = {
     ]},
     { version:191, date:'26.09.2026, 21:50 Uhr', items:[
       'Spartopf: Beim "+"-Button kann jetzt zwischen Einzahlung und Ausgabe gewählt werden - bei Ausgabe mit frei wählbarer Bezeichnung, ohne dass sie an eine bestimmte Kostenart gebunden sein muss'
+    ]},
+    { version:192, date:'26.09.2026, 22:26 Uhr', items:[
+      'Fix: Das Kalender-Symbol bei Datumsfeldern war im Dunkelmodus unsichtbar (dunkles Symbol auf dunklem Hintergrund) - jetzt in allen Datumsfeldern der App farblich invertiert und damit gut sichtbar'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
