@@ -660,18 +660,12 @@
         </div>
 
         <div id="einnahmenSubView" style="display:none;">
-        <div class="section-toggle-row" id="incomeHeader" style="cursor:default;">
-          <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M6 10l6-6 6 6"/></svg></div>
-          <div class="section-toggle-text"><div class="section-toggle-title">Einnahmen</div><div class="section-toggle-sub" id="incomeHeaderSub"></div></div>
-        </div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="incomeSummary"></div></div>
         <div id="incomeList"></div>
         </div>
 
         <div id="fixkostenSubView" style="display:none;">
-        <div class="section-toggle-row" id="fixedHeader" style="cursor:default;">
-          <div class="section-toggle-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 20.4l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></div>
-          <div class="section-toggle-text"><div class="section-toggle-title">Fixkosten</div><div class="section-toggle-sub" id="fixedHeaderSub"></div></div>
-        </div>
+        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fixedSummary"></div></div>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
         </div>
@@ -2537,8 +2531,18 @@ var nativeStorage = {
     renderIncomeList(document.getElementById('incomeList'), state.income);
     renderGroupedFixedList(document.getElementById('fixedList'), state.fixedExpenses);
     renderAutoFixedEntries();
-    document.getElementById('incomeHeaderSub').textContent = state.income.length + (state.income.length===1?' Eintrag':' Einträge')+' · '+fmtEUR(sum(state.income,'amount'));
-    document.getElementById('fixedHeaderSub').textContent = state.fixedExpenses.length + (state.fixedExpenses.length===1?' Eintrag':' Einträge')+' · '+fmtEUR(sum(state.fixedExpenses,'amount'));
+    document.getElementById('incomeSummary').innerHTML =
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Einnahmen gesamt</div>'+
+      '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.income.length+'</div></div>'+
+      '</div>';
+    document.getElementById('fixedSummary').innerHTML =
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Fixkosten gesamt</div>'+
+      '<div class="hero-card-value">'+fmtEUR(sum(state.fixedExpenses,'amount'))+'</div>'+
+      '<div class="hero-card-sub-row">'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.fixedExpenses.length+'</div></div>'+
+      '</div>';
     renderInvoices();
   }
 
@@ -5669,6 +5673,9 @@ var nativeStorage = {
     ]},
     { version:177, date:'26.09.2026, 08:27 Uhr', items:[
       'Fix: Tab-Wechsel hat im Dunkelmodus kurz geblitzt, vermutlich durch die Positions-Optimierung aus Version 176 (veraltete zwischengespeicherte Position statt Neuberechnung) - Optimierung zurückgenommen, da sie ohnehin keinen spürbaren Geschwindigkeitsvorteil brachte'
+    ]},
+    { version:178, date:'26.09.2026, 10:03 Uhr', items:[
+      'Einnahmen und Fixkosten: Die kleine Titelzeile oben ist durch eine Hero-Karte ersetzt (wie bei Rechnungen/Spartopf) - zeigt Gesamtbetrag und Anzahl Einträge größer und prominenter an'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
