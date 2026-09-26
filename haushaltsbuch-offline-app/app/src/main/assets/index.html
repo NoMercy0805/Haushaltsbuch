@@ -2537,11 +2537,15 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.income.length+'</div></div>'+
       '</div>';
+    var fixedManualTotal = sum(state.fixedExpenses,'amount');
+    var fixedActiveLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
+    var fixedAutoTotal = sum(fixedActiveLoans, 'monthlyPayment') + getTilgungExtra() + sum(state.variableCosts, 'monthlyAmount');
     document.getElementById('fixedSummary').innerHTML =
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Fixkosten gesamt</div>'+
-      '<div class="hero-card-value">'+fmtEUR(sum(state.fixedExpenses,'amount'))+'</div>'+
+      '<div class="hero-card-value">'+fmtEUR(fixedManualTotal)+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.fixedExpenses.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Inkl. automatisch</div><div class="hero-card-sub-value">'+fmtEUR(fixedManualTotal+fixedAutoTotal)+'</div></div>'+
       '</div>';
     renderInvoices();
   }
@@ -5676,6 +5680,9 @@ var nativeStorage = {
     ]},
     { version:178, date:'26.09.2026, 10:03 Uhr', items:[
       'Einnahmen und Fixkosten: Die kleine Titelzeile oben ist durch eine Hero-Karte ersetzt (wie bei Rechnungen/Spartopf) - zeigt Gesamtbetrag und Anzahl Einträge größer und prominenter an'
+    ]},
+    { version:179, date:'26.09.2026, 10:07 Uhr', items:[
+      'Fixkosten-Hero-Karte: Zusätzliche Anzeige "Inkl. automatisch" neben Einträge - zeigt den Gesamtbetrag inklusive der automatisch berechneten Posten (Kreditraten, Extra-Tilgung, Sparbedarf Variable Kosten)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
