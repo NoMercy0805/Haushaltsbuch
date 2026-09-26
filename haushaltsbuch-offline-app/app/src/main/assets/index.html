@@ -2673,6 +2673,7 @@ var nativeStorage = {
       '<div class="hero-card-value">'+fmtEUR(sum(state.variableCosts,'monthlyAmount'))+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kostenarten</div><div class="hero-card-sub-value">'+state.variableCosts.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Gesamt Puffer</div><div class="hero-card-sub-value">'+fmtEUR(potBalance)+'</div></div>'+
       '</div>';
     if(state.variableCosts.length === 0){
       vcContainer.innerHTML = '<div class="empty-state">Noch keine Kostenarten angelegt.</div>';
@@ -5688,6 +5689,9 @@ var nativeStorage = {
     ]},
     { version:180, date:'26.09.2026, 10:09 Uhr', items:[
       'Variable Kosten - Kostenarten: Die kleine Titelzeile oben ist durch eine Hero-Karte ersetzt, zeigt monatlichen Sparbedarf und Anzahl Kostenarten'
+    ]},
+    { version:181, date:'26.09.2026, 10:14 Uhr', items:[
+      'Kostenarten-Hero-Karte: Zusätzliche Anzeige "Gesamt Puffer" neben Kostenarten - zeigt direkt, wie viel im Spartopf übrig ist (wird automatisch mit jeder Ausgabe verrechnet)'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
