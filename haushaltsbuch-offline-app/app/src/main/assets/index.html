@@ -2594,9 +2594,12 @@ var nativeStorage = {
       } else {
         var isOverdue = !inv.paid && inv.dueDate && inv.dueDate < todayISO();
         var d = inv.dueDate ? parseISO(inv.dueDate) : null;
+        var now = new Date();
+        var dueThisMonth = !inv.paid && d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        var rowTint = inv.paid ? '' : (dueThisMonth ? 'background:var(--expense-soft);' : 'background:var(--savings-soft);');
         var dateLabel = d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '';
         var statusLabel = inv.paid ? 'Bezahlt' : (isOverdue ? 'Überfällig seit '+dateLabel : 'Fällig am '+dateLabel);
-        html += '<div class="compact-list-row'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'">'+
+        html += '<div class="compact-list-row'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'" style="'+rowTint+'">'+
                   '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren" style="flex-shrink:0;margin-right:10px;">✓</button>'+
                   '<span class="compact-name-wrap">'+
                     '<span class="compact-name">'+escapeHtml(inv.name)+'</span>'+
@@ -5756,6 +5759,9 @@ var nativeStorage = {
     ]},
     { version:192, date:'26.09.2026, 22:26 Uhr', items:[
       'Fix: Das Kalender-Symbol bei Datumsfeldern war im Dunkelmodus unsichtbar (dunkles Symbol auf dunklem Hintergrund) - jetzt in allen Datumsfeldern der App farblich invertiert und damit gut sichtbar'
+    ]},
+    { version:193, date:'27.09.2026, 20:03 Uhr', items:[
+      'Offene Rechnungen: Zeilen sind jetzt eingefärbt wie bei Krediten - rot bei Fälligkeit in diesem Monat, grün bei Fälligkeit in einem anderen Monat, bezahlte Rechnungen bleiben ungefärbt'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
