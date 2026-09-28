@@ -1040,6 +1040,10 @@
         <button class="settings-close-btn" data-close-form="addFuelLogOverlay" aria-label="Schließen">×</button>
       </div>
       <form id="fuelLogModalForm" class="entry-form">
+        <div class="full">
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Auto</label>
+          <select id="fuelModalCar" required></select>
+        </div>
         <input type="text" inputmode="decimal" data-cent-input id="fuelModalLiters" placeholder="Liter" class="full" required>
         <input type="text" inputmode="decimal" data-milli-input id="fuelModalPrice" placeholder="€/Liter" class="full" required>
         <div class="full">
@@ -4017,11 +4021,12 @@ var nativeStorage = {
         if(action === 'add-car'){
           document.getElementById('addCarOverlay').classList.add('open');
         } else if(action === 'add-fuel-log'){
-          if(selectedCarId === ALL_CARS_KEY || !selectedCarId){
-            selectedCarId = state.cars.length ? state.cars[0].id : null;
-          }
-          var car = state.cars.filter(function(c){ return c.id === selectedCarId; })[0];
-          document.getElementById('addFuelLogTitle').textContent = car ? 'Tankvorgang – '+car.name : 'Tankvorgang';
+          var prefillCarId = (selectedCarId && selectedCarId !== ALL_CARS_KEY) ? selectedCarId : (state.cars.length ? state.cars[0].id : null);
+          var carSelectEl = document.getElementById('fuelModalCar');
+          carSelectEl.innerHTML = state.cars.map(function(c){
+            return '<option value="'+c.id+'"'+(c.id===prefillCarId?' selected':'')+'>'+c.name+'</option>';
+          }).join('');
+          document.getElementById('addFuelLogTitle').textContent = 'Tankvorgang';
           document.getElementById('fuelModalDate').value = todayISO();
           document.getElementById('addFuelLogOverlay').classList.add('open');
         }
@@ -5762,6 +5767,9 @@ var nativeStorage = {
     ]},
     { version:193, date:'27.09.2026, 20:03 Uhr', items:[
       'Offene Rechnungen: Zeilen sind jetzt eingefärbt wie bei Krediten - rot bei Fälligkeit in diesem Monat, grün bei Fälligkeit in einem anderen Monat, bezahlte Rechnungen bleiben ungefärbt'
+    ]},
+    { version:194, date:'28.09.2026, 22:39 Uhr', items:[
+      'Tanken: Beim Hinzufügen eines Tankvorgangs kann jetzt direkt im Formular das Auto ausgewählt werden - vorher wurde automatisch das gerade angezeigte Auto verwendet, was bei "Gesamt"-Ansicht sogar fehlerhaft sein konnte'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -6751,8 +6759,9 @@ var nativeStorage = {
       var liters = parseAmount(document.getElementById('fuelModalLiters').value);
       var price = parseAmount(document.getElementById('fuelModalPrice').value);
       var date = document.getElementById('fuelModalDate').value || todayISO();
-      if(isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0 || !selectedCarId) return;
-      state.fuelLogs.push({ id: genId(), carId: selectedCarId, liters: liters, pricePerLiter: price, date: date });
+      var chosenCarId = document.getElementById('fuelModalCar').value;
+      if(isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0 || !chosenCarId) return;
+      state.fuelLogs.push({ id: genId(), carId: chosenCarId, liters: liters, pricePerLiter: price, date: date });
       saveState();
       document.getElementById('fuelModalLiters').value = '';
       document.getElementById('fuelModalPrice').value = '';
