@@ -436,9 +436,10 @@
   .loan-name{font-family:var(--serif);font-size:17px;font-weight:800;display:inline-flex;align-items:center;gap:6px;}
   .loan-remaining{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--expense);}
   .loan-bar{background:var(--paper);border:none;border-radius:20px;height:10px;overflow:hidden;margin:10px 0;}
-  .income-expense-bar{display:flex;height:8px;border-radius:20px;overflow:hidden;margin-top:12px;}
-  .income-expense-bar-income{background:var(--savings);height:100%;}
-  .income-expense-bar-expense{background:var(--expense);height:100%;}
+  .income-expense-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:12px;}
+  .income-expense-bar-income{background:var(--savings);height:100%;display:flex;align-items:center;padding-left:8px;box-sizing:border-box;overflow:hidden;}
+  .income-expense-bar-expense{background:var(--expense);height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;overflow:hidden;}
+  .income-expense-bar-label{font-size:11px;font-weight:700;white-space:nowrap;color:#fff;}
   .loan-bar-fill{height:100%;background:var(--primary);border-radius:20px;}
   .loan-sub{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);font-weight:600;}
   .loan-history{margin-top:14px;padding-top:6px;border-top:1px solid var(--rule);}
@@ -1753,9 +1754,11 @@ var nativeStorage = {
     var barTotal = incomeTotal + expenseTotal;
     var incomeShare = barTotal > 0 ? (incomeTotal/barTotal*100) : 50;
     var expenseShare = barTotal > 0 ? (expenseTotal/barTotal*100) : 50;
+    var incomeLabel = incomeShare >= 20 ? '<span class="income-expense-bar-label">'+fmtEUR(incomeTotal)+'</span>' : '';
+    var expenseLabel = expenseShare >= 20 ? '<span class="income-expense-bar-label">'+fmtEUR(expenseTotal)+'</span>' : '';
     document.getElementById('incomeExpenseBar').innerHTML =
-      '<div class="income-expense-bar-income" style="width:'+incomeShare.toFixed(1)+'%;"></div>'+
-      '<div class="income-expense-bar-expense" style="width:'+expenseShare.toFixed(1)+'%;"></div>';
+      '<div class="income-expense-bar-income" style="width:'+incomeShare.toFixed(1)+'%;">'+incomeLabel+'</div>'+
+      '<div class="income-expense-bar-expense" style="width:'+expenseShare.toFixed(1)+'%;">'+expenseLabel+'</div>';
   }
 
   function monthOptions(selected){
@@ -5633,6 +5636,9 @@ var nativeStorage = {
     ]},
     { version:200, date:'28.09.2026, 23:09 Uhr', items:[
       'Buchungen: Der "Diagramm"-Unterreiter ist auch hier wieder entfernt - stattdessen zeigt ein durchgehender rot/grüner Balken unter dem Titel "Haushaltsbuch+" das Verhältnis von Einnahmen zu Ausgaben auf einen Blick'
+    ]},
+    { version:201, date:'28.09.2026, 23:18 Uhr', items:[
+      'Der Einnahmen/Ausgaben-Balken ist etwas höher und zeigt jetzt direkt die Euro-Beträge im Balken selbst - bei sehr schmalen Segmenten (unter 20%) wird der Betrag ausgeblendet, damit nichts überläuft'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
