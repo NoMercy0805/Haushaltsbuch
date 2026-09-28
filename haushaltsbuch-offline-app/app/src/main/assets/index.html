@@ -436,6 +436,9 @@
   .loan-name{font-family:var(--serif);font-size:17px;font-weight:800;display:inline-flex;align-items:center;gap:6px;}
   .loan-remaining{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--expense);}
   .loan-bar{background:var(--paper);border:none;border-radius:20px;height:10px;overflow:hidden;margin:10px 0;}
+  .income-expense-bar{display:flex;height:8px;border-radius:20px;overflow:hidden;margin-top:12px;}
+  .income-expense-bar-income{background:var(--savings);height:100%;}
+  .income-expense-bar-expense{background:var(--expense);height:100%;}
   .loan-bar-fill{height:100%;background:var(--primary);border-radius:20px;}
   .loan-sub{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);font-weight:600;}
   .loan-history{margin-top:14px;padding-top:6px;border-top:1px solid var(--rule);}
@@ -599,6 +602,7 @@
           </button>
         </div>
       </div>
+      <div id="incomeExpenseBar" class="income-expense-bar"></div>
     </header>
 
     <nav class="tabs">
@@ -643,10 +647,6 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 20.4l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>
             Fixkosten
           </button>
-          <button type="button" class="sub-nav-btn" data-sub-view="diagramm">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-            Diagramm
-          </button>
         </div>
 
         <div id="rechnungenSubView">
@@ -670,21 +670,6 @@
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fixedSummary"></div></div>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
-        </div>
-
-        <div id="diagrammSubView" style="display:none;">
-        <h2 class="section-title" style="margin-top:0;">Einnahmen / Ausgaben</h2>
-        <div class="chart-block">
-          <svg id="incomeExpenseRing" viewBox="0 0 120 120" width="110" height="110" class="ring-chart-svg"></svg>
-          <div class="ring-chart-info">
-            <div class="ring-chart-pct" id="incomeExpensePct"></div>
-            <div class="ring-chart-sub">gespart vom Einkommen</div>
-            <div id="incomeExpensePieLegend"></div>
-          </div>
-        </div>
-
-        <h2 class="section-title">Bezahlte Rechnungen pro Monat</h2>
-        <div id="paidInvoicesBarChart" class="bar-chart"></div>
         </div>
       </section>
 
@@ -1765,42 +1750,12 @@ var nativeStorage = {
     var loanMonthly = sum(state.loans.filter(function(l){ return l.remainingBalance > 0; }),'monthlyPayment');
     var openInvTotal = sum(state.openInvoices.filter(function(i){ return !i.paid; }), 'amount');
     var expenseTotal = fixedTotal + variableMonthly + loanMonthly + openInvTotal;
-    renderComparisonRing('incomeExpenseRing', 'incomeExpensePct', 'incomeExpensePieLegend', [
-      {label:'Einnahmen', value:incomeTotal, color:'var(--savings)'},
-      {label:'Ausgaben', value:expenseTotal, color:'var(--expense)'}
-    ], 'var(--expense)');
-
-    renderMonthlyPaidInvoicesBarChart();
-  }
-
-  function renderMonthlyPaidInvoicesBarChart(){
-    var container = document.getElementById('paidInvoicesBarChart');
-    var months = [];
-    var now = new Date();
-    for(var i=5;i>=0;i--){
-      var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-      months.push({key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: MONTH_NAMES[d.getMonth()].slice(0,3)});
-    }
-    var totalsByMonth = {};
-    state.openInvoices.forEach(function(inv){
-      if(!inv.paid || !inv.paidDate) return;
-      var key = inv.paidDate.slice(0,7);
-      totalsByMonth[key] = (totalsByMonth[key]||0) + inv.amount;
-    });
-    var values = months.map(function(m){ return totalsByMonth[m.key]||0; });
-    var maxVal = Math.max.apply(null, values.concat([0.01]));
-    var html = '';
-    months.forEach(function(m, idx){
-      var val = values[idx];
-      var isMax = val > 0 && val === maxVal;
-      var heightPct = maxVal > 0 ? Math.max(2, (val/maxVal*100)) : 2;
-      html += '<div class="bar-col">'+
-                '<span class="bar-value'+(isMax?' max':'')+'">'+(val>0?fmtEUR(val):'')+'</span>'+
-                '<div class="bar-fill'+(isMax?' max':'')+'" style="height:'+heightPct+'%;"></div>'+
-                '<span class="bar-label">'+m.label+'</span>'+
-              '</div>';
-    });
-    container.innerHTML = html;
+    var barTotal = incomeTotal + expenseTotal;
+    var incomeShare = barTotal > 0 ? (incomeTotal/barTotal*100) : 50;
+    var expenseShare = barTotal > 0 ? (expenseTotal/barTotal*100) : 50;
+    document.getElementById('incomeExpenseBar').innerHTML =
+      '<div class="income-expense-bar-income" style="width:'+incomeShare.toFixed(1)+'%;"></div>'+
+      '<div class="income-expense-bar-expense" style="width:'+expenseShare.toFixed(1)+'%;"></div>';
   }
 
   function monthOptions(selected){
@@ -3676,7 +3631,7 @@ var nativeStorage = {
     });
   }
 
-  var FAB_HIDDEN_TABS = ['tilgungsplan', 'diagramm'];
+  var FAB_HIDDEN_TABS = ['tilgungsplan'];
 
   function updateFabVisibilityForTab(effectiveTabName){
     var fab = document.getElementById('addEntryFab');
@@ -3748,7 +3703,7 @@ var nativeStorage = {
   }
 
   var activeBuchungenSubView = 'rechnungen';
-  var BUCHUNGEN_SUB_VIEWS = ['rechnungen', 'einnahmen', 'fixkosten', 'diagramm'];
+  var BUCHUNGEN_SUB_VIEWS = ['rechnungen', 'einnahmen', 'fixkosten'];
   function switchBuchungenSubView(view){
     activeBuchungenSubView = view;
     BUCHUNGEN_SUB_VIEWS.forEach(function(v){
@@ -5675,6 +5630,9 @@ var nativeStorage = {
     ]},
     { version:199, date:'28.09.2026, 23:04 Uhr', items:[
       'Kredite: Der "Diagramm"-Unterreiter ist wieder entfernt - stattdessen zeigt die Kredite-Hero-Karte jetzt einen Fortschrittsbalken mit dem gesamten Prozentsatz aller Kredite zusammen, genau wie bei einzelnen Kreditkarten'
+    ]},
+    { version:200, date:'28.09.2026, 23:09 Uhr', items:[
+      'Buchungen: Der "Diagramm"-Unterreiter ist auch hier wieder entfernt - stattdessen zeigt ein durchgehender rot/grüner Balken unter dem Titel "Haushaltsbuch+" das Verhältnis von Einnahmen zu Ausgaben auf einen Blick'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
