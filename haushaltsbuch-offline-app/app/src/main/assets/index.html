@@ -170,7 +170,6 @@
   header.ledger-header{background:rgba(255,255,255,0.16);color:var(--ink);padding:calc(env(safe-area-inset-top, 0px) + 22px) 20px 10px;border-bottom:none;position:sticky;top:0;z-index:100;overflow:hidden;}
   html[data-theme="dark"] header.ledger-header{background:rgba(255,255,255,0.08);}
   .settings-btn-wrap{position:relative;flex-shrink:0;}
-  .header-trend{display:block;margin-top:4px;}
   header.ledger-header h1{font-family:var(--serif);font-size:32px;font-weight:800;margin:0;text-align:left;letter-spacing:-0.02em;color:var(--ink);}
   .header-top-row{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:10px;}
   .settings-icon-btn{background:var(--surface);border:none;border-radius:50%;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);cursor:pointer;box-shadow:none;position:relative;z-index:1;}
@@ -593,7 +592,6 @@
       <div class="header-top-row">
         <div>
           <h1>Haushaltsbuch<span style="color:var(--primary);">+</span></h1>
-          <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap" style="display:flex;gap:8px;">
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
@@ -2443,48 +2441,6 @@ var nativeStorage = {
   }
 
   /* ---------- Übersicht ---------- */
-  /* ---------- Trend-Linie im Header (echter, mit der Zeit wachsender Verlauf) ---------- */
-  var REST_HISTORY_KEY = 'household-rest-history';
-
-  function saveRestHistoryPoint(monthKey, value){
-    try{
-      var raw = nativeStorage.getItem(REST_HISTORY_KEY);
-      var hist = raw ? JSON.parse(raw) : {};
-      hist[monthKey] = value;
-      var keys = Object.keys(hist).sort();
-      if(keys.length > 12){
-        keys.slice(0, keys.length-12).forEach(function(k){ delete hist[k]; });
-      }
-      nativeStorage.setItem(REST_HISTORY_KEY, JSON.stringify(hist));
-    }catch(e){}
-  }
-
-  function getRestHistory(){
-    try{
-      var raw = nativeStorage.getItem(REST_HISTORY_KEY);
-      if(!raw) return [];
-      var hist = JSON.parse(raw);
-      var keys = Object.keys(hist).sort();
-      return keys.map(function(k){ return hist[k]; });
-    }catch(e){ return []; }
-  }
-
-  function renderHeaderTrend(values){
-    var svg = document.getElementById('headerTrend');
-    if(!svg) return;
-    if(values.length < 2){ svg.innerHTML = ''; return; }
-    var w = 90, h = 20, pad = 2;
-    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
-    var range = max - min || 1;
-    var points = values.map(function(v, i){
-      var x = (i/(values.length-1)) * (w-2*pad) + pad;
-      var y = h - pad - ((v-min)/range) * (h-2*pad);
-      return x.toFixed(1)+','+y.toFixed(1);
-    }).join(' ');
-    var trendUp = values[values.length-1] >= values[0];
-    var color = trendUp ? 'var(--savings)' : 'var(--expense)';
-    svg.innerHTML = '<polyline points="'+points+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-  }
 
   function renderUebersicht(){
     var heroIncomeTotal = sum(state.income,'amount');
@@ -2494,8 +2450,6 @@ var nativeStorage = {
     var heroTilgungExtra = getTilgungExtra();
     var heroExpenseTotal = heroFixedTotal + heroVariableMonthly + heroLoanMonthly + heroTilgungExtra;
     var heroRest = heroIncomeTotal - heroExpenseTotal;
-    saveRestHistoryPoint(todayISO().slice(0,7), heroRest);
-    renderHeaderTrend(getRestHistory());
 
     renderIncomeList(document.getElementById('incomeList'), state.income);
     renderGroupedFixedList(document.getElementById('fixedList'), state.fixedExpenses);
@@ -5738,6 +5692,9 @@ var nativeStorage = {
     ]},
     { version:197, date:'28.09.2026, 22:53 Uhr', items:[
       'Das separate "Übersicht"-Menü ist entfernt (samt zugehöriger Einstellungen-Sektion) - der "Monatliche Rest" (Einnahmen minus alle Ausgaben) steht stattdessen jetzt direkt in der Einnahmen-Hero-Karte'
+    ]},
+    { version:198, date:'28.09.2026, 22:58 Uhr', items:[
+      'Der Trend-Verlauf (kleines Diagramm unter dem Titel) ist entfernt, da er nie richtig funktioniert hat'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
