@@ -596,9 +596,6 @@
           <svg id="headerTrend" class="header-trend" viewBox="0 0 90 20" width="90" height="20"></svg>
         </div>
         <div class="settings-btn-wrap" style="display:flex;gap:8px;">
-          <button id="uebersichtBtn" class="settings-icon-btn" aria-label="Übersicht">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
-          </button>
           <button id="settingsIconBtn" class="settings-icon-btn" aria-label="Einstellungen">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
@@ -841,29 +838,7 @@
 
     </main>
 
-    <div id="uebersichtOverlay" class="settings-overlay">
-      <div class="settings-panel" style="text-align:left;">
-        <div class="settings-panel-head">
-          <h2>Übersicht</h2>
-          <button class="settings-close-btn" id="uebersichtCloseBtn" aria-label="Schließen">×</button>
-        </div>
-        <div class="hero-card" id="heroCard">
-          <div class="hero-card-label">Monatlicher Rest</div>
-          <div class="hero-card-value" id="heroCardValue"></div>
-          <div class="hero-card-sub-row">
-            <div>
-              <div class="hero-card-sub-label" style="color:var(--savings);">▲ Einnahmen</div>
-              <div class="hero-card-sub-value" id="heroCardIncome"></div>
-            </div>
-            <div>
-              <div class="hero-card-sub-label" style="color:var(--expense);">▼ Ausgaben</div>
-              <div class="hero-card-sub-value" id="heroCardFixed"></div>
-            </div>
-          </div>
-        </div>
-        <div id="overviewWidgets"></div>
-      </div>
-    </div>
+
 
     <div id="betaBalanceBar" style="display:none;">
       <span class="beta-balance-label">Kontostand</span>
@@ -1162,11 +1137,6 @@
           <span class="settings-nav-text"><span class="settings-nav-title">Sichtbare Bereiche</span><span class="settings-nav-sub">Welche Tabs angezeigt werden</span></span>
           <span class="settings-nav-arrow">›</span>
         </button>
-        <button type="button" class="settings-nav-row" data-open-settings="widgets">
-          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></span>
-          <span class="settings-nav-text"><span class="settings-nav-title">Übersicht-Anzeige</span><span class="settings-nav-sub">Mini-Übersichten im Übersicht-Tab</span></span>
-          <span class="settings-nav-arrow">›</span>
-        </button>
         <button type="button" class="settings-nav-row" data-open-settings="backup">
           <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17.5a4.5 4.5 0 0 1-.9-8.9A5.5 5.5 0 0 1 16.7 7 4.5 4.5 0 0 1 17.2 15.9"/><path d="M12 10.5v8M9 15.5l3 3 3-3"/></svg></span>
           <span class="settings-nav-text"><span class="settings-nav-title">Backup</span><span class="settings-nav-sub">Sichern, wiederherstellen, automatisch</span></span>
@@ -1255,17 +1225,7 @@
     </div>
   </div>
 
-  <div id="settingsSubOverlay-widgets" class="settings-overlay">
-    <div class="settings-panel">
-      <div class="settings-panel-head">
-        <button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <h2>Übersicht-Anzeige</h2>
-        <span style="width:34px;"></span>
-      </div>
-      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft);">Welche Mini-Übersichten sollen im Übersicht-Tab angezeigt werden? Am Griff halten und ziehen, um die Reihenfolge zu ändern.</p>
-      <div class="summary-card" id="overviewWidgetList"></div>
-    </div>
-  </div>
+
 
   <div id="settingsSubOverlay-backup" class="settings-overlay">
     <div class="settings-panel">
@@ -2534,13 +2494,8 @@ var nativeStorage = {
     var heroTilgungExtra = getTilgungExtra();
     var heroExpenseTotal = heroFixedTotal + heroVariableMonthly + heroLoanMonthly + heroTilgungExtra;
     var heroRest = heroIncomeTotal - heroExpenseTotal;
-    document.getElementById('heroCardValue').textContent = fmtEUR(heroRest);
-    document.getElementById('heroCardIncome').textContent = fmtEUR(heroIncomeTotal);
-    document.getElementById('heroCardFixed').textContent = fmtEUR(heroExpenseTotal);
     saveRestHistoryPoint(todayISO().slice(0,7), heroRest);
     renderHeaderTrend(getRestHistory());
-
-    renderOverviewWidgets();
 
     renderIncomeList(document.getElementById('incomeList'), state.income);
     renderGroupedFixedList(document.getElementById('fixedList'), state.fixedExpenses);
@@ -2550,6 +2505,7 @@ var nativeStorage = {
       '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.income.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Monatlicher Rest</div><div class="hero-card-sub-value">'+fmtEUR(heroRest)+'</div></div>'+
       '</div>';
     var fixedManualTotal = sum(state.fixedExpenses,'amount');
     var fixedActiveLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
@@ -5779,6 +5735,9 @@ var nativeStorage = {
     ]},
     { version:196, date:'28.09.2026, 22:49 Uhr', items:[
       'Das separate "Diagramm"-Menü ist aufgelöst: Einnahmen/Ausgaben- und Rechnungen-Diagramm gibt es jetzt als eigenen Unterreiter bei Buchungen, das Kredit-Tilgungsdiagramm als eigenen Unterreiter bei Kredite - direkt bei den zugehörigen Daten statt in einem separaten Menü'
+    ]},
+    { version:197, date:'28.09.2026, 22:53 Uhr', items:[
+      'Das separate "Übersicht"-Menü ist entfernt (samt zugehöriger Einstellungen-Sektion) - der "Monatliche Rest" (Einnahmen minus alle Ausgaben) steht stattdessen jetzt direkt in der Einnahmen-Hero-Karte'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -6729,16 +6688,6 @@ var nativeStorage = {
     }
   }
 
-  function setupUebersichtOverlay(){
-    var overlay = document.getElementById('uebersichtOverlay');
-    document.getElementById('uebersichtBtn').addEventListener('click', function(){
-      overlay.classList.add('open');
-    });
-    document.getElementById('uebersichtCloseBtn').addEventListener('click', function(){
-      overlay.classList.remove('open');
-    });
-  }
-
   function setupFuelTracker(){
     document.getElementById('carModalForm').addEventListener('submit', function(e){
       e.preventDefault();
@@ -7057,7 +7006,6 @@ var nativeStorage = {
     setupThemeToggle();
     setupFuelTracker();
     setupBeta();
-    setupUebersichtOverlay();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardToggle();
