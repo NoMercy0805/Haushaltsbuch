@@ -436,7 +436,8 @@
   .loan-name{font-family:var(--serif);font-size:17px;font-weight:800;display:inline-flex;align-items:center;gap:6px;}
   .loan-remaining{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--expense);}
   .loan-bar{background:var(--paper);border:none;border-radius:20px;height:10px;overflow:hidden;margin:10px 0;}
-  .income-expense-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:12px;}
+  .income-expense-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:12px;transition:height .2s ease, opacity .2s ease, margin-top .2s ease;}
+  .income-expense-bar.collapsed{height:0;opacity:0;margin-top:0;}
   .income-expense-bar-income{background:var(--savings);height:100%;display:flex;align-items:center;padding-left:8px;box-sizing:border-box;overflow:hidden;}
   .income-expense-bar-expense{background:var(--expense);height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;overflow:hidden;}
   .income-expense-bar-label{font-size:11px;font-weight:700;white-space:nowrap;color:#fff;}
@@ -3737,6 +3738,42 @@ var nativeStorage = {
     }
   }
 
+  function setupIncomeExpenseBarCollapse(){
+    var bar = document.getElementById('incomeExpenseBar');
+    if(!bar) return;
+    var lastScrollY = window.scrollY;
+    var ticking = false;
+    var COLLAPSE_THRESHOLD = 24; // ab wieviel Pixeln Scroll-Bewegung reagiert wird
+
+    // Wenn die Ein-/Ausklapp-Animation fertig ist, haengende Elemente (Monats-
+    // navigation/Saldo-Leiste) neu positionieren, da sich die Kopfzeilenhoehe
+    // dabei aendert - sonst koennten diese ueberlappen oder eine Luecke zeigen.
+    bar.addEventListener('transitionend', function(e){
+      if(e.propertyName !== 'height') return;
+      positionBetaMonthNav();
+      positionBetaBalanceBar();
+    });
+
+    window.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        var currentY = window.scrollY;
+        var delta = currentY - lastScrollY;
+        if(currentY <= 8){
+          bar.classList.remove('collapsed');
+        } else if(delta > COLLAPSE_THRESHOLD){
+          bar.classList.add('collapsed');
+          lastScrollY = currentY;
+        } else if(delta < -COLLAPSE_THRESHOLD){
+          bar.classList.remove('collapsed');
+          lastScrollY = currentY;
+        }
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
   function setupTabs(){
     document.querySelectorAll('nav.tabs button').forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -5639,6 +5676,9 @@ var nativeStorage = {
     ]},
     { version:201, date:'28.09.2026, 23:18 Uhr', items:[
       'Der Einnahmen/Ausgaben-Balken ist etwas höher und zeigt jetzt direkt die Euro-Beträge im Balken selbst - bei sehr schmalen Segmenten (unter 20%) wird der Betrag ausgeblendet, damit nichts überläuft'
+    ]},
+    { version:202, date:'29.09.2026, 12:45 Uhr', items:[
+      'Der Einnahmen/Ausgaben-Balken klappt jetzt sanft ein, wenn man nach unten scrollt, und wieder aus, wenn man nach oben scrollt oder ganz oben ankommt - gibt mehr Platz für Inhalte beim Scrollen'
     ]}
   ];
   var APP_VERSION = CHANGELOG[CHANGELOG.length-1].version;
@@ -6896,6 +6936,7 @@ var nativeStorage = {
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('mainUI').style.display = 'block';
     setupTabs();
+    setupIncomeExpenseBarCollapse();
     setupSwipe();
     setupUebersichtForms();
     setupVariableForms();
