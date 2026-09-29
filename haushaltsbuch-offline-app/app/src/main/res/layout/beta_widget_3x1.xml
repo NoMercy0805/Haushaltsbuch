@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@android:color/transparent"
+    android:gravity="center_vertical"
+    android:baselineAligned="false"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp"
+    android:paddingTop="0dp"
+    android:paddingBottom="0dp">
+
+    <TextView
+        android:id="@+id/widget_minus_btn"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/widget_circle_toggle"
+        android:gravity="center"
+        android:text="+/\u2212"
+        android:textColor="@color/widget_toggle_bg"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp">
+
+        <LinearLayout
+            android:id="@+id/widget_balance_pill"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_amount_pill_neg"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:id="@+id/widget_balance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0,00 \u20ac"
+                android:textColor="@color/widget_balance_neg"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:maxLines="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_balance_cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_amount_cover"
+            android:gravity="center"
+            android:text="\u2022\u2022\u2022\u2022\u2022\u2022"
+            android:textColor="@color/widget_cover_dots"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/widget_label"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+</LinearLayout>
