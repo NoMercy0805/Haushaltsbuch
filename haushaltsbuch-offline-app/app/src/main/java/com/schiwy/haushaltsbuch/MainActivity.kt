@@ -26,14 +26,24 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
 
-private val Green = Color(0xFF34C759)
-private val Red = Color(0xFFFF453A)
-private val Blue = Color(0xFF0A84FF)
+private val Paper = Color(0xFFF2F2F5)
+private val Ink = Color(0xFF191A1C)
+private val InkSoft = Color(0xFF6E7074)
+private val Green = Color(0xFF00A971)
+private val Red = Color(0xFFF0421F)
+private val Blue = Color(0xFF1268FF)
+private val SurfaceSolid = Color(0xFFFDFDFE)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme(colorScheme = if (androidx.compose.foundation.isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) { NativeApp() } }
+        setContent {
+            val dark = androidx.compose.foundation.isSystemInDarkTheme()
+            MaterialTheme(
+                colorScheme = if (dark) darkColorScheme(primary=Color(0xFF5B9CFF), background=Color(0xFF0F1013), surface=Color(0xFF1E1F24), onBackground=Color(0xFFF2F2F4), onSurface=Color(0xFFF2F2F4))
+                else lightColorScheme(primary=Blue, background=Paper, surface=SurfaceSolid, onBackground=Ink, onSurface=Ink)
+            ) { NativeApp() }
+        }
     }
 }
 
@@ -48,7 +58,7 @@ private class HouseholdRepository(private val activity: Activity) {
 private fun JSONArray.objects(): List<JSONObject> = (0 until length()).mapNotNull { optJSONObject(it) }
 private fun money(v: Double): String = NumberFormat.getCurrencyInstance(Locale.GERMANY).format(v)
 private fun sum(a: JSONArray, field: String, predicate: (JSONObject)->Boolean = { true }): Double = a.objects().filter(predicate).sumOf { it.optDouble(field, 0.0) }
-private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand","€"),BOOKINGS("Buchungen","≡"),VARIABLE("Variabel","↕"),LOANS("Kredite","%"),FUEL("Tanken","⛽")}
+private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand","▰"),BOOKINGS("Buchungen","▤"),VARIABLE("Variable Kosten","◎"),LOANS("Kredite","▣"),FUEL("Tanken","⛽")}
 
 @Composable private fun NativeApp(){
     val activity=androidx.compose.ui.platform.LocalContext.current as Activity
@@ -56,10 +66,10 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
     var state by remember{mutableStateOf(repo.load())};var tab by remember{mutableStateOf(Tab.BALANCE)};var addBeta by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
     fun persist(){repo.save(state);state=JSONObject(state.toString())}
     Scaffold(
-        topBar={Surface(shadowElevation=2.dp){Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){Text("Haushaltsbuch+",fontSize=22.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Text("NATIV",fontSize=11.sp,color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)}}},
-        bottomBar={NavigationBar{Tab.entries.forEach{t->NavigationBarItem(selected=tab==t,onClick={tab=t},icon={Text(t.symbol,fontSize=18.sp)},label={Text(t.label,fontSize=10.sp)})}}},
-        floatingActionButton={if(tab==Tab.BALANCE)FloatingActionButton(onClick={addBeta=true}){Text("+",fontSize=28.sp)}}
-    ){pad->Box(Modifier.padding(pad).fillMaxSize()){when(tab){Tab.BALANCE->BalanceScreen(state,repo,month,{month=month.minusMonths(1)},{month=month.plusMonths(1)});Tab.BOOKINGS->BookingsScreen(state,repo);Tab.VARIABLE->VariableScreen(state,repo);Tab.LOANS->LoansScreen(state,repo);Tab.FUEL->FuelScreen(state,repo)}}}
+        topBar={Surface(color=MaterialTheme.colorScheme.background.copy(alpha=.92f)){Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("Haushaltsbuch",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-.6).sp);Text("+",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Spacer(Modifier.weight(1f));Surface(shape=RoundedCornerShape(50),color=MaterialTheme.colorScheme.surface){Text("⚙",Modifier.padding(10.dp),fontSize=18.sp)}}}}},
+        bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){Tab.entries.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){Text(t.symbol,fontSize=17.sp,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=if(tab==t)FontWeight.ExtraBold else FontWeight.Normal);Text(t.label,fontSize=10.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
+        floatingActionButton={if(tab==Tab.BALANCE)FloatingActionButton(onClick={addBeta=true},containerColor=MaterialTheme.colorScheme.primary.copy(alpha=.80f),shape=RoundedCornerShape(50)){Text("+",fontSize=30.sp,color=Color.White)}}
+    ){pad->Box(Modifier.padding(pad).fillMaxSize().background(MaterialTheme.colorScheme.background)){when(tab){Tab.BALANCE->BalanceScreen(state,repo,month,{month=month.minusMonths(1)},{month=month.plusMonths(1)});Tab.BOOKINGS->BookingsScreen(state,repo);Tab.VARIABLE->VariableScreen(state,repo);Tab.LOANS->LoansScreen(state,repo);Tab.FUEL->FuelScreen(state,repo)}}}
     if(addBeta)BetaEntryDialog({addBeta=false}){type,title,date,amount,category->repo.array(state,"betaEntries").put(JSONObject().put("id",UUID.randomUUID().toString()).put("type",type).put("title",title).put("date",date).put("amount",amount).put("category",category).put("recurring",false).put("reconciled",false));persist();addBeta=false}
 }
 
