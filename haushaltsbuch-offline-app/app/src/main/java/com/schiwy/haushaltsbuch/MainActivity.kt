@@ -93,8 +93,8 @@ private fun heroBlueSub(dark:Boolean)=if(dark)Color(0xFFB8C4D9) else Color(0xFF3
 
 class MainActivity : ComponentActivity() {
     private val widgetAction = mutableStateOf<String?>(null)
-    internal var nativeStateForLifecycle: JSONObject? = null
-    internal var nativeRepoForLifecycle: HouseholdRepository? = null
+    var nativeStateForLifecycle: JSONObject? = null
+    var nativeRepoForLifecycle: HouseholdRepository? = null
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); widgetAction.value=intent.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION) }
     override fun onStop() { nativeStateForLifecycle?.let { nativeRepoForLifecycle?.autoBackup(it) }; super.onStop() }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private class HouseholdRepository(private val activity: Activity) {
+class HouseholdRepository(private val activity: Activity) {
     private val store = NativeKeyValueStore.getInstance(activity)
     private val key = "household-data-v8"
     fun load(): JSONObject = runCatching { JSONObject(store.getItem(key) ?: "{}") }.getOrDefault(JSONObject())
@@ -577,7 +577,7 @@ private fun nothingDueRestOfYearExact(item:JSONObject,pays:List<JSONObject>):Boo
  Column(Modifier.fillMaxSize().subViewSwipe(listOf("kredite","tilgung"),view){view=it}.padding(horizontal=18.dp)){
   Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background,RoundedCornerShape(14.dp)).padding(4.dp)){OriginalSubNav("Kredite",view=="kredite",Modifier.weight(1f)){view="kredite"};OriginalSubNav("Tilgungsplan",view=="tilgung",Modifier.weight(1f)){view="tilgung"}}
   Spacer(Modifier.height(18.dp))
-  if(view=="kredite"){val payments=repo.array(state,"loanPayments").objects();val month=LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));fun paid(l:JSONObject)=payments.any{it.optString("loanId")==l.optString("id")&&it.optString("type")=="payment"&&it.optString("date").startsWith(month)};val sorted=active.sortedWith(compareBy<JSONObject>{if(paid(it))1 else 0}.thenBy{it.optDouble("remainingBalance")});val paidLoans=loans.filter{it.optDouble("remainingBalance")<=0}.sortedByDescending{it.optString("paidOffDate")};var showPaid by remember{mutableStateOf(repo.getSetting("household-show-paid-loans")=="1")};LoanHero(remaining,original,monthly);LazyColumn{if(sorted.isEmpty())item{OriginalEmpty("Noch keine laufenden Kredite oder Raten angelegt.")};items(sorted){LoanCardOriginal(it,paid(it),payments,state,repo)};item{PaidLoansHeader(paidLoans.size,showPaid){showPaid=!showPaid;repo.setSetting("household-show-paid-loans",if(showPaid)"1" else "0")}};if(showPaid){if(paidLoans.isEmpty())item{OriginalEmpty("Noch keine abbezahlten Kredite.")}else items(paidLoans){PaidLoanRow(it,state,repo)}}}}
+  if(view=="kredite"){val payments=repo.array(state,"loanPayments").objects();val month=LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));val paid: (JSONObject)->Boolean = { l -> payments.any{it.optString("loanId")==l.optString("id")&&it.optString("type")=="payment"&&it.optString("date").startsWith(month)} };val sorted=active.sortedWith(compareBy<JSONObject>{if(paid(it))1 else 0}.thenBy{it.optDouble("remainingBalance")});val paidLoans=loans.filter{it.optDouble("remainingBalance")<=0}.sortedByDescending{it.optString("paidOffDate")};var showPaid by remember{mutableStateOf(repo.getSetting("household-show-paid-loans")=="1")};LoanHero(remaining,original,monthly);LazyColumn{if(sorted.isEmpty())item{OriginalEmpty("Noch keine laufenden Kredite oder Raten angelegt.")};items(sorted){LoanCardOriginal(it,paid(it),payments,state,repo)};item{PaidLoansHeader(paidLoans.size,showPaid){showPaid=!showPaid;repo.setSetting("household-show-paid-loans",if(showPaid)"1" else "0")}};if(showPaid){if(paidLoans.isEmpty())item{OriginalEmpty("Noch keine abbezahlten Kredite.")}else items(paidLoans){PaidLoanRow(it,state,repo)}}}}
   else{TilgungScreen(active,monthly,repo.array(state,"loanPayments").objects(),repo,state)}
  }
 }
