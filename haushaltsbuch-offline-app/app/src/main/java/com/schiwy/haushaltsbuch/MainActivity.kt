@@ -106,7 +106,9 @@ private fun fabOptions(tab:Tab):List<String> = when(tab){Tab.BALANCE->listOf("Ne
  };onSaved()},Modifier.fillMaxWidth(),shape=RoundedCornerShape(50)){Text(when(kind){"Offene Rechnung"->"Rechnung hinzufügen";"Variable Kostenart"->"Kostenart hinzufügen";"Kredit"->"Kredit hinzufügen";"Einzahlung in den Spartopf"->if(mode=="in")"Einzahlen" else "Ausgeben";else->if(kind=="Auto hinzufügen")"Hinzufügen" else "Speichern"})}}
  }
 }
-private fun solveMonthlyRate(principal:Double,payment:Double,total:Double):Double?{if(principal<=0||payment<=0||total<=0)return null;val n=kotlin.math.ceil(total/payment).toInt().coerceAtLeast(1);var lo=0.0;var hi=.1;repeat(80){val r=(lo+hi)/2;var bal=principal;repeat(n){bal=bal*(1+r)-payment};if(bal>0)hi=r else lo=r};return (lo+hi)/2}\n\n@Composable private fun BalanceScreen(state:JSONObject,repo:HouseholdRepository,month:YearMonth,prev:()->Unit,next:()->Unit){
+private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Double?{if(principal==0.0||monthly==0.0||total==0.0||total<=principal)return null;val n=total/monthly;if(n<1)return null;var r=.01;repeat(60){val pow=kotlin.math.pow(1+r,-n);val fv=monthly*(1-pow)/r-principal;val h=.00001;val powH=kotlin.math.pow(1+r+h,-n);val fH=monthly*(1-powH)/(r+h)-principal;val deriv=(fH-fv)/h;if(kotlin.math.abs(deriv)<1e-9)return@repeat;var nr=r-fv/deriv;if(nr<=0)nr=r/2;if(kotlin.math.abs(nr-r)<1e-9){r=nr;return@repeat};r=nr};return if(r>0&&r.isFinite())r else null}
+
+@Composable private fun BalanceScreen(state:JSONObject,repo:HouseholdRepository,month:YearMonth,prev:()->Unit,next:()->Unit){
     val all=repo.array(state,"betaEntries").objects()
     val monthEntries=all.filter{runCatching{YearMonth.from(LocalDate.parse(it.optString("date")))==month}.getOrDefault(false)}
     val income=monthEntries.filter{it.optString("type")=="einnahme" || it.optString("type")=="income"}.sumOf{it.optDouble("amount")}
@@ -229,9 +231,21 @@ private fun solveMonthlyRate(principal:Double,payment:Double,total:Double):Doubl
  Spacer(Modifier.height(14.dp))
  plan.take(12).forEachIndexed{idx,m->Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).then(if(idx==0)Modifier.border(1.5.dp,Blue,RoundedCornerShape(14.dp)) else Modifier).padding(horizontal=20.dp,vertical=18.dp)){Row(Modifier.fillMaxWidth()){Text(m.label+(if(idx==0)" · aktuell" else ""),Modifier.weight(1f),fontSize=17.sp,fontWeight=FontWeight.ExtraBold);Text(money(m.total),fontSize=14.5.sp,fontWeight=FontWeight.SemiBold)};m.rows.filter{it.extra>.005}.forEach{r->Row(Modifier.fillMaxWidth().padding(top=7.dp)){Text(r.name,Modifier.weight(1f),fontSize=16.sp,fontWeight=FontWeight.SemiBold);Text("+"+money(r.extra),fontSize=14.sp,fontWeight=FontWeight.Bold,color=Green)};Text("Restschuld danach: "+money(r.remaining),fontSize=12.sp,color=InkSoft)}}}
 }
-private data class PayRow(val name:String,val payment:Double,val extra:Double,val remaining:Double)
-private data class PayMonth(val month:Int,val label:String,val total:Double,val rows:List<PayRow>)
-private fun makePayoffPlan(loans:List<JSONObject>,extra:Double):List<PayMonth>{data class D(val name:String,var balance:Double,val payment:Double);val ds=loans.map{D(it.optString("name"),it.optDouble("remainingBalance"),it.optDouble("monthlyPayment"))}.toMutableList();val out=mutableListOf<PayMonth>();var m=0;while(ds.any{it.balance>.005}&&m<1200){m++;var snow=extra;var total=0.0;val rows=mutableListOf<PayRow>();ds.filter{it.balance>.005}.sortedBy{it.balance}.forEach{d->val base=kotlin.math.min(d.balance,d.payment);val ex=kotlin.math.min(kotlin.math.max(0.0,d.balance-base),snow);val pay=base+ex;d.balance-=pay;total+=pay;if(d.balance<=.005)snow+=d.payment;rows+=PayRow(d.name,pay,ex,d.balance)};out+=PayMonth(m,LocalDate.now().plusMonths((m-1).toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy",Locale.GERMAN)),total,rows)};return out}
+private data class PayRow(val id:String,val name:String,val payment:Double,val extra:Double,val remaining:Double)
+private data class PayMonth(val month:Int,val label:String,val total:Double,val remaining:Double,val rows:List<PayRow>)
+private fun cents(v:Double)=kotlin.math.round(v*100.0)/100.0
+private fun makePayoffPlan(loans:List<JSONObject>,extra:Double,maxMonths:Int=600):List<PayMonth>{
+ data class D(val id:String,val name:String,var balance:Double,val payment:Double,val rate:Double?,val carry:Int,var counted:Boolean=false)
+ val ds=loans.filter{it.optDouble("remainingBalance")>0}.map{D(it.optString("id"),it.optString("name"),it.optDouble("remainingBalance"),it.optDouble("monthlyPayment"),if(it.isNull("monthlyRate"))null else it.optDouble("monthlyRate"),it.optInt("carryoverPct",100).coerceIn(0,100))}.toMutableList()
+ if(ds.isEmpty())return emptyList();var currentBudget=ds.sumOf{it.payment}+extra;if(currentBudget<=0)return emptyList();val out=mutableListOf<PayMonth>();var m=0
+ fun mark(d:D){if(d.balance<=.005&&!d.counted){d.counted=true;currentBudget=cents(currentBudget-cents(d.payment*(100-d.carry)/100.0))}}
+ while(ds.any{it.balance>.005}&&m<maxMonths){m++;val start=currentBudget;var budget=start;val rows=mutableListOf<PayRow>()
+  ds.forEach{d->if(d.balance>.005){val interest=if(d.rate!=null)cents(d.balance*d.rate) else 0.0;val maxPay=kotlin.math.min(d.payment,budget);val principal=kotlin.math.max(0.0,kotlin.math.min(maxPay-interest,d.balance));var pay=cents(principal+interest);pay=kotlin.math.min(pay,budget);d.balance=cents(d.balance-principal);budget=cents(budget-pay);rows+=PayRow(d.id,d.name,pay,0.0,d.balance);mark(d)}}
+  while(budget>.005&&ds.any{it.balance>.005}){val d=ds.filter{it.balance>.005}.minBy{it.balance};val pay=kotlin.math.min(budget,d.balance);d.balance=cents(d.balance-pay);budget=cents(budget-pay);val i=rows.indexOfFirst{it.id==d.id};if(i>=0){val x=rows[i];rows[i]=x.copy(extra=x.extra+pay,remaining=d.balance)}else rows+=PayRow(d.id,d.name,0.0,pay,d.balance);mark(d)}
+  val date=LocalDate.now().withDayOfMonth(1).plusMonths((m-1).toLong());val label=date.month.getDisplayName(java.time.format.TextStyle.FULL,Locale.GERMAN).take(3)+" "+date.year
+  out+=PayMonth(m,label,cents(start-budget),cents(ds.sumOf{it.balance}),rows)
+ };return out
+}
 private fun payoffDuration(m:Int):String{val y=m/12;val r=m%12;return (if(y>0)"$y "+if(y==1)"Jahr" else "Jahre" else "")+(if(y>0&&r>0)", " else "")+(if(r>0)"$r "+if(r==1)"Monat" else "Monate" else if(y==0)"diesen Monat" else "")}
 @Composable private fun LoanHero(remaining:Double,original:Double,monthly:Double){
  val pct=if(original>0)((original-remaining)/original).coerceIn(0.0,1.0) else 0.0
