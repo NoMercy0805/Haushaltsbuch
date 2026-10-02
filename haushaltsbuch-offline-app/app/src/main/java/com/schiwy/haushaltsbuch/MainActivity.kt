@@ -147,7 +147,38 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
 }
 @Composable private fun IncomeExpenseBar(income:Double,expense:Double){val total=(income+expense).takeIf{it>0}?:1.0;val left=(income/total).toFloat().coerceIn(0f,1f);Row(Modifier.fillMaxWidth().padding(top=12.dp).height(20.dp).clip(RoundedCornerShape(10.dp))){Box(Modifier.weight(left.coerceAtLeast(.001f)).fillMaxHeight().background(Green).padding(start=8.dp),contentAlignment=Alignment.CenterStart){if(left>.22f)Text(money(income),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)};Box(Modifier.weight((1-left).coerceAtLeast(.001f)).fillMaxHeight().background(Red).padding(end=8.dp),contentAlignment=Alignment.CenterEnd){if(1-left>.22f)Text(money(expense),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)}}}
 
-@Composable private fun BookingsScreen(state:JSONObject,repo:HouseholdRepository){val income=repo.array(state,"income");val fixed=repo.array(state,"fixedExpenses");val invoices=repo.array(state,"openInvoices");LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){item{SummaryCard("Monatliche Einnahmen",money(sum(income,"amount")),Green)};item{SectionTitle("Einnahmen")};items(income.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))};item{SectionTitle("Fixkosten")};items(fixed.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))};item{SectionTitle("Offene Rechnungen")};items(invoices.objects().filter{!it.optBoolean("paid")}){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"),it.optString("dueDate"))}}}
+@Composable private fun BookingsScreen(state:JSONObject,repo:HouseholdRepository){
+    val income=repo.array(state,"income");val fixed=repo.array(state,"fixedExpenses");val invoices=repo.array(state,"openInvoices")
+    var view by remember{mutableStateOf("rechnungen")}
+    Column(Modifier.fillMaxSize().padding(horizontal=18.dp)){
+        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background,RoundedCornerShape(14.dp)).padding(4.dp)){
+            OriginalSubNav("Rechnungen",view=="rechnungen",Modifier.weight(1f)){view="rechnungen"}
+            OriginalSubNav("Einnahmen",view=="einnahmen",Modifier.weight(1f)){view="einnahmen"}
+            OriginalSubNav("Fixkosten",view=="fixkosten",Modifier.weight(1f)){view="fixkosten"}
+        }
+        Spacer(Modifier.height(18.dp))
+        when(view){
+            "rechnungen"->{
+                val open=invoices.objects().filter{!it.optBoolean("paid")};val total=open.sumOf{it.optDouble("amount")}
+                val today=LocalDate.now();val overdue=open.count{runCatching{LocalDate.parse(it.optString("dueDate")).isBefore(today)}.getOrDefault(false)}
+                OriginalHero("Offene Rechnungen gesamt",money(total),"Rechnungen",open.size.toString(),"Davon überfällig",overdue.toString())
+                LazyColumn{if(open.isEmpty())item{OriginalEmpty("Keine offenen Rechnungen eingetragen.")};items(open.sortedBy{it.optString("dueDate")}){o->SimpleMoneyRow(o.optString("name"),o.optDouble("amount"),o.optString("dueDate"))}}
+            }
+            "einnahmen"->{OriginalHero("Einnahmen gesamt",money(sum(income,"amount")));LazyColumn{if(income.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(income.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))}}}
+            else->{OriginalHero("Fixkosten gesamt",money(sum(fixed,"amount")));LazyColumn{if(fixed.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(fixed.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))}}}
+        }
+    }
+}
+@Composable private fun OriginalSubNav(label:String,active:Boolean,modifier:Modifier,onClick:()->Unit){
+    Surface(modifier.clickable(onClick=onClick),shape=RoundedCornerShape(11.dp),color=if(active)MaterialTheme.colorScheme.surface else Color.Transparent,shadowElevation=if(active)1.dp else 0.dp){Text(label,Modifier.padding(vertical=11.dp,horizontal=8.dp),textAlign=TextAlign.Center,fontSize=13.5.sp,fontWeight=FontWeight.Bold,color=if(active)MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)}
+}
+@Composable private fun OriginalHero(label:String,value:String,sub1:String?=null,val1:String?=null,sub2:String?=null,val2:String?=null){
+    Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(HeroBlueStart,HeroBlueEnd))).padding(horizontal=20.dp,vertical=22.dp)){
+        Text(label,fontSize=13.sp,color=HeroBlueText);Spacer(Modifier.height(6.dp));Text(value,fontSize=34.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-.68).sp,color=MaterialTheme.colorScheme.onSurface)
+        if(sub1!=null&&val1!=null){Spacer(Modifier.height(14.dp));Row(horizontalArrangement=Arrangement.spacedBy(18.dp)){Column{Text(sub1,fontSize=11.sp,color=HeroBlueSub);Spacer(Modifier.height(2.dp));Text(val1,fontSize=14.sp,fontWeight=FontWeight.Bold)};if(sub2!=null&&val2!=null)Column{Text(sub2,fontSize=11.sp,color=HeroBlueSub);Spacer(Modifier.height(2.dp));Text(val2,fontSize=14.sp,fontWeight=FontWeight.Bold)}}}
+    }
+}
+@Composable private fun OriginalEmpty(text:String)=Text(text,Modifier.fillMaxWidth().padding(vertical=28.dp),textAlign=TextAlign.Center,color=MaterialTheme.colorScheme.onSurfaceVariant)
 @Composable private fun VariableScreen(state:JSONObject,repo:HouseholdRepository){val costs=repo.array(state,"variableCosts");val savings=repo.array(state,"savings");val saved=savings.objects().sumOf{if(it.optString("type","deposit")=="expense")-it.optDouble("amount") else it.optDouble("amount")};LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){item{SummaryCard("Spartopf",money(saved),Blue)};item{SectionTitle("Variable Kosten")};items(costs.objects()){o->SimpleMoneyRow(o.optString("name"),o.optDouble("monthlyAmount"),o.optString("interval"))};item{SectionTitle("Sparen")};items(savings.objects().sortedByDescending{it.optString("date")}){o->EntryCard(o.optString("comment","Sparen"),o.optString("date"),o.optDouble("amount"),o.optString("type","deposit")!="expense")}}}
 @Composable private fun LoansScreen(state:JSONObject,repo:HouseholdRepository){val loans=repo.array(state,"loans").objects();LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){item{SummaryCard("Restschuld",money(loans.sumOf{it.optDouble("remainingBalance")}),Red)};items(loans){o->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(16.dp)){Text(o.optString("name","Kredit"),fontWeight=FontWeight.Bold);Text("Restschuld "+money(o.optDouble("remainingBalance")),fontSize=20.sp);Text("Rate "+money(o.optDouble("monthlyPayment"))+" / Monat",color=MaterialTheme.colorScheme.onSurfaceVariant)}}};if(loans.isEmpty())item{EmptyCard("Keine Kredite angelegt")}}}
 @Composable private fun FuelScreen(state:JSONObject,repo:HouseholdRepository){val cars=repo.array(state,"cars").objects();val logs=repo.array(state,"fuelLogs").objects();LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){item{SummaryCard("Tankvorgänge",logs.size.toString(),Blue)};item{SectionTitle("Fahrzeuge")};items(cars){o->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(16.dp)){Text(o.optString("name","Fahrzeug"),fontWeight=FontWeight.Bold);Text(logs.count{it.optString("carId")==o.optString("id")}.toString()+" Tankvorgänge",color=MaterialTheme.colorScheme.onSurfaceVariant)}}};item{SectionTitle("Letzte Tankvorgänge")};items(logs.sortedByDescending{it.optString("date")}.take(30)){o->SimpleMoneyRow(o.optString("date"),o.optDouble("liters")*o.optDouble("pricePerLiter"),o.optDouble("liters").toString()+" l · "+money(o.optDouble("pricePerLiter"))+"/l")}}}
