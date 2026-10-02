@@ -19,8 +19,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.awaitPointerEventScope
-import androidx.compose.ui.input.pointer.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
@@ -33,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -77,6 +78,14 @@ private fun appBlue(dark:Boolean)=if(dark)Color(0xFF5B9CFF) else Color(0xFF1268F
 private fun appSurface(dark:Boolean)=if(dark)Color(0xF71E1F24) else Color(0xF7FFFFFF)
 private fun appPrimarySoft(dark:Boolean)=if(dark)Color(0xFF1B2A44) else Color(0xFFE3EDFF)
 private fun appSavingsSoft(dark:Boolean)=if(dark)Color(0xFF1B3A2C) else Color(0xFFDCF5EA)
+private fun appExpenseSoft(dark:Boolean)=if(dark)Color(0xFF4A241F) else Color(0xFFFFE2DC)
+private fun appExhaust(dark:Boolean)=if(dark)Color(0xFF9CA3AF) else Color(0xFF6B7280)
+private fun appExhaustSoft(dark:Boolean)=if(dark)Color(0xFF292D32) else Color(0xFFE8E9EB)
+private fun heroExhaustStart(dark:Boolean)=if(dark)Color(0xFF34383E) else Color(0xFFE5E7EA)
+private fun heroExhaustEnd(dark:Boolean)=if(dark)Color(0xFF25282D) else Color(0xFFD5D8DC)
+private fun heroExhaustText(dark:Boolean)=if(dark)Color(0xFFF2F2F4) else Color(0xFF34383E)
+private fun heroExhaustSub(dark:Boolean)=if(dark)Color(0xFFC5C8CE) else Color(0xFF666B73)
+private fun genId()=UUID.randomUUID().toString()
 private fun heroBlueStart(dark:Boolean)=if(dark)Color(0xFF1B2A4A) else Color(0xFFCFE0FF)
 private fun heroBlueEnd(dark:Boolean)=if(dark)Color(0xFF14203A) else Color(0xFFB8D2FF)
 private fun heroBlueText(dark:Boolean)=if(dark)Color(0xFF8FB4E8) else Color(0xFF0D3C8C)
@@ -84,8 +93,8 @@ private fun heroBlueSub(dark:Boolean)=if(dark)Color(0xFFB8C4D9) else Color(0xFF3
 
 class MainActivity : ComponentActivity() {
     private val widgetAction = mutableStateOf<String?>(null)
-    private var nativeStateForLifecycle: JSONObject? = null
-    private var nativeRepoForLifecycle: HouseholdRepository? = null
+    internal var nativeStateForLifecycle: JSONObject? = null
+    internal var nativeRepoForLifecycle: HouseholdRepository? = null
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); widgetAction.value=intent.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION) }
     override fun onStop() { nativeStateForLifecycle?.let { nativeRepoForLifecycle?.autoBackup(it) }; super.onStop() }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -342,8 +351,9 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
 @Composable private fun NativeApp(onThemeChanged:()->Unit,initialWidgetAction:String?,onWidgetActionConsumed:()->Unit){
     val activity=androidx.compose.ui.platform.LocalContext.current as Activity
     val repo=remember{HouseholdRepository(activity)}
+    var state by remember{mutableStateOf(repo.load())}
     SideEffect { if(activity is MainActivity){activity.nativeStateForLifecycle=state;activity.nativeRepoForLifecycle=repo} }
-    var state by remember{mutableStateOf(repo.load())};var startupWhatsNew by remember{mutableStateOf<List<NativeChange>>(emptyList())};var freshRestorePrompt by remember{mutableStateOf(false)};var freshRestorePending by remember{mutableStateOf(false)};var freshRestoreMessage by remember{mutableStateOf<String?>(null)};var tab by remember{mutableStateOf(Tab.BALANCE)};var visibilityRevision by remember{mutableStateOf(0)};val tabVisibility=remember(visibilityRevision){runCatching{JSONObject(repo.getSetting("household-tab-visibility")?:"{}")}.getOrDefault(JSONObject())};val visibleTabs=Tab.entries.filter{t->val k=when(t){Tab.BALANCE->"beta";Tab.BOOKINGS->"buchungen";Tab.VARIABLE->"variabel";Tab.LOANS->"kredite";Tab.FUEL->"tanken"};if(tabVisibility.has(k))tabVisibility.optBoolean(k,true) else true}.ifEmpty{listOf(Tab.BALANCE)};LaunchedEffect(visibleTabs){if(tab !in visibleTabs)tab=visibleTabs.first()};var addBeta by remember{mutableStateOf(false)};var betaInitialType by remember{mutableStateOf<String?>(null)};var editBetaId by remember{mutableStateOf<String?>(null)};var editBetaScope by remember{mutableStateOf("this")};var betaScopeChoiceId by remember{mutableStateOf<String?>(null)};var reconcileConfirmId by remember{mutableStateOf<String?>(null)};var addForm by remember{mutableStateOf<String?>(null)};var fabOpen by remember{mutableStateOf(false)};var settings by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
+    ;var startupWhatsNew by remember{mutableStateOf<List<NativeChange>>(emptyList())};var freshRestorePrompt by remember{mutableStateOf(false)};var freshRestorePending by remember{mutableStateOf(false)};var freshRestoreMessage by remember{mutableStateOf<String?>(null)};var tab by remember{mutableStateOf(Tab.BALANCE)};var visibilityRevision by remember{mutableStateOf(0)};val tabVisibility=remember(visibilityRevision){runCatching{JSONObject(repo.getSetting("household-tab-visibility")?:"{}")}.getOrDefault(JSONObject())};val visibleTabs=Tab.entries.filter{t->val k=when(t){Tab.BALANCE->"beta";Tab.BOOKINGS->"buchungen";Tab.VARIABLE->"variabel";Tab.LOANS->"kredite";Tab.FUEL->"tanken"};if(tabVisibility.has(k))tabVisibility.optBoolean(k,true) else true}.ifEmpty{listOf(Tab.BALANCE)};LaunchedEffect(visibleTabs){if(tab !in visibleTabs)tab=visibleTabs.first()};var addBeta by remember{mutableStateOf(false)};var betaInitialType by remember{mutableStateOf<String?>(null)};var editBetaId by remember{mutableStateOf<String?>(null)};var editBetaScope by remember{mutableStateOf("this")};var betaScopeChoiceId by remember{mutableStateOf<String?>(null)};var reconcileConfirmId by remember{mutableStateOf<String?>(null)};var addForm by remember{mutableStateOf<String?>(null)};var fabOpen by remember{mutableStateOf(false)};var settings by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
     fun persist(){repo.save(state);repo.autoBackup(state);state=JSONObject(state.toString())}
     fun updateWidgetBalance(){val entries=repo.array(state,"betaEntries").objects();val balance=entries.sumOf{if(it.optString("type")=="income"||it.optString("type")=="einnahme")it.optDouble("amount") else -it.optDouble("amount")};activity.getSharedPreferences(BetaWidgetProvider.PREFS_NAME,Context.MODE_PRIVATE).edit().putString(BetaWidgetProvider.KEY_BALANCE,money(balance)).putBoolean(BetaWidgetProvider.KEY_POSITIVE,balance>=0).apply();BetaWidgetProvider.updateAll(activity);if(activity.getSharedPreferences(BetaWidgetProvider.PREFS_NAME,Context.MODE_PRIVATE).getBoolean("kontostand_notification_enabled",false)){runCatching{ContextCompat.startForegroundService(activity,Intent(activity,KontostandForegroundService::class.java).putExtra(KontostandForegroundService.EXTRA_BALANCE_TEXT,money(balance)).putExtra(KontostandForegroundService.EXTRA_IS_POSITIVE,balance>=0))}}}
     LaunchedEffect(state.toString()){updateWidgetBalance()}
