@@ -56,6 +56,14 @@ private val HeroBlueStart = Color(0xFFCFE0FF)
 private val HeroBlueEnd = Color(0xFFB8D2FF)
 private val HeroBlueText = Color(0xFF0D3C8C)
 private val HeroBlueSub = Color(0xFF3A66AD)
+private val LocalAppDark = staticCompositionLocalOf { false }
+private fun appPaper(dark:Boolean)=if(dark)Color(0xFF0F1013) else Color(0xFFF2F2F5)
+private fun appInk(dark:Boolean)=if(dark)Color(0xFFF2F2F4) else Color(0xFF191A1C)
+private fun appInkSoft(dark:Boolean)=if(dark)Color(0xFFA9ABB2) else Color(0xFF6E7074)
+private fun appGreen(dark:Boolean)=if(dark)Color(0xFF2ED991) else Color(0xFF00A971)
+private fun appRed(dark:Boolean)=if(dark)Color(0xFFFF5B42) else Color(0xFFF0421F)
+private fun appBlue(dark:Boolean)=if(dark)Color(0xFF5B9CFF) else Color(0xFF1268FF)
+private fun appSurface(dark:Boolean)=if(dark)Color(0xF71E1F24) else Color(0xF7FFFFFF)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +78,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme(
                 colorScheme = if (dark) darkColorScheme(primary=Color(0xFF5B9CFF), background=Color(0xFF0F1013), surface=Color(0xFF1E1F24), onBackground=Color(0xFFF2F2F4), onSurface=Color(0xFFF2F2F4))
                 else lightColorScheme(primary=Blue, background=Paper, surface=SurfaceSolid, onBackground=Ink, onSurface=Ink)
-            ) { NativeApp(onThemeChanged={themeRevision++},initialWidgetAction=intent?.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION)) }
+            ) { CompositionLocalProvider(LocalAppDark provides dark) { NativeApp(onThemeChanged={themeRevision++},initialWidgetAction=intent?.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION)) } }
         }
     }
 }
