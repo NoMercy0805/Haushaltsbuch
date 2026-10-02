@@ -97,23 +97,58 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
 
 @Composable private fun BetaEntryDialog(onDismiss:()->Unit,onSave:(String,String,String,Double,String)->Unit){var type by remember{mutableStateOf("expense")};var title by remember{mutableStateOf("")};var date by remember{mutableStateOf(LocalDate.now().toString())};var amount by remember{mutableStateOf("")};var category by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,title={Text("Buchung hinzufügen")},text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){FilterChip(type=="income",{type="income"},{Text("Einnahme")});FilterChip(type=="expense",{type="expense"},{Text("Ausgabe")})};OutlinedTextField(title,{title=it},label={Text("Titel")},singleLine=true);OutlinedTextField(amount,{amount=it},label={Text("Betrag")},singleLine=true);OutlinedTextField(date,{date=it},label={Text("Datum (JJJJ-MM-TT)")},singleLine=true);OutlinedTextField(category,{category=it},label={Text("Kategorie")},singleLine=true)}},confirmButton={Button(onClick={val v=amount.replace(".","").replace(",",".").toDoubleOrNull();if(title.isNotBlank()&&v!=null&&v>0)onSave(type,title,date,v,category)}){Text("Speichern")}},dismissButton={TextButton(onClick=onDismiss){Text("Abbrechen")}})}
 
+
 @Composable private fun SettingsDialog(state:JSONObject,onDismiss:()->Unit){
     var page by remember{mutableStateOf<String?>(null)}
-    AlertDialog(onDismissRequest=onDismiss,title={Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){if(page!=null)TextButton(onClick={page=null}){Text("‹")};Text(page?:"Einstellungen",fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));TextButton(onClick=onDismiss){Text("×",fontSize=24.sp)}}},text={
-        if(page==null)Column(verticalArrangement=Arrangement.spacedBy(4.dp)){
-            SettingsRow("☀","Darstellung","Hell, Dunkel, System"){page="Darstellung"}
-            SettingsRow("▤","Sichtbare Bereiche","Welche Tabs angezeigt werden"){page="Sichtbare Bereiche"}
-            SettingsRow("☁","Backup","Sichern, wiederherstellen, automatisch"){page="Backup"}
-            SettingsRow("▰","Kontostand","Import, Dauerauftrag-Vorlagen, Titel-Vorschläge"){page="Kontostand"}
-            SettingsRow("⌫","Zurücksetzen","Alle Daten löschen"){page="Zurücksetzen"}
-            SettingsRow("◷","Update-Historie","Alle bisherigen Änderungen"){page="Update-Historie"}
-        } else when(page){
-            "Darstellung"->Column{Text("Darstellung",fontWeight=FontWeight.Bold);Spacer(Modifier.height(10.dp));Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){AssistChip(onClick={},label={Text("Hell")});AssistChip(onClick={},label={Text("Dunkel")});AssistChip(onClick={},label={Text("System")})}}
-            "Sichtbare Bereiche"->Column{Text("Buchungen");Text("Variable Kosten");Text("Kredite");Text("Tanken")}
-            else->Text("Dieser Bereich wird 1:1 aus der bestehenden App übernommen.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+    Box(Modifier.fillMaxSize().background(Color(0x73141416)).clickable(onClick=onDismiss),contentAlignment=Alignment.Center){
+        Surface(
+            modifier=Modifier.padding(20.dp).widthIn(max=400.dp).fillMaxWidth().clickable(enabled=false){},
+            shape=RoundedCornerShape(26.dp),
+            color=if(androidx.compose.foundation.isSystemInDarkTheme()) Color(0xFF2E2F35) else Color(0xFFD0D1D6),
+            shadowElevation=12.dp
+        ){
+            Column(Modifier.padding(22.dp)){
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+                    if(page!=null){
+                        Surface(shape=CircleShape,color=MaterialTheme.colorScheme.background,modifier=Modifier.size(36.dp).clickable{page=null}){
+                            Box(contentAlignment=Alignment.Center){Text("‹",fontSize=26.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    Text(page?:"Einstellungen",fontSize=19.sp,fontWeight=FontWeight.ExtraBold,modifier=Modifier.weight(1f))
+                    if(page==null)Surface(shape=CircleShape,color=MaterialTheme.colorScheme.background,modifier=Modifier.size(36.dp).clickable(onClick=onDismiss)){
+                        Box(contentAlignment=Alignment.Center){Text("×",fontSize=18.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                    } else Spacer(Modifier.width(36.dp))
+                }
+                Spacer(Modifier.height(6.dp))
+                if(page==null){
+                    SettingsRow("Darstellung","Hell, Dunkel, System"){page="Darstellung"}
+                    SettingsRow("Sichtbare Bereiche","Welche Tabs angezeigt werden"){page="Sichtbare Bereiche"}
+                    SettingsRow("Backup","Sichern, wiederherstellen, automatisch"){page="Backup"}
+                    SettingsRow("Kontostand","Import, Dauerauftrag-Vorlagen, Titel-Vorschläge"){page="Kontostand"}
+                    SettingsRow("Zurücksetzen","Alle Daten löschen"){page="Zurücksetzen"}
+                    SettingsRow("Update-Historie","Alle bisherigen Änderungen",false){page="Update-Historie"}
+                }else{
+                    when(page){
+                        "Darstellung"->Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                            listOf("Hell","Dunkel","System").forEach{label->Surface(Modifier.weight(1f),shape=RoundedCornerShape(11.dp),color=MaterialTheme.colorScheme.background){Text(label,Modifier.padding(vertical=11.dp),textAlign=TextAlign.Center,fontSize=13.5.sp,fontWeight=FontWeight.Bold)}}
+                        }
+                        "Sichtbare Bereiche"->Column(Modifier.padding(top=10.dp)){listOf("Buchungen","Variable Kosten","Kredite","Tanken").forEach{Text(it,Modifier.fillMaxWidth().padding(vertical=13.dp),fontSize=16.sp,fontWeight=FontWeight.SemiBold)}}
+                        else->Spacer(Modifier.height(1.dp))
+                    }
+                }
+            }
         }
-    },confirmButton={})
+    }
 }
-@Composable private fun SettingsRow(icon:String,title:String,sub:String,onClick:()->Unit){
-    Row(Modifier.fillMaxWidth().clickable(onClick=onClick).padding(vertical=11.dp),verticalAlignment=Alignment.CenterVertically){Text(icon,fontSize=20.sp,modifier=Modifier.width(34.dp));Column(Modifier.weight(1f)){Text(title,fontWeight=FontWeight.SemiBold);Text(sub,fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)};Text("›",fontSize=22.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+@Composable private fun SettingsRow(title:String,sub:String,divider:Boolean=true,onClick:()->Unit){
+    Column(Modifier.fillMaxWidth()){
+        Row(Modifier.fillMaxWidth().clickable(onClick=onClick).padding(vertical=13.dp),verticalAlignment=Alignment.CenterVertically){
+            Surface(shape=RoundedCornerShape(8.dp),color=MaterialTheme.colorScheme.primary,modifier=Modifier.size(32.dp)){Box(contentAlignment=Alignment.Center){Text("•",color=Color.White,fontSize=20.sp)}}
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)){Text(title,fontSize=16.sp,fontWeight=FontWeight.Bold);Text(sub,fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            Text("›",fontSize=22.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if(divider)HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+    }
 }
