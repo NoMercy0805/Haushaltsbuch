@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -171,8 +173,12 @@ private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Doubl
     val unreconciled=monthEntries.count{!it.optBoolean("reconciled")}
     val shown=if(filter=="unreconciled")monthEntries.filter{!it.optBoolean("reconciled")}else monthEntries
     val groups=shown.groupBy{it.optString("date")}.toSortedMap(compareByDescending{it})
+    val listState=rememberLazyListState()
+    var barCollapsed by remember(month){mutableStateOf(false)}
+    var lastScrollOffset by remember(month){mutableStateOf(0)}
+    LaunchedEffect(listState.firstVisibleItemIndex,listState.firstVisibleItemScrollOffset){val current=if(listState.firstVisibleItemIndex==0)listState.firstVisibleItemScrollOffset else Int.MAX_VALUE;if(current<=8){barCollapsed=false;lastScrollOffset=current}else if(current!=Int.MAX_VALUE&&lastScrollOffset!=Int.MAX_VALUE&&current-lastScrollOffset>24){barCollapsed=true;lastScrollOffset=current}else if(current==Int.MAX_VALUE){barCollapsed=true;lastScrollOffset=current}else if(kotlin.math.abs(current-lastScrollOffset)>24){lastScrollOffset=current}}
     Column(Modifier.fillMaxSize()){
-        IncomeExpenseBar(income,expense)
+        Box(Modifier.animateContentSize()){if(!barCollapsed)IncomeExpenseBar(income,expense)}
         Surface(color=MaterialTheme.colorScheme.surface.copy(alpha=.35f),shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){
             Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){
                 Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=prev)){Box(contentAlignment=Alignment.Center){Text("‹",fontSize=27.sp)}}
@@ -187,7 +193,7 @@ private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Doubl
             BetaFilter("Alle",filter=="all",Modifier.weight(1f)){filter="all"}
             BetaFilter("Nicht abgeglichen ($unreconciled)",filter=="unreconciled",Modifier.weight(1f)){filter="unreconciled"}
         }
-        LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(horizontal=18.dp,vertical=2.dp)){
+        LazyColumn(Modifier.weight(1f),state=listState,contentPadding=PaddingValues(horizontal=18.dp,vertical=2.dp)){
             if(groups.isEmpty())item{Text(if(filter=="unreconciled")"Alles in diesem Monat ist abgeglichen." else "Noch keine Einträge in diesem Monat.",Modifier.fillMaxWidth().padding(30.dp),textAlign=TextAlign.Center,color=MaterialTheme.colorScheme.onSurfaceVariant)}
             groups.forEach{(date,entries)->item(key=date){BetaDayGroup(date,entries)}}
         }
