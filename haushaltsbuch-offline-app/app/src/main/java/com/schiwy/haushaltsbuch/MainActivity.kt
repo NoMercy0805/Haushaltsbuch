@@ -187,12 +187,12 @@ private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Doubl
         Box(Modifier.animateContentSize()){if(!barCollapsed)IncomeExpenseBar(income,expense)}
         Surface(color=MaterialTheme.colorScheme.surface.copy(alpha=.35f),shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){
             Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){
-                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=prev)){Box(contentAlignment=Alignment.Center){Text("‹",fontSize=27.sp)}}
+                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=prev)){Box(contentAlignment=Alignment.Center){ChevronIcon(left=true,color=MaterialTheme.colorScheme.onSurface)}}
                 Column(horizontalAlignment=Alignment.CenterHorizontally){
                     Row{Text(month.format(DateTimeFormatter.ofPattern("MMMM",Locale.GERMAN)).replaceFirstChar{it.uppercase()},fontSize=19.sp,fontWeight=FontWeight.ExtraBold);Spacer(Modifier.width(6.dp));Text(month.year.toString(),fontSize=19.sp,fontWeight=FontWeight.ExtraBold)}
                     Text("Einnahmen +"+money(income)+" · Ausgaben -"+money(expense),fontSize=11.sp,fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=next)){Box(contentAlignment=Alignment.Center){Text("›",fontSize=27.sp)}}
+                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=next)){Box(contentAlignment=Alignment.Center){ChevronIcon(left=false,color=MaterialTheme.colorScheme.onSurface)}}
             }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(14.dp)).padding(4.dp)){
@@ -234,6 +234,7 @@ private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Doubl
         }
     }
 }
+@Composable private fun ChevronIcon(left:Boolean,color:Color){Canvas(Modifier.size(20.dp)){val stroke=Stroke(width=2.4.dp.toPx(),cap=StrokeCap.Round,join=StrokeJoin.Round);val x1=if(left)size.width*.63f else size.width*.37f;val x2=if(left)size.width*.37f else size.width*.63f;drawLine(color,Offset(x1,size.height*.25f),Offset(x2,size.height*.5f),strokeWidth=stroke.width,cap=StrokeCap.Round);drawLine(color,Offset(x2,size.height*.5f),Offset(x1,size.height*.75f),strokeWidth=stroke.width,cap=StrokeCap.Round)}}
 @Composable private fun IncomeExpenseBar(income:Double,expense:Double){val total=(income+expense).takeIf{it>0}?:1.0;val left=(income/total).toFloat().coerceIn(0f,1f);Row(Modifier.fillMaxWidth().padding(top=12.dp).height(20.dp).clip(RoundedCornerShape(10.dp))){Box(Modifier.weight(left.coerceAtLeast(.001f)).fillMaxHeight().background(Green).padding(start=8.dp),contentAlignment=Alignment.CenterStart){if(left>.22f)Text(money(income),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)};Box(Modifier.weight((1-left).coerceAtLeast(.001f)).fillMaxHeight().background(Red).padding(end=8.dp),contentAlignment=Alignment.CenterEnd){if(1-left>.22f)Text(money(expense),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)}}}
 
 @Composable private fun BookingsScreen(state:JSONObject,repo:HouseholdRepository){
@@ -411,7 +412,7 @@ private fun freedRateOffer(loan:JSONObject,repo:HouseholdRepository):Triple<Doub
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
                     if(page!=null){
                         Surface(shape=CircleShape,color=MaterialTheme.colorScheme.background,modifier=Modifier.size(36.dp).clickable{page=null}){
-                            Box(contentAlignment=Alignment.Center){Text("‹",fontSize=26.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                            Box(contentAlignment=Alignment.Center){ChevronIcon(left=true,color=MaterialTheme.colorScheme.onSurfaceVariant)}
                         }
                         Spacer(Modifier.width(10.dp))
                     }
