@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +34,10 @@ private val Green = Color(0xFF00A971)
 private val Red = Color(0xFFF0421F)
 private val Blue = Color(0xFF1268FF)
 private val SurfaceSolid = Color(0xFFFDFDFE)
+private val HeroBlueStart = Color(0xFFCFE0FF)
+private val HeroBlueEnd = Color(0xFFB8D2FF)
+private val HeroBlueText = Color(0xFF0D3C8C)
+private val HeroBlueSub = Color(0xFF3A66AD)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,11 +121,11 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
 @Composable private fun BetaDayGroup(date:String,entries:List<JSONObject>){
     val d=runCatching{LocalDate.parse(date)}.getOrNull()
     val total=entries.sumOf{if(it.optString("type")=="einnahme"||it.optString("type")=="income")it.optDouble("amount") else -it.optDouble("amount")}
-    Surface(Modifier.fillMaxWidth().padding(bottom=3.dp),shape=RoundedCornerShape(16.dp),color=MaterialTheme.colorScheme.surface){
+    Surface(Modifier.fillMaxWidth().padding(bottom=3.dp),shape=RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surface){
         Column{
-            Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary.copy(alpha=.12f)).padding(horizontal=14.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
-                Box(Modifier.size(34.dp).border(1.5.dp,MaterialTheme.colorScheme.primary,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center){Text((d?.dayOfMonth?:0).toString().padStart(2,'0'),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)}
-                Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text("TAGESSALDO",fontSize=11.5.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Text(if(d==null)"" else d.format(DateTimeFormatter.ofPattern("MMMM yyyy (EEEE)",Locale.GERMAN)),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            Row(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(HeroBlueStart,HeroBlueEnd))).padding(horizontal=14.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
+                Box(Modifier.size(34.dp).border(1.5.dp,HeroBlueText,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center){Text((d?.dayOfMonth?:0).toString().padStart(2,'0'),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)}
+                Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text("TAGESSALDO",fontSize=11.5.sp,fontWeight=FontWeight.ExtraBold,color=HeroBlueText,letterSpacing=.23.sp);Text(if(d==null)"" else d.format(DateTimeFormatter.ofPattern("MMMM yyyy (EEEE)",Locale.GERMAN)),fontSize=11.sp,color=HeroBlueSub)}
                 Text((if(total>=0) "+" else "")+money(total),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=if(total>=0)Green else Red)
             }
             entries.sortedByDescending{it.optString("id")}.forEachIndexed{idx,e->
