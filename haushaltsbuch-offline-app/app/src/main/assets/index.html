@@ -3760,13 +3760,16 @@ var nativeStorage = {
       requestAnimationFrame(function(){
         var currentY = window.scrollY;
         var delta = currentY - lastScrollY;
+        // Nach dem Einklappen bleibt der Balken verborgen, bis wirklich
+        // wieder der Seitenanfang erreicht ist. Normales Hochscrollen
+        // blendet ihn nicht mehr vorzeitig ein.
         if(currentY <= 8){
           bar.classList.remove('collapsed');
+          lastScrollY = currentY;
         } else if(delta > COLLAPSE_THRESHOLD){
           bar.classList.add('collapsed');
           lastScrollY = currentY;
-        } else if(delta < -COLLAPSE_THRESHOLD){
-          bar.classList.remove('collapsed');
+        } else if(Math.abs(delta) > COLLAPSE_THRESHOLD){
           lastScrollY = currentY;
         }
         ticking = false;
