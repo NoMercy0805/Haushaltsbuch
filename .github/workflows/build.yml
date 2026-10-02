@@ -2,7 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, native-compose ]
   workflow_dispatch:
 
 jobs:
@@ -53,10 +53,10 @@ jobs:
           keytool -printcert -jarfile "$APK_PATH" | grep "SHA1:" || echo "WARNUNG: Konnte Signatur nicht auslesen (unsignierte APK?)"
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Haushaltsbuch.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Haushaltsbuch-Beta.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Haushaltsbuch
-          path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch.apk
+          name: Haushaltsbuch-Beta
+          path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch-Beta.apk
