@@ -193,21 +193,23 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
 @Composable private fun TilgungScreen(loans:List<JSONObject>,monthly:Double){
  var extra by remember{mutableStateOf(0.0)}
  if(loans.isEmpty()){OriginalEmpty("Keine laufenden Kredite - nichts zu tilgen. 🎉");return}
- val estimate=estimatePayoffMonths(loans,extra)
- val years=estimate/12;val months=estimate%12
- val duration=(if(years>0) "$years "+if(years==1)"Jahr" else "Jahre" else "")+(if(years>0&&months>0)", " else "")+(if(months>0)"$months "+if(months==1)"Monat" else "Monate" else if(years==0)"0 Monate" else "")
+ val plan=makePayoffPlan(loans,extra);val estimate=plan.lastOrNull()?.month?:0
+ val years=estimate/12;val rest=estimate%12
+ val duration=(if(years>0)"$years "+if(years==1)"Jahr" else "Jahre" else "")+(if(years>0&&rest>0)", " else "")+(if(rest>0)"$rest "+if(rest==1)"Monat" else "Monate" else if(years==0)"0 Monate" else "")
  OriginalHero("Schuldenfrei in",duration,"Voraussichtlich fertig",LocalDate.now().plusMonths(estimate.toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy",Locale.GERMAN)),"Betrag/Monat",money(monthly+extra))
  Column(Modifier.fillMaxWidth().padding(bottom=20.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp)){
   Text("Zusätzlicher Betrag pro Monat",fontSize=13.sp,color=InkSoft);Spacer(Modifier.height(10.dp));Text(money(extra),Modifier.fillMaxWidth().padding(bottom=6.dp),textAlign=TextAlign.Center,fontSize=30.sp,fontWeight=FontWeight.ExtraBold);HorizontalDivider(thickness=2.dp,color=HeroBlueText);Spacer(Modifier.height(14.dp))
   Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf(50.0,100.0,150.0,200.0).forEach{v->Surface(Modifier.weight(1f).clickable{extra=v},shape=RoundedCornerShape(50),color=if(extra==v)HeroBlueStart else Paper){Text(v.toInt().toString()+" €",Modifier.padding(vertical=9.dp),textAlign=TextAlign.Center,fontSize=13.sp,color=if(extra==v)HeroBlueText else InkSoft)}}}
  }
+ val finished=plan.flatMap{m->m.rows.filter{it.remaining<=.005}.map{Triple(it.name,m.month,it.payment)}}
+ if(finished.isNotEmpty()){Text("Wann welcher Kredit fertig ist",Modifier.padding(top=20.dp,bottom=8.dp),fontSize=19.sp,fontWeight=FontWeight.ExtraBold);Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal=20.dp)){finished.distinctBy{it.first}.forEachIndexed{i,p->Column(Modifier.padding(vertical=10.dp)){Text(p.first,fontSize=15.sp,fontWeight=FontWeight.Bold);Text("in "+payoffDuration(p.second)+" · "+LocalDate.now().plusMonths(p.second.toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy",Locale.GERMAN)),fontSize=13.5.sp,color=InkSoft);Text("+"+money(p.third)+" zum Extra-Betrag",fontSize=13.sp,color=Green)};if(i<finished.distinctBy{it.first}.lastIndex)HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)}}}
+ Spacer(Modifier.height(14.dp))
+ plan.take(12).forEachIndexed{idx,m->Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).then(if(idx==0)Modifier.border(1.5.dp,Blue,RoundedCornerShape(14.dp)) else Modifier).padding(horizontal=20.dp,vertical=18.dp)){Row(Modifier.fillMaxWidth()){Text(m.label+(if(idx==0)" · aktuell" else ""),Modifier.weight(1f),fontSize=17.sp,fontWeight=FontWeight.ExtraBold);Text(money(m.total),fontSize=14.5.sp,fontWeight=FontWeight.SemiBold)};m.rows.filter{it.extra>.005}.forEach{r->Row(Modifier.fillMaxWidth().padding(top=7.dp)){Text(r.name,Modifier.weight(1f),fontSize=16.sp,fontWeight=FontWeight.SemiBold);Text("+"+money(r.extra),fontSize=14.sp,fontWeight=FontWeight.Bold,color=Green)};Text("Restschuld danach: "+money(r.remaining),fontSize=12.sp,color=InkSoft)}}}
 }
-private fun estimatePayoffMonths(loans:List<JSONObject>,extra:Double):Int{
- data class D(var balance:Double,val payment:Double)
- val ds=loans.map{D(it.optDouble("remainingBalance"),it.optDouble("monthlyPayment"))}.toMutableList();var m=0
- while(ds.any{it.balance>.005}&&m<1200){var snow=extra;ds.filter{it.balance>.005}.sortedBy{it.balance}.forEach{d->val pay=kotlin.math.min(d.balance,d.payment+snow);d.balance-=pay;if(d.balance<=.005)snow+=d.payment};m++}
- return m
-}
+private data class PayRow(val name:String,val payment:Double,val extra:Double,val remaining:Double)
+private data class PayMonth(val month:Int,val label:String,val total:Double,val rows:List<PayRow>)
+private fun makePayoffPlan(loans:List<JSONObject>,extra:Double):List<PayMonth>{data class D(val name:String,var balance:Double,val payment:Double);val ds=loans.map{D(it.optString("name"),it.optDouble("remainingBalance"),it.optDouble("monthlyPayment"))}.toMutableList();val out=mutableListOf<PayMonth>();var m=0;while(ds.any{it.balance>.005}&&m<1200){m++;var snow=extra;var total=0.0;val rows=mutableListOf<PayRow>();ds.filter{it.balance>.005}.sortedBy{it.balance}.forEach{d->val base=kotlin.math.min(d.balance,d.payment);val ex=kotlin.math.min(kotlin.math.max(0.0,d.balance-base),snow);val pay=base+ex;d.balance-=pay;total+=pay;if(d.balance<=.005)snow+=d.payment;rows+=PayRow(d.name,pay,ex,d.balance)};out+=PayMonth(m,LocalDate.now().plusMonths((m-1).toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy",Locale.GERMAN)),total,rows)};return out}
+private fun payoffDuration(m:Int):String{val y=m/12;val r=m%12;return (if(y>0)"$y "+if(y==1)"Jahr" else "Jahre" else "")+(if(y>0&&r>0)", " else "")+(if(r>0)"$r "+if(r==1)"Monat" else "Monate" else if(y==0)"diesen Monat" else "")}
 @Composable private fun LoanHero(remaining:Double,original:Double,monthly:Double){
  val pct=if(original>0)((original-remaining)/original).coerceIn(0.0,1.0) else 0.0
  Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(HeroBlueStart,HeroBlueEnd))).padding(horizontal=20.dp,vertical=22.dp)){
