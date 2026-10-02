@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background\nimport androidx.compose.foundation.border\nimport androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,7 +67,7 @@ private class HouseholdRepository(private val activity: Activity) {
 private fun JSONArray.objects(): List<JSONObject> = (0 until length()).mapNotNull { optJSONObject(it) }
 private fun money(v: Double): String = NumberFormat.getCurrencyInstance(Locale.GERMANY).format(v)
 private fun sum(a: JSONArray, field: String, predicate: (JSONObject)->Boolean = { true }): Double = a.objects().filter(predicate).sumOf { it.optDouble(field, 0.0) }
-private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand","▰"),BOOKINGS("Buchungen","▤"),VARIABLE("Variable Kosten","◎"),LOANS("Kredite","▣"),FUEL("Tanken","⛽")}
+private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchungen"),VARIABLE("Variable Kosten"),LOANS("Kredite"),FUEL("Tanken")}
 
 @Composable private fun NativeApp(){
     val activity=androidx.compose.ui.platform.LocalContext.current as Activity
@@ -72,7 +76,7 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
     fun persist(){repo.save(state);state=JSONObject(state.toString())}
     Scaffold(
         topBar={Surface(color=MaterialTheme.colorScheme.background.copy(alpha=.92f)){Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("Haushaltsbuch",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-.6).sp);Text("+",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Spacer(Modifier.weight(1f));Surface(shape=RoundedCornerShape(50),color=MaterialTheme.colorScheme.surface,modifier=Modifier.clickable{settings=true}){Text("⚙",Modifier.padding(10.dp),fontSize=18.sp)}}}}},
-        bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){Tab.entries.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){Text(t.symbol,fontSize=17.sp,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=if(tab==t)FontWeight.ExtraBold else FontWeight.Normal);Text(t.label,fontSize=10.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
+        bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){Tab.entries.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){OriginalTabIcon(t,if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,tab==t);Text(t.label,fontSize=10.5.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
         floatingActionButton={if(tab==Tab.BALANCE)FloatingActionButton(onClick={addBeta=true},containerColor=MaterialTheme.colorScheme.primary.copy(alpha=.80f),shape=RoundedCornerShape(50)){Text("+",fontSize=30.sp,color=Color.White)}}
     ){pad->Box(Modifier.padding(pad).fillMaxSize().background(MaterialTheme.colorScheme.background)){when(tab){Tab.BALANCE->BalanceScreen(state,repo,month,{month=month.minusMonths(1)},{month=month.plusMonths(1)});Tab.BOOKINGS->BookingsScreen(state,repo);Tab.VARIABLE->VariableScreen(state,repo);Tab.LOANS->LoansScreen(state,repo);Tab.FUEL->FuelScreen(state,repo)}}}
     if(settings)SettingsDialog(state,{settings=false})\n    if(addBeta)BetaEntryDialog({addBeta=false}){type,title,date,amount,category->repo.array(state,"betaEntries").put(JSONObject().put("id",UUID.randomUUID().toString()).put("type",type).put("title",title).put("date",date).put("amount",amount).put("category",category).put("recurring",false).put("reconciled",false));persist();addBeta=false}
@@ -208,5 +212,20 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
             Text("›",fontSize=22.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if(divider)HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+@Composable private fun OriginalTabIcon(tab:Tab,color:Color,active:Boolean){
+    Canvas(Modifier.size(16.dp)){
+        val sx=size.width/24f; val sy=size.height/24f
+        fun p(x:Float,y:Float)=Offset(x*sx,y*sy)
+        val stroke=Stroke(width=(if(active)2.6f else 2f)*sx)
+        when(tab){
+            Tab.BOOKINGS->{drawLine(color,p(6f,2f),p(15f,2f),stroke.width);drawLine(color,p(6f,2f),p(4f,4f),stroke.width);drawLine(color,p(4f,4f),p(4f,20f),stroke.width);drawLine(color,p(4f,20f),p(6f,22f),stroke.width);drawLine(color,p(6f,22f),p(18f,22f),stroke.width);drawLine(color,p(18f,22f),p(20f,20f),stroke.width);drawLine(color,p(20f,20f),p(20f,7f),stroke.width);drawLine(color,p(15f,2f),p(20f,7f),stroke.width);drawLine(color,p(14f,2f),p(14f,7f),stroke.width);drawLine(color,p(14f,7f),p(19f,7f),stroke.width);drawLine(color,p(8f,13f),p(16f,13f),stroke.width);drawLine(color,p(8f,17f),p(13f,17f),stroke.width)}
+            Tab.VARIABLE->{drawOval(color,p(5f,3f),Size(14*sx,6*sy),style=stroke);drawLine(color,p(5f,6f),p(5f,16f),stroke.width);drawLine(color,p(19f,6f),p(19f,16f),stroke.width);drawArc(color,0f,180f,false,p(5f,8f),Size(14*sx,6*sy),style=stroke);drawArc(color,0f,180f,false,p(5f,13f),Size(14*sx,6*sy),style=stroke)}
+            Tab.LOANS->{drawRoundRect(color,p(2f,5f),Size(20*sx,14*sy),cornerRadius=androidx.compose.ui.geometry.CornerRadius(2.5f*sx),style=stroke);drawLine(color,p(2f,10f),p(22f,10f),stroke.width)}
+            Tab.FUEL->{drawRoundRect(color,p(3f,7f),Size(10*sx,14*sy),cornerRadius=androidx.compose.ui.geometry.CornerRadius(1.5f*sx),style=stroke);drawLine(color,p(6f,7f),p(6f,4f),stroke.width);drawLine(color,p(6f,4f),p(7f,3f),stroke.width);drawLine(color,p(7f,3f),p(10f,3f),stroke.width);drawLine(color,p(10f,3f),p(11f,4f),stroke.width);drawLine(color,p(11f,4f),p(11f,7f),stroke.width);drawLine(color,p(6.5f,12f),p(11.5f,12f),stroke.width);drawLine(color,p(13f,11f),p(15.3f,11f),stroke.width);drawLine(color,p(15.3f,11f),p(18.3f,14.1f),stroke.width)}
+            Tab.BALANCE->{listOf(Triple(2f,13.4f,6f),Triple(9f,14.4f,13f),Triple(15f,10.4f,19f)).forEach{(x,y,cx)->drawOval(color,p(x,y),Size(8*sx,3.2f*sy),style=stroke)};drawLine(color,p(2f,15f),p(2f,18f),stroke.width);drawLine(color,p(10f,15f),p(10f,18f),stroke.width);drawLine(color,p(9f,16f),p(9f,20f),stroke.width);drawLine(color,p(17f,16f),p(17f,20f),stroke.width);drawLine(color,p(15f,12f),p(15f,17f),stroke.width);drawLine(color,p(23f,12f),p(23f,17f),stroke.width)}
+        }
     }
 }
