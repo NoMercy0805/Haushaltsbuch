@@ -74,12 +74,65 @@ private enum class Tab(val label:String,val symbol:String){BALANCE("Kontostand",
 }
 
 @Composable private fun BalanceScreen(state:JSONObject,repo:HouseholdRepository,month:YearMonth,prev:()->Unit,next:()->Unit){
-    val all=repo.array(state,"betaEntries").objects();val entries=all.filter{runCatching{YearMonth.from(LocalDate.parse(it.optString("date")))==month}.getOrDefault(false)}
-    val income=entries.filter{it.optString("type")=="income"}.sumOf{it.optDouble("amount")};val expense=entries.filter{it.optString("type")!="income"}.sumOf{it.optDouble("amount")};val balance=income-expense
-    Column(Modifier.fillMaxSize()){IncomeExpenseBar(income,expense);Surface(color=MaterialTheme.colorScheme.surface.copy(alpha=.65f),shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){TextButton(onClick=prev){Text("‹",fontSize=26.sp)};Column(horizontalAlignment=Alignment.CenterHorizontally){Text(month.format(DateTimeFormatter.ofPattern("MMMM",Locale.GERMAN)).replaceFirstChar{it.uppercase()},fontWeight=FontWeight.Bold);Text(month.year.toString(),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)};TextButton(onClick=next){Text("›",fontSize=26.sp)}}}
-        Card(Modifier.fillMaxWidth().padding(horizontal=16.dp),shape=RoundedCornerShape(18.dp)){Column(Modifier.padding(18.dp)){Text("Kontostand",color=MaterialTheme.colorScheme.onSurfaceVariant);Text(money(balance),fontSize=32.sp,fontWeight=FontWeight.Bold,color=if(balance>=0)Green else Red);Spacer(Modifier.height(8.dp));Row(Modifier.fillMaxWidth()){Text("Einnahmen "+money(income),color=Green,modifier=Modifier.weight(1f));Text("Ausgaben "+money(expense),color=Red)}}}
-        Text("Buchungen",Modifier.padding(16.dp,18.dp,16.dp,8.dp),fontWeight=FontWeight.Bold,fontSize=18.sp)
-        LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(horizontal=16.dp,vertical=4.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){if(entries.isEmpty())item{EmptyCard("Keine Buchungen in diesem Monat")};items(entries.sortedByDescending{it.optString("date")}){e->EntryCard(e.optString("title","Buchung"),e.optString("date"),e.optDouble("amount"),e.optString("type")=="income")}}
+    val all=repo.array(state,"betaEntries").objects()
+    val monthEntries=all.filter{runCatching{YearMonth.from(LocalDate.parse(it.optString("date")))==month}.getOrDefault(false)}
+    val income=monthEntries.filter{it.optString("type")=="einnahme" || it.optString("type")=="income"}.sumOf{it.optDouble("amount")}
+    val expense=monthEntries.filterNot{it.optString("type")=="einnahme" || it.optString("type")=="income"}.sumOf{it.optDouble("amount")}
+    val cutoff=month.atEndOfMonth()
+    val balance=all.filter{runCatching{!LocalDate.parse(it.optString("date")).isAfter(cutoff)}.getOrDefault(false)}.sumOf{if(it.optString("type")=="einnahme"||it.optString("type")=="income")it.optDouble("amount") else -it.optDouble("amount")}
+    var filter by remember{mutableStateOf("all")}
+    val unreconciled=monthEntries.count{!it.optBoolean("reconciled")}
+    val shown=if(filter=="unreconciled")monthEntries.filter{!it.optBoolean("reconciled")}else monthEntries
+    val groups=shown.groupBy{it.optString("date")}.toSortedMap(compareByDescending{it})
+    Column(Modifier.fillMaxSize()){
+        IncomeExpenseBar(income,expense)
+        Surface(color=MaterialTheme.colorScheme.surface.copy(alpha=.35f),shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){
+            Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){
+                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=prev)){Box(contentAlignment=Alignment.Center){Text("‹",fontSize=27.sp)}}
+                Column(horizontalAlignment=Alignment.CenterHorizontally){
+                    Row{Text(month.format(DateTimeFormatter.ofPattern("MMMM",Locale.GERMAN)).replaceFirstChar{it.uppercase()},fontSize=19.sp,fontWeight=FontWeight.ExtraBold);Spacer(Modifier.width(6.dp));Text(month.year.toString(),fontSize=19.sp,fontWeight=FontWeight.ExtraBold)}
+                    Text("Einnahmen +"+money(income)+" · Ausgaben -"+money(expense),fontSize=11.sp,fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(40.dp).clickable(onClick=next)){Box(contentAlignment=Alignment.Center){Text("›",fontSize=27.sp)}}
+            }
+        }
+        Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(14.dp)).padding(4.dp)){
+            BetaFilter("Alle",filter=="all",Modifier.weight(1f)){filter="all"}
+            BetaFilter("Nicht abgeglichen ($unreconciled)",filter=="unreconciled",Modifier.weight(1f)){filter="unreconciled"}
+        }
+        LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(horizontal=18.dp,vertical=2.dp)){
+            if(groups.isEmpty())item{Text(if(filter=="unreconciled")"Alles in diesem Monat ist abgeglichen." else "Noch keine Einträge in diesem Monat.",Modifier.fillMaxWidth().padding(30.dp),textAlign=TextAlign.Center,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            groups.forEach{(date,entries)->item(key=date){BetaDayGroup(date,entries)}}
+        }
+        Row(Modifier.fillMaxWidth().background(if(balance>=0)Green else Red).padding(horizontal=18.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
+            Text("Kontostand",fontSize=12.sp,fontWeight=FontWeight.Bold,color=Color.White.copy(alpha=.9f));Spacer(Modifier.width(10.dp));Text(money(balance),fontSize=19.sp,fontWeight=FontWeight.ExtraBold,color=Color.White,modifier=Modifier.weight(1f))
+            Text("01."+month.monthValue.toString().padStart(2,'0')+"."+month.year+"\n- "+month.lengthOfMonth().toString().padStart(2,'0')+"."+month.monthValue.toString().padStart(2,'0')+"."+month.year,fontSize=10.5.sp,color=Color.White.copy(alpha=.85f),textAlign=TextAlign.End)
+        }
+    }
+}
+@Composable private fun BetaFilter(label:String,active:Boolean,modifier:Modifier=Modifier,onClick:()->Unit){
+    Surface(modifier.clickable(onClick=onClick),shape=RoundedCornerShape(11.dp),color=if(active)MaterialTheme.colorScheme.surface else Color.Transparent,shadowElevation=if(active)1.dp else 0.dp){Text(label,Modifier.padding(vertical=11.dp,horizontal=8.dp),textAlign=TextAlign.Center,fontSize=13.5.sp,fontWeight=FontWeight.Bold,color=if(active)MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)}
+}
+@Composable private fun BetaDayGroup(date:String,entries:List<JSONObject>){
+    val d=runCatching{LocalDate.parse(date)}.getOrNull()
+    val total=entries.sumOf{if(it.optString("type")=="einnahme"||it.optString("type")=="income")it.optDouble("amount") else -it.optDouble("amount")}
+    Surface(Modifier.fillMaxWidth().padding(bottom=3.dp),shape=RoundedCornerShape(16.dp),color=MaterialTheme.colorScheme.surface){
+        Column{
+            Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary.copy(alpha=.12f)).padding(horizontal=14.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
+                Box(Modifier.size(34.dp).border(1.5.dp,MaterialTheme.colorScheme.primary,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center){Text((d?.dayOfMonth?:0).toString().padStart(2,'0'),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)}
+                Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text("TAGESSALDO",fontSize=11.5.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Text(if(d==null)"" else d.format(DateTimeFormatter.ofPattern("MMMM yyyy (EEEE)",Locale.GERMAN)),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                Text((if(total>=0) "+" else "")+money(total),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=if(total>=0)Green else Red)
+            }
+            entries.sortedByDescending{it.optString("id")}.forEachIndexed{idx,e->
+                if(idx>0)HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
+                    val reconciled=e.optBoolean("reconciled")
+                    Box(Modifier.size(22.dp).border(2.dp,if(reconciled)InkSoft else MaterialTheme.colorScheme.outline,RoundedCornerShape(50)).background(if(reconciled)InkSoft else Color.Transparent,RoundedCornerShape(50)),contentAlignment=Alignment.Center){if(reconciled)Text("✓",fontSize=12.sp,fontWeight=FontWeight.Bold,color=Color.White)}
+                    Spacer(Modifier.width(10.dp));Column(Modifier.weight(1f)){Text(e.optString("title"),fontSize=15.sp,fontWeight=FontWeight.Bold,maxLines=1);if(e.optString("category").isNotBlank())Text(e.optString("category"),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                    val positive=e.optString("type")=="einnahme"||e.optString("type")=="income";Text((if(positive) "+" else "-")+money(e.optDouble("amount")),fontSize=15.sp,fontWeight=FontWeight.ExtraBold,color=if(positive)Green else Red)
+                }
+            }
+        }
     }
 }
 @Composable private fun IncomeExpenseBar(income:Double,expense:Double){val total=(income+expense).takeIf{it>0}?:1.0;val left=(income/total).toFloat().coerceIn(0f,1f);Row(Modifier.fillMaxWidth().height(34.dp)){Box(Modifier.weight(left.coerceAtLeast(.001f)).fillMaxHeight().background(Green),contentAlignment=Alignment.Center){if(left>.22f)Text(money(income),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold)};Box(Modifier.weight((1-left).coerceAtLeast(.001f)).fillMaxHeight().background(Red),contentAlignment=Alignment.Center){if(1-left>.22f)Text(money(expense),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold)}}}
