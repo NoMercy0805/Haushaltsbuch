@@ -81,6 +81,8 @@ private fun heroBlueEnd(dark:Boolean)=if(dark)Color(0xFF14203A) else Color(0xFFB
 private fun heroBlueText(dark:Boolean)=if(dark)Color(0xFF8FB4E8) else Color(0xFF0D3C8C)
 private fun heroBlueSub(dark:Boolean)=if(dark)Color(0xFFB8C4D9) else Color(0xFF3A66AD)
 
+import kotlinx.coroutines.delay
+
 class MainActivity : ComponentActivity() {
     private val widgetAction = mutableStateOf<String?>(null)
     private var nativeStateForLifecycle: JSONObject? = null
@@ -346,6 +348,7 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
     fun persist(){repo.save(state);repo.autoBackup(state);state=JSONObject(state.toString())}
     fun updateWidgetBalance(){val entries=repo.array(state,"betaEntries").objects();val balance=entries.sumOf{if(it.optString("type")=="income"||it.optString("type")=="einnahme")it.optDouble("amount") else -it.optDouble("amount")};activity.getSharedPreferences(BetaWidgetProvider.PREFS_NAME,Context.MODE_PRIVATE).edit().putString(BetaWidgetProvider.KEY_BALANCE,money(balance)).putBoolean(BetaWidgetProvider.KEY_POSITIVE,balance>=0).apply();BetaWidgetProvider.updateAll(activity);if(activity.getSharedPreferences(BetaWidgetProvider.PREFS_NAME,Context.MODE_PRIVATE).getBoolean("kontostand_notification_enabled",false)){runCatching{ContextCompat.startForegroundService(activity,Intent(activity,KontostandForegroundService::class.java).putExtra(KontostandForegroundService.EXTRA_BALANCE_TEXT,money(balance)).putExtra(KontostandForegroundService.EXTRA_IS_POSITIVE,balance>=0))}}}
     LaunchedEffect(state.toString()){updateWidgetBalance()}
+    LaunchedEffect(Unit){while(true){delay(10*60*1000L);repo.autoBackup(state)}}
     val lifecycleOwner=LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner){val observer=LifecycleEventObserver{_,event->if(event==Lifecycle.Event.ON_RESUME)month=YearMonth.now()};lifecycleOwner.lifecycle.addObserver(observer);onDispose{lifecycleOwner.lifecycle.removeObserver(observer)}}
     LaunchedEffect(initialWidgetAction){when(initialWidgetAction){BetaWidgetProvider.ACTION_ADD_EINNAHME->{tab=Tab.BALANCE;betaInitialType="income";addBeta=true};BetaWidgetProvider.ACTION_ADD_AUSGABE->{tab=Tab.BALANCE;betaInitialType="expense";addBeta=true};BetaWidgetProvider.ACTION_OPEN->{tab=Tab.BALANCE}};if(initialWidgetAction!=null)onWidgetActionConsumed()}
