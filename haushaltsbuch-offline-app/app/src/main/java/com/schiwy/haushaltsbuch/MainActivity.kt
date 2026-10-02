@@ -187,8 +187,26 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
   Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background,RoundedCornerShape(14.dp)).padding(4.dp)){OriginalSubNav("Kredite",view=="kredite",Modifier.weight(1f)){view="kredite"};OriginalSubNav("Tilgungsplan",view=="tilgung",Modifier.weight(1f)){view="tilgung"}}
   Spacer(Modifier.height(18.dp))
   if(view=="kredite"){LoanHero(remaining,original,monthly);LazyColumn{if(active.isEmpty())item{OriginalEmpty("Noch keine laufenden Kredite oder Raten angelegt.")};items(active.sortedBy{it.optDouble("remainingBalance")}){LoanCardOriginal(it)}}}
-  else{OriginalHero("Restschuld gesamt",money(remaining),"Kredite",active.size.toString(),"Raten/Monat",money(monthly))}
+  else{TilgungScreen(active,monthly)}
  }
+}
+@Composable private fun TilgungScreen(loans:List<JSONObject>,monthly:Double){
+ var extra by remember{mutableStateOf(0.0)}
+ if(loans.isEmpty()){OriginalEmpty("Keine laufenden Kredite - nichts zu tilgen. 🎉");return}
+ val estimate=estimatePayoffMonths(loans,extra)
+ val years=estimate/12;val months=estimate%12
+ val duration=(if(years>0) "$years "+if(years==1)"Jahr" else "Jahre" else "")+(if(years>0&&months>0)", " else "")+(if(months>0)"$months "+if(months==1)"Monat" else "Monate" else if(years==0)"0 Monate" else "")
+ OriginalHero("Schuldenfrei in",duration,"Voraussichtlich fertig",LocalDate.now().plusMonths(estimate.toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy",Locale.GERMAN)),"Betrag/Monat",money(monthly+extra))
+ Column(Modifier.fillMaxWidth().padding(bottom=20.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp)){
+  Text("Zusätzlicher Betrag pro Monat",fontSize=13.sp,color=InkSoft);Spacer(Modifier.height(10.dp));Text(money(extra),Modifier.fillMaxWidth().padding(bottom=6.dp),textAlign=TextAlign.Center,fontSize=30.sp,fontWeight=FontWeight.ExtraBold);HorizontalDivider(thickness=2.dp,color=HeroBlueText);Spacer(Modifier.height(14.dp))
+  Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf(50.0,100.0,150.0,200.0).forEach{v->Surface(Modifier.weight(1f).clickable{extra=v},shape=RoundedCornerShape(50),color=if(extra==v)HeroBlueStart else Paper){Text(v.toInt().toString()+" €",Modifier.padding(vertical=9.dp),textAlign=TextAlign.Center,fontSize=13.sp,color=if(extra==v)HeroBlueText else InkSoft)}}}
+ }
+}
+private fun estimatePayoffMonths(loans:List<JSONObject>,extra:Double):Int{
+ data class D(var balance:Double,val payment:Double)
+ val ds=loans.map{D(it.optDouble("remainingBalance"),it.optDouble("monthlyPayment"))}.toMutableList();var m=0
+ while(ds.any{it.balance>.005}&&m<1200){var snow=extra;ds.filter{it.balance>.005}.sortedBy{it.balance}.forEach{d->val pay=kotlin.math.min(d.balance,d.payment+snow);d.balance-=pay;if(d.balance<=.005)snow+=d.payment};m++}
+ return m
 }
 @Composable private fun LoanHero(remaining:Double,original:Double,monthly:Double){
  val pct=if(original>0)((original-remaining)/original).coerceIn(0.0,1.0) else 0.0
