@@ -168,7 +168,22 @@ private fun fabOptions(tab:Tab):List<String> = when(tab){Tab.BALANCE->listOf("Ne
 }
 private fun solveMonthlyRate(principal:Double,monthly:Double,total:Double):Double?{if(principal==0.0||monthly==0.0||total==0.0||total<=principal)return null;val n=total/monthly;if(n<1)return null;var r=.01;repeat(60){val pow=(1+r).pow(-n);val fv=monthly*(1-pow)/r-principal;val h=.00001;val powH=(1+r+h).pow(-n);val fH=monthly*(1-powH)/(r+h)-principal;val deriv=(fH-fv)/h;if(kotlin.math.abs(deriv)<1e-9)return@repeat;var nr=r-fv/deriv;if(nr<=0)nr=r/2;if(kotlin.math.abs(nr-r)<1e-9){r=nr;return@repeat};r=nr};return if(r>0&&r.isFinite())r else null}
 
+private fun betaAddPeriod(date:LocalDate,period:String):LocalDate=when(period){"weekly"->date.plusWeeks(1);"biweekly"->date.plusWeeks(2);"quarterly"->date.plusMonths(3);"yearly"->date.plusYears(1);else->date.plusMonths(1)}
+private fun generateBetaRecurringOccurrences(state:JSONObject,repo:HouseholdRepository,viewMonth:YearMonth):Boolean{
+ val entries=repo.array(state,"betaEntries");val all=entries.objects();val templates=all.filter{it.optBoolean("isRecurringTemplate")}
+ var horizon=LocalDate.now().plusMonths(2);val viewedEnd=viewMonth.atEndOfMonth();if(viewedEnd.isAfter(horizon))horizon=viewedEnd
+ var changed=false
+ templates.forEach{tpl->
+  val existing=repo.array(state,"betaEntries").objects().filter{it.optString("id")==tpl.optString("id")||it.optString("recurringGroupId")==tpl.optString("id")}.map{it.optString("date")}.toMutableSet()
+  val start=runCatching{LocalDate.parse(tpl.optString("date"))}.getOrNull()?:return@forEach
+  val end=tpl.optString("recurrenceEnd").takeIf{it.isNotBlank()&&it!="null"}?.let{runCatching{LocalDate.parse(it)}.getOrNull()}
+  val period=tpl.optString("recurrencePeriod","monthly");var cursor=betaAddPeriod(start,period);var guard=0
+  while(!cursor.isAfter(horizon)&&guard<240){guard++;if(end!=null&&cursor.isAfter(end))break;val key=cursor.toString();if(key !in existing){entries.put(JSONObject().put("id",UUID.randomUUID().toString()).put("type",tpl.optString("type")).put("title",tpl.optString("title")).put("date",key).put("amount",tpl.optDouble("amount")).put("category",tpl.optString("category")).put("recurring",true).put("recurringGroupId",tpl.optString("id")).put("reconciled",false));existing+=key;changed=true};cursor=betaAddPeriod(cursor,period)}
+ }
+ return changed
+}
 @Composable private fun BalanceScreen(state:JSONObject,repo:HouseholdRepository,month:YearMonth,prev:()->Unit,next:()->Unit){
+    LaunchedEffect(month){if(generateBetaRecurringOccurrences(state,repo,month))repo.persist(state)}
     val all=repo.array(state,"betaEntries").objects()
     val monthEntries=all.filter{runCatching{YearMonth.from(LocalDate.parse(it.optString("date")))==month}.getOrDefault(false)}
     val income=monthEntries.filter{it.optString("type")=="einnahme" || it.optString("type")=="income"}.sumOf{it.optDouble("amount")}
