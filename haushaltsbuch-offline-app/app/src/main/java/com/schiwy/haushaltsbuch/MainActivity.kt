@@ -19,6 +19,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.awaitPointerEventScope
+import androidx.compose.ui.input.pointer.awaitFirstDown
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
@@ -482,7 +484,7 @@ private fun generateBetaRecurringOccurrences(state:JSONObject,repo:HouseholdRepo
 @Composable private fun ChevronIcon(left:Boolean,color:Color){Canvas(Modifier.size(20.dp)){val stroke=Stroke(width=2.4.dp.toPx(),cap=StrokeCap.Round,join=StrokeJoin.Round);val x1=if(left)size.width*.63f else size.width*.37f;val x2=if(left)size.width*.37f else size.width*.63f;drawLine(color,Offset(x1,size.height*.25f),Offset(x2,size.height*.5f),strokeWidth=stroke.width,cap=StrokeCap.Round);drawLine(color,Offset(x2,size.height*.5f),Offset(x1,size.height*.75f),strokeWidth=stroke.width,cap=StrokeCap.Round)}}
 @Composable private fun IncomeExpenseBar(income:Double,expense:Double){val total=(income+expense).takeIf{it>0}?:1.0;val left=(income/total).toFloat().coerceIn(0f,1f);Row(Modifier.fillMaxWidth().padding(top=12.dp).height(20.dp).clip(RoundedCornerShape(10.dp))){Box(Modifier.weight(left.coerceAtLeast(.001f)).fillMaxHeight().background(Green).padding(start=8.dp),contentAlignment=Alignment.CenterStart){if(left>.22f)Text(money(income),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)};Box(Modifier.weight((1-left).coerceAtLeast(.001f)).fillMaxHeight().background(Red).padding(end=8.dp),contentAlignment=Alignment.CenterEnd){if(1-left>.22f)Text(money(expense),color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold,maxLines=1)}}}
 
-private fun Modifier.subViewSwipe(views:List<String>,current:String,onChange:(String)->Unit)=pointerInput(views,current){var drag=0f;detectHorizontalDragGestures(onDragStart={drag=0f},onHorizontalDrag={_,amount->drag+=amount},onDragEnd={val idx=views.indexOf(current);if(kotlin.math.abs(drag)>=60f&&idx>=0){if(drag<0&&idx<views.lastIndex)onChange(views[idx+1]) else if(drag>0&&idx>0)onChange(views[idx-1])}})}
+private fun Modifier.subViewSwipe(views:List<String>,current:String,onChange:(String)->Unit)=pointerInput(views,current){awaitPointerEventScope{while(true){val down=awaitFirstDown(requireUnconsumed=false);val start=down.position;var end=start;var pressed=true;while(pressed){val event=awaitPointerEvent();val change=event.changes.firstOrNull{it.id==down.id}?:break;end=change.position;pressed=change.pressed};val dx=end.x-start.x;val dy=end.y-start.y;val idx=views.indexOf(current);if(kotlin.math.abs(dx)>=60f&&kotlin.math.abs(dx)>=kotlin.math.abs(dy)*1.3f&&idx>=0){if(dx<0&&idx<views.lastIndex)onChange(views[idx+1]) else if(dx>0&&idx>0)onChange(views[idx-1])}}}}
 @Composable private fun BookingsScreen(state:JSONObject,repo:HouseholdRepository){
  var revision by remember{mutableStateOf(0)};revision
  val income=repo.array(state,"income");val fixed=repo.array(state,"fixedExpenses");val invoices=repo.array(state,"openInvoices");var view by remember{mutableStateOf("rechnungen")};var paidOpen by remember{mutableStateOf(repo.getSetting("household-show-paid-invoices")=="1")}
