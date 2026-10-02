@@ -4,7 +4,9 @@ import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background\nimport androidx.compose.foundation.border\nimport androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Canvas
@@ -20,7 +22,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.json.JSONArray
@@ -48,11 +51,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val dark = androidx.compose.foundation.isSystemInDarkTheme()
+            val activity=this@MainActivity
+            val themeRepo=remember{HouseholdRepository(activity)}
+            var themeRevision by remember{mutableStateOf(0)}
+            val choice=remember(themeRevision){themeRepo.getSetting("household-theme")?.takeIf{it in setOf("light","dark","system")} ?: "system"}
+            val systemDark=androidx.compose.foundation.isSystemInDarkTheme()
+            val dark=choice=="dark" || (choice=="system" && systemDark)
             MaterialTheme(
                 colorScheme = if (dark) darkColorScheme(primary=Color(0xFF5B9CFF), background=Color(0xFF0F1013), surface=Color(0xFF1E1F24), onBackground=Color(0xFFF2F2F4), onSurface=Color(0xFFF2F2F4))
                 else lightColorScheme(primary=Blue, background=Paper, surface=SurfaceSolid, onBackground=Ink, onSurface=Ink)
-            ) { NativeApp() }
+            ) { NativeApp(onThemeChanged={themeRevision++}) }
         }
     }
 }
@@ -72,17 +80,17 @@ private fun money(v: Double): String = NumberFormat.getCurrencyInstance(Locale.G
 private fun sum(a: JSONArray, field: String, predicate: (JSONObject)->Boolean = { true }): Double = a.objects().filter(predicate).sumOf { it.optDouble(field, 0.0) }
 private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchungen"),VARIABLE("Variable Kosten"),LOANS("Kredite"),FUEL("Tanken")}
 
-@Composable private fun NativeApp(){
+@Composable private fun NativeApp(onThemeChanged:()->Unit){
     val activity=androidx.compose.ui.platform.LocalContext.current as Activity
     val repo=remember{HouseholdRepository(activity)}
-    var state by remember{mutableStateOf(repo.load())};var tab by remember{mutableStateOf(Tab.BALANCE)};var addBeta by remember{mutableStateOf(false)};var addForm by remember{mutableStateOf<String?>(null)};var fabOpen by remember{mutableStateOf(false)};var settings by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
+    var state by remember{mutableStateOf(repo.load())};var tab by remember{mutableStateOf(Tab.BALANCE)};var visibilityRevision by remember{mutableStateOf(0)};val tabVisibility=remember(visibilityRevision){runCatching{JSONObject(repo.getSetting("household-tab-visibility")?:"{}")}.getOrDefault(JSONObject())};val visibleTabs=Tab.entries.filter{t->val k=when(t){Tab.BALANCE->"beta";Tab.BOOKINGS->"buchungen";Tab.VARIABLE->"variabel";Tab.LOANS->"kredite";Tab.FUEL->"tanken"};if(tabVisibility.has(k))tabVisibility.optBoolean(k,true) else true}.ifEmpty{listOf(Tab.BALANCE)};LaunchedEffect(visibleTabs){if(tab !in visibleTabs)tab=visibleTabs.first()};var addBeta by remember{mutableStateOf(false)};var addForm by remember{mutableStateOf<String?>(null)};var fabOpen by remember{mutableStateOf(false)};var settings by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
     fun persist(){repo.save(state);state=JSONObject(state.toString())}
     Scaffold(
         topBar={Surface(color=MaterialTheme.colorScheme.background.copy(alpha=.92f)){Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("Haushaltsbuch",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-.6).sp);Text("+",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Spacer(Modifier.weight(1f));Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(38.dp).clickable{settings=true}){Box(contentAlignment=Alignment.Center){SettingsGearIcon(MaterialTheme.colorScheme.onSurfaceVariant)}}}}}},
-        bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){Tab.entries.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){OriginalTabIcon(t,if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,tab==t);Text(t.label,fontSize=10.5.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
+        bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){visibleTabs.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){OriginalTabIcon(t,if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,tab==t);Text(t.label,fontSize=10.5.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
         floatingActionButton={Box(contentAlignment=Alignment.BottomEnd){if(fabOpen){Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha=.4f)).clickable{fabOpen=false});Column(horizontalAlignment=Alignment.End,verticalArrangement=Arrangement.spacedBy(14.dp),modifier=Modifier.padding(bottom=76.dp)){fabOptions(tab).forEach{opt->Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)){Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.surface){Text(opt,Modifier.padding(horizontal=13.dp,vertical=8.dp),fontSize=13.sp,fontWeight=FontWeight.Bold)};Surface(shape=CircleShape,color=fabOptionColor(opt),modifier=Modifier.size(46.dp).clickable{if(opt=="Neuer Eintrag")addBeta=true else addForm=opt;fabOpen=false}){Box(contentAlignment=Alignment.Center){Text("+",fontSize=22.sp,color=Color.White)}}}}}};Surface(shape=CircleShape,color=MaterialTheme.colorScheme.primary.copy(alpha=.80f),modifier=Modifier.size(60.dp).clickable{fabOpen=!fabOpen},shadowElevation=8.dp){Box(contentAlignment=Alignment.Center){Text(if(fabOpen)"×" else "+",fontSize=30.sp,color=Color.White)}}}}
     ){pad->Box(Modifier.padding(pad).fillMaxSize().background(MaterialTheme.colorScheme.background)){when(tab){Tab.BALANCE->BalanceScreen(state,repo,month,{month=month.minusMonths(1)},{month=month.plusMonths(1)});Tab.BOOKINGS->BookingsScreen(state,repo);Tab.VARIABLE->VariableScreen(state,repo);Tab.LOANS->LoansScreen(state,repo);Tab.FUEL->FuelScreen(state,repo)}}}
-    if(settings)SettingsDialog(state,repo,{settings=false})\n    addForm?.let{QuickAddForm(it,state,repo,{addForm=null}){persist();addForm=null}}\n    if(addBeta)BetaEntryDialog({addBeta=false}){type,title,date,amount,category->repo.array(state,"betaEntries").put(JSONObject().put("id",UUID.randomUUID().toString()).put("type",type).put("title",title).put("date",date).put("amount",amount).put("category",category).put("recurring",false).put("reconciled",false));persist();addBeta=false}
+    if(settings)SettingsDialog(state,repo,{settings=false},onThemeChanged,{visibilityRevision++})\n    addForm?.let{QuickAddForm(it,state,repo,{addForm=null}){persist();addForm=null}}\n    if(addBeta)BetaEntryDialog({addBeta=false}){type,title,date,amount,category->repo.array(state,"betaEntries").put(JSONObject().put("id",UUID.randomUUID().toString()).put("type",type).put("title",title).put("date",date).put("amount",amount).put("category",category).put("recurring",false).put("reconciled",false));persist();addBeta=false}
 }
 
 private fun fabOptions(tab:Tab):List<String> = when(tab){Tab.BALANCE->listOf("Neuer Eintrag");Tab.BOOKINGS->listOf("Offene Rechnung","Einnahme","Fixkosten");Tab.VARIABLE->listOf("Einzahlung in den Spartopf","Variable Kostenart");Tab.LOANS->listOf("Kredit");Tab.FUEL->listOf("Tankvorgang","Auto hinzufügen")}\nprivate fun fabOptionColor(label:String):Color=when(label){"Einnahme","Einzahlung in den Spartopf"->Green;"Offene Rechnung"->Color(0xFFFF9F0A);"Kredit"->Red;"Tankvorgang","Auto hinzufügen"->Color(0xFF6B7280);else->Blue}\n\n@Composable private fun QuickAddForm(kind:String,state:JSONObject,repo:HouseholdRepository,onClose:()->Unit,onSaved:()->Unit){
@@ -335,7 +343,7 @@ private fun termLabel(months:Int):String{val y=months/12;val m=months%12;if(y==0
 @Composable private fun BetaEntryDialog(onDismiss:()->Unit,onSave:(String,String,String,Double,String)->Unit){var type by remember{mutableStateOf("expense")};var title by remember{mutableStateOf("")};var date by remember{mutableStateOf(LocalDate.now().toString())};var amount by remember{mutableStateOf("")};var category by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,title={Text("Buchung hinzufügen")},text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){FilterChip(type=="income",{type="income"},{Text("Einnahme")});FilterChip(type=="expense",{type="expense"},{Text("Ausgabe")})};OutlinedTextField(title,{title=it},label={Text("Titel")},singleLine=true);OutlinedTextField(amount,{amount=it},label={Text("Betrag")},singleLine=true);OutlinedTextField(date,{date=it},label={Text("Datum (JJJJ-MM-TT)")},singleLine=true);OutlinedTextField(category,{category=it},label={Text("Kategorie")},singleLine=true)}},confirmButton={Button(onClick={val v=amount.replace(".","").replace(",",".").toDoubleOrNull();if(title.isNotBlank()&&v!=null&&v>0)onSave(type,title,date,v,category)}){Text("Speichern")}},dismissButton={TextButton(onClick=onDismiss){Text("Abbrechen")}})}
 
 
-@Composable private fun SettingsDialog(state:JSONObject,repo:HouseholdRepository,onDismiss:()->Unit){
+@Composable private fun SettingsDialog(state:JSONObject,repo:HouseholdRepository,onDismiss:()->Unit,onThemeChanged:()->Unit,onVisibilityChanged:()->Unit){
     var page by remember{mutableStateOf<String?>(null)};var themeChoice by remember{mutableStateOf(repo.getSetting("household-theme")?.takeIf{it in setOf("light","dark","system")} ?: "system")};var tabVisibility by remember{mutableStateOf(runCatching{JSONObject(repo.getSetting("household-tab-visibility")?:"{}")}.getOrDefault(JSONObject()))}
     Box(Modifier.fillMaxSize().background(Color(0x73141416)).clickable(onClick=onDismiss),contentAlignment=Alignment.Center){
         Surface(
@@ -367,8 +375,8 @@ private fun termLabel(months:Int):String{val y=months/12;val m=months%12;if(y==0
                     SettingsRow("Update-Historie","Alle bisherigen Änderungen",false){page="Update-Historie"}
                 }else{
                     when(page){
-                        "Darstellung"->Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf("light" to "Hell","dark" to "Dunkel","system" to "System").forEach{(key,label)->Surface(Modifier.weight(1f).clickable{themeChoice=key;repo.setSetting("household-theme",key)},shape=RoundedCornerShape(11.dp),color=if(themeChoice==key)Blue else MaterialTheme.colorScheme.background){Text(label,Modifier.padding(vertical=11.dp),textAlign=TextAlign.Center,fontSize=13.5.sp,fontWeight=FontWeight.Bold,color=if(themeChoice==key)Color.White else MaterialTheme.colorScheme.onSurface)}}}
-                        "Sichtbare Bereiche"->Column(Modifier.padding(top=10.dp)){listOf("beta" to "Kontostand","buchungen" to "Buchungen","variabel" to "Variable Kosten","kredite" to "Kredite","tanken" to "Tanken").forEach{(key,label)->val checked=if(tabVisibility.has(key))tabVisibility.optBoolean(key,true) else true;Row(Modifier.fillMaxWidth().clickable{tabVisibility.put(key,!checked);repo.setSetting("household-tab-visibility",tabVisibility.toString())}.padding(vertical=10.dp),verticalAlignment=Alignment.CenterVertically){Text(label,Modifier.weight(1f),fontSize=16.sp,fontWeight=FontWeight.SemiBold);Checkbox(checked,{v->tabVisibility.put(key,v);repo.setSetting("household-tab-visibility",tabVisibility.toString())})}}}
+                        "Darstellung"->Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf("light" to "Hell","dark" to "Dunkel","system" to "System").forEach{(key,label)->Surface(Modifier.weight(1f).clickable{themeChoice=key;repo.setSetting("household-theme",key);onThemeChanged()},shape=RoundedCornerShape(11.dp),color=if(themeChoice==key)Blue else MaterialTheme.colorScheme.background){Text(label,Modifier.padding(vertical=11.dp),textAlign=TextAlign.Center,fontSize=13.5.sp,fontWeight=FontWeight.Bold,color=if(themeChoice==key)Color.White else MaterialTheme.colorScheme.onSurface)}}}
+                        "Sichtbare Bereiche"->Column(Modifier.padding(top=10.dp)){listOf("beta" to "Kontostand","buchungen" to "Buchungen","variabel" to "Variable Kosten","kredite" to "Kredite","tanken" to "Tanken").forEach{(key,label)->val checked=if(tabVisibility.has(key))tabVisibility.optBoolean(key,true) else true;Row(Modifier.fillMaxWidth().clickable{tabVisibility.put(key,!checked);repo.setSetting("household-tab-visibility",tabVisibility.toString());onVisibilityChanged()}.padding(vertical=10.dp),verticalAlignment=Alignment.CenterVertically){Text(label,Modifier.weight(1f),fontSize=16.sp,fontWeight=FontWeight.SemiBold);Checkbox(checked,{v->tabVisibility.put(key,v);repo.setSetting("household-tab-visibility",tabVisibility.toString());onVisibilityChanged()})}}}
                         else->Spacer(Modifier.height(1.dp))
                     }
                 }
