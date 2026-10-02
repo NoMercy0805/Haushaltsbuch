@@ -54,6 +54,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
+import kotlinx.coroutines.delay
 
 private val Paper = Color(0xFFF2F2F5)
 private val Ink = Color(0xFF191A1C)
@@ -80,8 +81,6 @@ private fun heroBlueStart(dark:Boolean)=if(dark)Color(0xFF1B2A4A) else Color(0xF
 private fun heroBlueEnd(dark:Boolean)=if(dark)Color(0xFF14203A) else Color(0xFFB8D2FF)
 private fun heroBlueText(dark:Boolean)=if(dark)Color(0xFF8FB4E8) else Color(0xFF0D3C8C)
 private fun heroBlueSub(dark:Boolean)=if(dark)Color(0xFFB8C4D9) else Color(0xFF3A66AD)
-
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     private val widgetAction = mutableStateOf<String?>(null)
