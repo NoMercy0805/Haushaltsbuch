@@ -162,10 +162,10 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
                 val open=invoices.objects().filter{!it.optBoolean("paid")};val total=open.sumOf{it.optDouble("amount")}
                 val today=LocalDate.now();val overdue=open.count{runCatching{LocalDate.parse(it.optString("dueDate")).isBefore(today)}.getOrDefault(false)}
                 OriginalHero("Offene Rechnungen gesamt",money(total),"Rechnungen",open.size.toString(),"Davon überfällig",overdue.toString())
-                LazyColumn{if(open.isEmpty())item{OriginalEmpty("Keine offenen Rechnungen eingetragen.")};items(open.sortedBy{it.optString("dueDate")}){o->SimpleMoneyRow(o.optString("name"),o.optDouble("amount"),o.optString("dueDate"))}}
+                LazyColumn{if(open.isEmpty())item{OriginalEmpty("Keine offenen Rechnungen eingetragen.")};items(open.sortedBy{it.optString("dueDate")}){o->InvoiceCompactRow(o)}}
             }
-            "einnahmen"->{OriginalHero("Einnahmen gesamt",money(sum(income,"amount")));LazyColumn{if(income.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(income.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))}}}
-            else->{OriginalHero("Fixkosten gesamt",money(sum(fixed,"amount")));LazyColumn{if(fixed.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(fixed.objects()){SimpleMoneyRow(it.optString("name"),it.optDouble("amount"))}}}
+            "einnahmen"->{OriginalHero("Einnahmen gesamt",money(sum(income,"amount")));LazyColumn{if(income.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(income.objects()){OriginalCompactRow(it.optString("name"),it.optDouble("amount"),true)}}}
+            else->{OriginalHero("Fixkosten gesamt",money(sum(fixed,"amount")));LazyColumn{if(fixed.length()==0)item{OriginalEmpty("Noch nichts eingetragen.")};items(fixed.objects()){OriginalCompactRow(it.optString("name"),it.optDouble("amount"),false)}}}
         }
     }
 }
@@ -268,5 +268,23 @@ private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchung
         drawCircle(color,3.2f*s,Offset(12f*s,12f*s),style=Stroke(w))
         val pts=listOf(Offset(12f,3f),Offset(12f,21f),Offset(3f,12f),Offset(21f,12f),Offset(5.7f,5.7f),Offset(18.3f,18.3f),Offset(18.3f,5.7f),Offset(5.7f,18.3f))
         pts.forEach{p->val dx=(p.x-12f);val dy=(p.y-12f);val len=kotlin.math.sqrt(dx*dx+dy*dy);val ux=dx/len;val uy=dy/len;drawLine(color,Offset((12f+ux*6f)*s,(12f+uy*6f)*s),Offset((12f+ux*9f)*s,(12f+uy*9f)*s),w)}
+    }
+}
+
+@Composable private fun OriginalCompactRow(name:String,amount:Double,income:Boolean,sub:String?=null,tint:Color=Color.Transparent,leading:(@Composable ()->Unit)?=null){
+    Row(Modifier.fillMaxWidth().background(tint).padding(horizontal=16.dp,vertical=13.dp),verticalAlignment=Alignment.CenterVertically){
+        if(leading!=null){leading();Spacer(Modifier.width(10.dp))}
+        Column(Modifier.weight(1f)){Text(name,fontSize=14.sp,maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis);if(!sub.isNullOrBlank()){Spacer(Modifier.height(2.dp));Text(sub,fontSize=11.5.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
+        Spacer(Modifier.width(10.dp));Text(money(amount),fontSize=17.sp,fontWeight=FontWeight.ExtraBold,color=if(income)Green else MaterialTheme.colorScheme.onSurface)
+    }
+    HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+}
+@Composable private fun InvoiceCompactRow(o:JSONObject){
+    val d=runCatching{LocalDate.parse(o.optString("dueDate"))}.getOrNull();val today=LocalDate.now();val overdue=d?.isBefore(today)==true
+    val dueThisMonth=d?.month==today.month&&d.year==today.year
+    val sub=if(d==null)"" else if(overdue)"Überfällig seit "+d.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) else "Fällig am "+d.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    val tint=if(dueThisMonth)Color(0xFFFDE8E3) else Color(0xFFDCF5EA)
+    OriginalCompactRow(o.optString("name"),o.optDouble("amount"),false,sub,tint){
+        Box(Modifier.size(24.dp).border(2.dp,Color(0xFFDADADE),CircleShape).background(MaterialTheme.colorScheme.surface,CircleShape))
     }
 }
