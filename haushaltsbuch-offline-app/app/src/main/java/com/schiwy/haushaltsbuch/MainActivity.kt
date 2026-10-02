@@ -216,10 +216,12 @@ private data class PotTx(val id:String,val date:String,val amount:Double,val lab
  Column(Modifier.fillMaxSize().padding(horizontal=18.dp)){
   Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background,RoundedCornerShape(14.dp)).padding(4.dp)){OriginalSubNav("Kredite",view=="kredite",Modifier.weight(1f)){view="kredite"};OriginalSubNav("Tilgungsplan",view=="tilgung",Modifier.weight(1f)){view="tilgung"}}
   Spacer(Modifier.height(18.dp))
-  if(view=="kredite"){LoanHero(remaining,original,monthly);LazyColumn{if(active.isEmpty())item{OriginalEmpty("Noch keine laufenden Kredite oder Raten angelegt.")};items(active.sortedBy{it.optDouble("remainingBalance")}){LoanCardOriginal(it)}}}
+  if(view=="kredite"){val payments=repo.array(state,"loanPayments").objects();val month=LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));fun paid(l:JSONObject)=payments.any{it.optString("loanId")==l.optString("id")&&it.optString("type")=="payment"&&it.optString("date").startsWith(month)};val sorted=active.sortedWith(compareBy<JSONObject>{if(paid(it))1 else 0}.thenBy{it.optDouble("remainingBalance")});val paidLoans=loans.filter{it.optDouble("remainingBalance")<=0};var showPaid by remember{mutableStateOf(false)};LoanHero(remaining,original,monthly);LazyColumn{if(sorted.isEmpty())item{OriginalEmpty("Noch keine laufenden Kredite oder Raten angelegt.")};items(sorted){LoanCardOriginal(it,paid(it))};item{PaidLoansHeader(paidLoans.size,showPaid){showPaid=!showPaid}};if(showPaid){if(paidLoans.isEmpty())item{OriginalEmpty("Noch keine abbezahlten Kredite.")}else items(paidLoans){PaidLoanRow(it)}}}}
   else{TilgungScreen(active,monthly)}
  }
 }
+@Composable private fun PaidLoansHeader(count:Int,open:Boolean,onClick:()->Unit){Row(Modifier.fillMaxWidth().padding(top=22.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).clickable(onClick=onClick).padding(horizontal=16.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Blue));Spacer(Modifier.width(14.dp));Column(Modifier.weight(1f)){Text("Abbezahlte Kredite",fontSize=15.sp,fontWeight=FontWeight.Bold);Text(count.toString()+if(count==1)" Kredit" else " Kredite",fontSize=13.sp,color=InkSoft)};Text(if(open)"⌃" else "⌄",fontSize=18.sp,color=InkSoft)}}
+@Composable private fun PaidLoanRow(o:JSONObject){Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=13.dp)){Text(o.optString("name"),Modifier.weight(1f),fontSize=14.sp);Text(money(o.optDouble("originalAmount")),fontSize=17.sp,fontWeight=FontWeight.ExtraBold,color=Green)}}
 @Composable private fun TilgungScreen(loans:List<JSONObject>,monthly:Double){
  var extra by remember{mutableStateOf(0.0)}
  if(loans.isEmpty()){OriginalEmpty("Keine laufenden Kredite - nichts zu tilgen. 🎉");return}
@@ -260,9 +262,9 @@ private fun payoffDuration(m:Int):String{val y=m/12;val r=m%12;return (if(y>0)"$
   Spacer(Modifier.height(14.dp));Row(horizontalArrangement=Arrangement.spacedBy(18.dp)){Column{Text("Kreditsumme",fontSize=11.sp,color=HeroBlueSub);Text(money(original),fontSize=14.sp,fontWeight=FontWeight.Bold)};Column{Text("Raten/Monat",fontSize=11.sp,color=HeroBlueSub);Text(money(monthly),fontSize=14.sp,fontWeight=FontWeight.Bold)}}
  }
 }
-@Composable private fun LoanCardOriginal(o:JSONObject){
+@Composable private fun LoanCardOriginal(o:JSONObject,paidThisMonth:Boolean){
  val original=o.optDouble("originalAmount");val remaining=o.optDouble("remainingBalance");val pct=if(original>0)((original-remaining)/original).coerceIn(0.0,1.0) else 0.0
- Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFFDE8E3)).padding(horizontal=20.dp,vertical=18.dp)){
+ Column(Modifier.fillMaxWidth().padding(bottom=14.dp).clip(RoundedCornerShape(14.dp)).background(if(paidThisMonth)Color(0xFFDCF5EA) else Color(0xFFFDE8E3)).padding(horizontal=20.dp,vertical=18.dp)){
   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.Bottom){Text(o.optString("name","Kredit"),Modifier.weight(1f),fontSize=17.sp,fontWeight=FontWeight.ExtraBold);Text(money(remaining),fontSize=18.sp,fontWeight=FontWeight.ExtraBold,color=Red)}
   if(original>0){Spacer(Modifier.height(10.dp));Box(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(20.dp)).background(Paper)){Box(Modifier.fillMaxWidth(pct.toFloat()).fillMaxHeight().background(Blue))};Spacer(Modifier.height(4.dp));Row(Modifier.fillMaxWidth()){Text((pct*100).toInt().toString()+"% abbezahlt",Modifier.weight(1f),fontSize=12.5.sp,fontWeight=FontWeight.SemiBold,color=InkSoft);Text("von "+money(original),fontSize=12.5.sp,fontWeight=FontWeight.SemiBold,color=InkSoft)}}
   Spacer(Modifier.height(6.dp));LoanDetail("Rate",money(o.optDouble("monthlyPayment"))+" / Monat")
