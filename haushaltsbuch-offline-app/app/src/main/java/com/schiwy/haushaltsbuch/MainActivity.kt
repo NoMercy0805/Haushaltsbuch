@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.Context
 import androidx.core.content.ContextCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme(
                 colorScheme = if (dark) darkColorScheme(primary=Color(0xFF5B9CFF), background=Color(0xFF0F1013), surface=Color(0xFF1E1F24), onBackground=Color(0xFFF2F2F4), onSurface=Color(0xFFF2F2F4))
                 else lightColorScheme(primary=Blue, background=Paper, surface=SurfaceSolid, onBackground=Ink, onSurface=Ink)
-            ) { NativeApp(onThemeChanged={themeRevision++}) }
+            ) { NativeApp(onThemeChanged={themeRevision++},initialWidgetAction=intent?.getStringExtra(BetaWidgetProvider.EXTRA_BETA_ACTION)) }
         }
     }
 }
@@ -93,11 +94,14 @@ private fun money(v: Double): String = NumberFormat.getCurrencyInstance(Locale.G
 private fun sum(a: JSONArray, field: String, predicate: (JSONObject)->Boolean = { true }): Double = a.objects().filter(predicate).sumOf { it.optDouble(field, 0.0) }
 private enum class Tab(val label:String){BALANCE("Kontostand"),BOOKINGS("Buchungen"),VARIABLE("Variable Kosten"),LOANS("Kredite"),FUEL("Tanken")}
 
-@Composable private fun NativeApp(onThemeChanged:()->Unit){
+@Composable private fun NativeApp(onThemeChanged:()->Unit,initialWidgetAction:String?){
     val activity=androidx.compose.ui.platform.LocalContext.current as Activity
     val repo=remember{HouseholdRepository(activity)}
     var state by remember{mutableStateOf(repo.load())};var tab by remember{mutableStateOf(Tab.BALANCE)};var visibilityRevision by remember{mutableStateOf(0)};val tabVisibility=remember(visibilityRevision){runCatching{JSONObject(repo.getSetting("household-tab-visibility")?:"{}")}.getOrDefault(JSONObject())};val visibleTabs=Tab.entries.filter{t->val k=when(t){Tab.BALANCE->"beta";Tab.BOOKINGS->"buchungen";Tab.VARIABLE->"variabel";Tab.LOANS->"kredite";Tab.FUEL->"tanken"};if(tabVisibility.has(k))tabVisibility.optBoolean(k,true) else true}.ifEmpty{listOf(Tab.BALANCE)};LaunchedEffect(visibleTabs){if(tab !in visibleTabs)tab=visibleTabs.first()};var addBeta by remember{mutableStateOf(false)};var addForm by remember{mutableStateOf<String?>(null)};var fabOpen by remember{mutableStateOf(false)};var settings by remember{mutableStateOf(false)};var month by remember{mutableStateOf(YearMonth.now())}
     fun persist(){repo.save(state);state=JSONObject(state.toString())}
+    fun updateWidgetBalance(){val entries=repo.array(state,"betaEntries").objects();val balance=entries.sumOf{if(it.optString("type")=="income")it.optDouble("amount") else -it.optDouble("amount")};activity.getSharedPreferences(BetaWidgetProvider.PREFS_NAME,Context.MODE_PRIVATE).edit().putString(BetaWidgetProvider.KEY_BALANCE,money(balance)).putBoolean(BetaWidgetProvider.KEY_POSITIVE,balance>=0).apply();BetaWidgetProvider.updateAll(activity)}
+    LaunchedEffect(state.toString()){updateWidgetBalance()}
+    LaunchedEffect(initialWidgetAction){when(initialWidgetAction){BetaWidgetProvider.ACTION_ADD_EINNAHME->{tab=Tab.BALANCE;addBeta=true};BetaWidgetProvider.ACTION_ADD_AUSGABE->{tab=Tab.BALANCE;addBeta=true};BetaWidgetProvider.ACTION_OPEN->{tab=Tab.BALANCE}}}
     Scaffold(
         topBar={Surface(color=MaterialTheme.colorScheme.background.copy(alpha=.92f)){Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=10.dp)){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("Haushaltsbuch",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,letterSpacing=(-.6).sp);Text("+",fontSize=32.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary);Spacer(Modifier.weight(1f));Surface(shape=CircleShape,color=MaterialTheme.colorScheme.surface,modifier=Modifier.size(38.dp).clickable{settings=true}){Box(contentAlignment=Alignment.Center){SettingsGearIcon(MaterialTheme.colorScheme.onSurfaceVariant)}}}}}},
         bottomBar={Surface(tonalElevation=3.dp,shape=RoundedCornerShape(26.dp),modifier=Modifier.padding(horizontal=6.dp,vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(vertical=6.dp)){visibleTabs.forEach{t->Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{tab=t},horizontalAlignment=Alignment.CenterHorizontally){OriginalTabIcon(t,if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,tab==t);Text(t.label,fontSize=10.5.sp,maxLines=1,color=if(tab==t)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=FontWeight.Bold)}}}}},
