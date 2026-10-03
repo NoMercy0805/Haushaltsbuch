@@ -190,7 +190,7 @@ class HouseholdRepository(private val activity: Activity) {
 }
 
 internal fun JSONArray.objects(): List<JSONObject> = (0 until length()).mapNotNull { optJSONObject(it) }
-private val currencyFormat=object:ThreadLocal<NumberFormat>(){override fun initialValue():NumberFormat=NumberFormat.getCurrencyInstance(Locale.GERMANY)}
+private val currencyFormat=object:java.lang.ThreadLocal<NumberFormat>(){override fun initialValue():NumberFormat=NumberFormat.getCurrencyInstance(Locale.GERMANY)}
 private fun money(v: Double): String = currencyFormat.get()!!.format(v)
 internal fun JSONArray.strings():List<String> =(0 until length()).map{optString(it)}
 private fun sum(a: JSONArray, field: String, predicate: (JSONObject)->Boolean = { true }): Double = a.objects().filter(predicate).sumOf { it.optDouble(field, 0.0) }
@@ -866,7 +866,7 @@ private fun deleteBetaEntry(state:JSONObject,repo:HouseholdRepository,entry:JSON
 }
 @Composable private fun BetaInput(value:String,onValue:(String)->Unit,placeholder:String,modifier:Modifier=Modifier,decimal:Boolean=false){
  val dark=LocalAppDark.current
- BasicTextField(value,onValue,modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(appPaper(dark)).border(1.5.dp,if(dark)Color(0xFF4A4C52) else Color(0xFFB0B2B8),RoundedCornerShape(16.dp)).padding(horizontal=16.dp,vertical=14.dp),singleLine=true,textStyle=androidx.compose.ui.text.TextStyle(fontSize=16.sp,color=appInk(dark)),cursorBrush=Brush.solidColor(appBlue(dark)),keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=if(decimal)androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),decorationBox={inner->Box{if(value.isEmpty())Text(placeholder,fontSize=16.sp,color=appInkSoft(dark));inner()}})
+ BasicTextField(value,onValue,modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(appPaper(dark)).border(1.5.dp,if(dark)Color(0xFF4A4C52) else Color(0xFFB0B2B8),RoundedCornerShape(16.dp)).padding(horizontal=16.dp,vertical=14.dp),singleLine=true,textStyle=androidx.compose.ui.text.TextStyle(fontSize=16.sp,color=appInk(dark)),cursorBrush=androidx.compose.ui.graphics.SolidColor(appBlue(dark)),keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=if(decimal)androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),decorationBox={inner->Box{if(value.isEmpty())Text(placeholder,fontSize=16.sp,color=appInkSoft(dark));inner()}})
 }
 @Composable private fun BetaDateField(value:String,onClick:()->Unit){
  val dark=LocalAppDark.current
