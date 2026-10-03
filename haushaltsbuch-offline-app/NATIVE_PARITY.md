@@ -52,3 +52,15 @@ An Android runtime/emulator is not available in the current execution environmen
 - Nine additional regression tests cover form validation, resulting backup schema and the plus-button action map.
 
 These are source-level corrections. Pixel equivalence is still unconfirmed. Other edit/history screens, backdrop blur, body blur layers, animation timing, font metrics and full device interaction remain unaccepted; no percentage or 1:1 completion is claimed.
+
+## Continued comparison after beta 385
+
+- Reference edit grids, expanded actions, deletion dialogs and history rendering for variable costs, loans, paid invoices, pot entries and fuel entries.
+- Root-owned freed-rate confirmation survives the loan moving into the paid list. Loan reversal restores principal reduction, and payoff dates preserve the reference behavior.
+- JavaScript half-cent rounding, repayment-plan month selection and separate IDs for same-name loans.
+- Fuel chart cutoff, same-day ordering, fixed viewbox coordinates and selected-car form defaults.
+- Settings, period picker, update history and plus menu use reference controls; restore files are parsed in the background before replacement confirmation.
+- Repayment and fuel screens use lazy lists. Native text tracking and font padding were aligned with the reference defaults.
+- Twelve new JVM regression tests cover loan reversal/payoff, rounding, repayment plans and chart behavior. These require the bundled workflow run; source checks alone do not verify Kotlin compilation.
+
+Actual Android visual and interaction acceptance remains open, including glass, shadows, keyboard, font metrics and animation.

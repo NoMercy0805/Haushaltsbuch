@@ -42,6 +42,16 @@ internal val htmlIconPaths=mapOf(
     "fixed-suitcase" to listOf("M6.0 7.0h12.0a2.0 2.0 0 0 1 2.0 2.0v8.0a2.0 2.0 0 0 1 -2.0 2.0h-12.0a2.0 2.0 0 0 1 -2.0 -2.0v-8.0a2.0 2.0 0 0 1 2.0 -2.0z","M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2","M4 12h16"),
     "fixed-paw" to listOf("M5.4 10.2a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0z","M10.4 8.0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0z","M15.4 10.2a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0z","M12 12c-3 0-5 2-5 4.5S8.5 21 12 21s5-2 5-4.5-2-4.5-5-4.5z"),
     "action-edit" to listOf("M12 20h9","M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"),
+    "fab-entry" to listOf("M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z","M14 3v4a1 1 0 0 0 1 1h4","M9 13h6M9 17h4"),
+    "fuel-add-car" to listOf("M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13","M3.6 13h16.8a1.6 1.6 0 0 1 1.6 1.6v1.8a1.6 1.6 0 0 1-1.6 1.6H3.6A1.6 1.6 0 0 1 2 16.4v-1.8A1.6 1.6 0 0 1 3.6 13z","M12 16v3m-1.5-1.5h3"),
+    "fuel-car" to listOf("M3.5 13 5 8.3A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.3L20.5 13","M3.6 13h16.8a1.6 1.6 0 0 1 1.6 1.6v1.8a1.6 1.6 0 0 1-1.6 1.6H3.6A1.6 1.6 0 0 1 2 16.4v-1.8A1.6 1.6 0 0 1 3.6 13z"),
+    "fuel-all-cars" to listOf("M4.5 3h4A1.5 1.5 0 0 1 10 4.5v4A1.5 1.5 0 0 1 8.5 10h-4A1.5 1.5 0 0 1 3 8.5v-4A1.5 1.5 0 0 1 4.5 3z","M15.5 3h4A1.5 1.5 0 0 1 21 4.5v4A1.5 1.5 0 0 1 19.5 10h-4A1.5 1.5 0 0 1 14 8.5v-4A1.5 1.5 0 0 1 15.5 3z","M4.5 14h4A1.5 1.5 0 0 1 10 15.5v4A1.5 1.5 0 0 1 8.5 21h-4A1.5 1.5 0 0 1 3 19.5v-4A1.5 1.5 0 0 1 4.5 14z","M15.5 14h4A1.5 1.5 0 0 1 21 15.5v4A1.5 1.5 0 0 1 19.5 21h-4A1.5 1.5 0 0 1 14 19.5v-4A1.5 1.5 0 0 1 15.5 14z"),
+    "action-close" to listOf("M6 6l12 12M18 6L6 18"),
+    "action-template-delete" to listOf("M3 6h18","M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2","M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"),
+    "action-plus" to listOf("M12 5v14M5 12h14"),
+    "action-refresh" to listOf("M3 12a9 9 0 1 0 2.6-6.3L3 8","M3 3v5h5"),
+    "action-check" to listOf("M20 6 9 17l-5-5"),
+    "action-reopen" to listOf("M1 4v6h6","M3.51 15a9 9 0 1 0 2.13-9.36L1 10"),
     "action-delete" to listOf("M3 6h18","M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2","M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6","M10 11v6M14 11v6"),
     "chevron-up" to listOf("M6 15l6-6 6 6"),
     "chevron-down" to listOf("M6 9l6 6 6-6"),
@@ -69,9 +79,9 @@ internal val htmlIconPaths=mapOf(
 
 private val htmlFilledIconPaths=mapOf("fixed-bolt" to setOf(0),"fixed-wifi" to setOf(2),"fixed-ballerina" to setOf(0),"fixed-film" to setOf(1),"fixed-car" to setOf(2,3),"fixed-piggy" to setOf(2),"fixed-paw" to setOf(0,1,2))
 
-@Composable internal fun HtmlReferenceIcon(name:String,color:Color,size:Dp,strokeWidth:Float=2f){
+@Composable internal fun HtmlReferenceIcon(name:String,color:Color,size:Dp,strokeWidth:Float=2f,modifier:Modifier=Modifier){
     val paths=remember(name){htmlIconPaths[name].orEmpty().map{PathParser().parsePathString(it).toPath()}}
-    Canvas(Modifier.size(size)){
+    Canvas(modifier.size(size)){
         val scaleX=this.size.width/24f;val scaleY=this.size.height/24f
         withTransform({scale(scaleX,scaleY,pivot=Offset.Zero)}){
             paths.forEachIndexed{index,path->if(index in htmlFilledIconPaths[name].orEmpty())drawPath(path,color) else drawPath(path,color,style=Stroke(strokeWidth,cap=StrokeCap.Round,join=StrokeJoin.Round))}
