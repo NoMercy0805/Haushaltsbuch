@@ -29,6 +29,9 @@
     --gold-soft:#FFEFD6;
     --fuel:#D97706;
     --fuel-soft:#FBEBD3;
+    --selection-bg:#0955C8;
+    --selection-text:#FFFFFF;
+    --selection-ring:#003A91;
     --primary:#1268FF;
     --primary-a:rgba(18,104,255,0.80);
     --primary-soft:#E3EDFF;
@@ -74,6 +77,9 @@
     --gold-soft:#3B2E16;
     --fuel:#E8940F;
     --fuel-soft:#3A2C14;
+    --selection-bg:#5B9CFF;
+    --selection-text:#101827;
+    --selection-ring:#B5D2FF;
     --primary:#5B9CFF;
     --primary-a:rgba(91,156,255,0.80);
     --primary-soft:#1B2A44;
@@ -266,7 +272,7 @@
   .hero-card{border-radius:16px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
   .hero-sticky-wrap{
     position:sticky;
-    top:calc(env(safe-area-inset-top, 0px) + 100px);
+    top:var(--ledger-header-height, calc(env(safe-area-inset-top, 0px) + 100px));
     z-index:90;
     transition:opacity .2s ease, transform .2s ease;
   }
@@ -587,6 +593,29 @@
   }
   .csv-modal-actions{display:flex;gap:10px;}
   .csv-modal-actions .confirm-btn{flex:1;}
+
+  /* Shared, opaque selection treatment for light and dark themes. */
+  nav.tabs button.active,
+  .sub-nav-btn.active,
+  .beta-filter-chip.active,
+  .theme-option.active,
+  .year-chip.active,
+  .tilgung-extra-chip.active,
+  .loan-carryover-chip.active,
+  .beta-picker-grid-btn.active,
+  .car-chip.active,
+  .range-chip.active{
+    background:var(--selection-bg);
+    color:var(--selection-text);
+    box-shadow:inset 0 0 0 2px var(--selection-ring);
+    font-weight:700;
+  }
+  :is(nav.tabs button, .sub-nav-btn, .beta-filter-chip, .theme-option,
+      .year-chip, .tilgung-extra-chip, .loan-carryover-chip,
+      .beta-picker-grid-btn, .car-chip, .range-chip):focus-visible{
+    outline:2px solid var(--primary);
+    outline-offset:2px;
+  }
 </style>
 </head>
 <body>
@@ -3738,9 +3767,23 @@ var nativeStorage = {
     }
   }
 
+
+  function positionHeroStickyCards(){
+    var header = document.querySelector('header.ledger-header');
+    if(!header) return;
+    document.documentElement.style.setProperty('--ledger-header-height', header.getBoundingClientRect().height + 'px');
+  }
+
   function setupIncomeExpenseBarCollapse(){
     var bar = document.getElementById('incomeExpenseBar');
     if(!bar) return;
+    positionHeroStickyCards();
+    window.addEventListener('resize', positionHeroStickyCards);
+    if(typeof ResizeObserver !== 'undefined'){
+      var headerObserver = new ResizeObserver(positionHeroStickyCards);
+      var header = document.querySelector('header.ledger-header');
+      if(header) headerObserver.observe(header);
+    }
     var lastScrollY = window.scrollY;
     var ticking = false;
     var COLLAPSE_THRESHOLD = 24; // ab wieviel Pixeln Scroll-Bewegung reagiert wird
@@ -3750,6 +3793,7 @@ var nativeStorage = {
     // dabei aendert - sonst koennten diese ueberlappen oder eine Luecke zeigen.
     bar.addEventListener('transitionend', function(e){
       if(e.propertyName !== 'height') return;
+      positionHeroStickyCards();
       positionBetaMonthNav();
       positionBetaBalanceBar();
     });
