@@ -3696,6 +3696,35 @@ var nativeStorage = {
     }
   }
 
+
+  var betaDayScrollRequest = 0;
+  function scrollBetaToToday(){
+    var today = new Date();
+    if(betaViewMonth !== today.getMonth() || betaViewYear !== today.getFullYear()){
+      betaViewMonth = today.getMonth(); betaViewYear = today.getFullYear();
+      renderBeta();
+    }
+    var request = ++betaDayScrollRequest;
+    var bar = document.getElementById('incomeExpenseBar');
+    if(bar) bar.classList.add('collapsed');
+    function alignDay(){
+      var panel = document.getElementById('tab-beta');
+      if(request !== betaDayScrollRequest || !panel || !panel.classList.contains('active')) return;
+      positionBetaMonthNav();
+      var date = localDateStr(today);
+      var groups = Array.prototype.slice.call(document.querySelectorAll('#betaList .beta-day-group[data-date]'));
+      var target = groups.filter(function(group){ return group.dataset.date === date; })[0] ||
+        groups.filter(function(group){ return group.dataset.date < date; })[0] || groups[0];
+      var nav = document.querySelector('.beta-month-nav');
+      if(!target || !nav) return;
+      var top = window.scrollY + target.getBoundingClientRect().top - nav.getBoundingClientRect().bottom;
+      window.scrollTo({top:Math.max(0, top), behavior:'instant'});
+    }
+    requestAnimationFrame(alignDay);
+    // Re-align after the header collapse transition and keyboard dismissal.
+    setTimeout(alignDay, 240);
+  }
+
   function switchToTab(tabName){
     var btn = document.querySelector('nav.tabs button[data-tab="'+tabName+'"]');
     var panel = document.getElementById('tab-'+tabName);
@@ -3708,6 +3737,8 @@ var nativeStorage = {
     if(tabName === 'beta'){
       positionBetaBalanceBar();
       positionBetaMonthNav();
+      renderBeta();
+      scrollBetaToToday();
     } else {
       var fabEl = document.getElementById('addEntryFab');
       var dialEl = document.getElementById('fabSpeedDial');
@@ -5901,7 +5932,7 @@ var nativeStorage = {
         var dayEntries = dayGroups[dateKey];
         var dayTotal = dayEntries.reduce(function(s,e){ return s + betaTypeSign(e.type)*e.amount; }, 0);
         var d = parseISO(dateKey);
-        html += '<div class="beta-day-group">'+
+        html += '<div class="beta-day-group" data-date="'+dateKey+'">'+
                   '<div class="beta-day-header">'+
                     '<span class="beta-day-box">'+String(d.getDate()).padStart(2,'0')+'</span>'+
                     '<span class="beta-day-text">'+
@@ -6469,6 +6500,7 @@ var nativeStorage = {
       var d = parseISO(date);
       betaViewMonth = d.getMonth(); betaViewYear = d.getFullYear();
       renderBeta();
+      scrollBetaToToday();
     });
 
     document.getElementById('addBetaOverlay').addEventListener('click', function(e){
