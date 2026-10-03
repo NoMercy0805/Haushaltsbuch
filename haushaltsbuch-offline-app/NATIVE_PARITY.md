@@ -40,3 +40,15 @@ Reference JavaScript was executed directly for recurrence periods, month-end cli
 - Measure real device performance after the complete import. No quantified device speedup is claimed yet.
 
 An Android runtime/emulator is not available in the current execution environment. Passing unit tests and an APK build do not close these remaining acceptance items.
+
+## Continued reference comparison after beta 384
+
+- Replaced all seven quick-add form layouts with the HTML field order, two-column grid, exact placeholders, selects, date controls, panel/input CSS and submit labels. Fuel/car submits use the HTML exhaust color.
+- Corrected validation and JSON schemas: deposits use `note`, standalone pot expenses use `itemId: null` and `itemName`; loan principal is optional, loan monthly rate required, and optional fields remain JSON null.
+- The plus button directly opens the form corresponding to the active booking/variable subview; these subviews persist when changing top-level tabs.
+- Income/fixed edit rows use the HTML inline form and action geometry; the fixed icon picker uses the original group order, SVG paths (including filled paths), colors and labels.
+- Invoice rows use HTML due-month tint, circular paid control, date text, expandable actions and the edit grid. Delete/reconcile confirmations use the reference confirmation card.
+- Hero gradients use the CSS 145-degree projection rather than the Compose diagonal default; empty-state typography and hero toggle geometry are taken from the stylesheet.
+- Nine additional regression tests cover form validation, resulting backup schema and the plus-button action map.
+
+These are source-level corrections. Pixel equivalence is still unconfirmed. Other edit/history screens, backdrop blur, body blur layers, animation timing, font metrics and full device interaction remain unaccepted; no percentage or 1:1 completion is claimed.
