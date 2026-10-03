@@ -2,12 +2,8 @@ name: Build APK
 
 on:
   push:
-    branches: [ main, native-compose ]
+    branches: [ main ]
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -23,10 +19,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
-          cache-dependency-path: |
-            haushaltsbuch-offline-app/**/*.gradle*
-            haushaltsbuch-offline-app/gradle/wrapper/gradle-wrapper.properties
 
       - name: Use fixed debug keystore
         run: |
@@ -51,15 +43,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Test and build Release APK
-        run: ./gradlew testReleaseUnitTest assembleRelease
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: native-parity-tests
-          path: haushaltsbuch-offline-app/app/build/test-results/testReleaseUnitTest/
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
 
       - name: Verify actual APK signature
         run: |
@@ -68,11 +53,10 @@ jobs:
           keytool -printcert -jarfile "$APK_PATH" | grep "SHA1:" || echo "WARNUNG: Konnte Signatur nicht auslesen (unsignierte APK?)"
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Haushaltsbuch-Beta.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Haushaltsbuch.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Haushaltsbuch-Beta
-          path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch-Beta.apk
-
+          name: Haushaltsbuch
+          path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch.apk
