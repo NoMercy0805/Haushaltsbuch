@@ -1,7 +1,6 @@
 package com.schiwy.haushaltsbuch;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -14,10 +13,13 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class MainActivity extends Activity {
+import androidx.fragment.app.FragmentActivity;
+
+public class MainActivity extends FragmentActivity {
 
     private WebView webView;
     private WebAppInterface bridge;
+    private SecurityBridge securityBridge;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 777;
     private static final int FOLDER_PICKER_REQUEST = 778;
@@ -79,11 +81,17 @@ public class MainActivity extends Activity {
         bridge = new WebAppInterface(this);
         webView.addJavascriptInterface(bridge, "AndroidBridge");
 
+        securityBridge = new SecurityBridge(this, webView);
+        webView.addJavascriptInterface(securityBridge, "SecurityBridge");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 view.evaluateJavascript(DOWNLOAD_HOOK_JS, null);
+                if (securityBridge != null) {
+                    securityBridge.installSettingsUi();
+                }
                 handleBetaWidgetIntent(getIntent());
             }
         });
@@ -97,10 +105,12 @@ public class MainActivity extends Activity {
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
                 try {
+                    if (securityBridge != null) securityBridge.setExternalActivityInProgress(true);
                     startActivityForResult(
                             Intent.createChooser(intent, "Sicherungsdatei auswählen"),
                             FILE_CHOOSER_REQUEST);
                 } catch (Exception e) {
+                    if (securityBridge != null) securityBridge.setExternalActivityInProgress(false);
                     filePathCallback = null;
                     return false;
                 }
@@ -111,6 +121,18 @@ public class MainActivity extends Activity {
         webView.loadUrl("file:///android_asset/index.html");
 
         requestStoragePermissionIfNeeded();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (securityBridge != null) securityBridge.onHostStart();
+    }
+
+    @Override
+    protected void onStop() {
+        if (securityBridge != null) securityBridge.onHostStop();
+        super.onStop();
     }
 
     @Override
@@ -137,8 +159,10 @@ public class MainActivity extends Activity {
                 | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         try {
+            if (securityBridge != null) securityBridge.setExternalActivityInProgress(true);
             startActivityForResult(intent, FOLDER_PICKER_REQUEST);
         } catch (Exception e) {
+            if (securityBridge != null) securityBridge.setExternalActivityInProgress(false);
             notifyFolderPicked(false, null);
         }
     }
@@ -193,6 +217,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQUEST || requestCode == FOLDER_PICKER_REQUEST) {
+            if (securityBridge != null) securityBridge.setExternalActivityInProgress(false);
+        }
+
         if (requestCode == FILE_CHOOSER_REQUEST) {
             if (filePathCallback == null) {
                 super.onActivityResult(requestCode, resultCode, data);
