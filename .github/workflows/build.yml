@@ -60,3 +60,5 @@ jobs:
         with:
           name: Haushaltsbuch
           path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch.apk
+
+# Manual rebuild trigger 2026-10-10
