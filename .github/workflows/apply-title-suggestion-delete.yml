@@ -21,4 +21,4 @@ jobs:
           git add -A
           git commit --amend --no-edit
           git push
-# retry with anchor-based patch
+# retry with final stable anchors
