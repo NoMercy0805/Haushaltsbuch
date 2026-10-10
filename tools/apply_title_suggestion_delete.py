@@ -20,10 +20,10 @@ replacement="""    var activeTitles = allTitles.filter(function(t){ return state
 
     function row(title){
       return '<div class=\"compact-list-row\" style=\"cursor:default;\">'+
-               '<span class=\"compact-name-wrap\"><span class=\"compact-name\">'+escapeHtml(title)+'</span></span>'+ 
+               '<span class=\"compact-name-wrap\"><span class=\"compact-name\">'+escapeHtml(title)+'</span></span>'+
                '<button type=\"button\" class=\"action-icon-btn danger\" data-action=\"delete-beta-title\" data-title=\"'+escapeHtml(title)+'\" style=\"margin-left:8px;\" aria-label=\"Entfernen\">'+
                  '<svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg>'+
-               '</button>'+ 
+               '</button>'+
              '</div>';
     }
 
