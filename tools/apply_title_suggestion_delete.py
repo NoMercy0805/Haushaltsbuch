@@ -1,18 +1,20 @@
 from pathlib import Path
-import re
 p=Path('haushaltsbuch-offline-app/app/src/main/assets/index.html')
 s=p.read_text(encoding='utf-8')
 
-# X means remove from suggestions; keep historic bookings untouched.
-s,n=re.subn(r"document\.getElementById\('betaTitleSuggestionsSettings'\)\.addEventListener\('click', function\(e\)\)\{\s*var titleBtn = e\.target\.closest\('\[data-action=\\\"hide-beta-title\\\"\], \[data-action=\\\"restore-beta-title\\\"\]'\);\s*if\(!titleBtn\) return;\s*var title = titleBtn\.dataset\.title;\s*if\(titleBtn\.dataset\.action === 'hide-beta-title'\)\{\s*if\(state\.betaHiddenTitles\.indexOf\(title\) === -1\) state\.betaHiddenTitles\.push\(title\);\s*\} else \{\s*state\.betaHiddenTitles = state\.betaHiddenTitles\.filter\(function\(t\)\{ return t !== title; \}\);\s*\}\s*saveState\(\);",
-"""document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){
+# Replace settings click handler by slicing between stable anchors.
+start=s.index("    document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){")
+end=s.index("      renderBetaTitleSuggestionsSettings();", start)
+handler="""    document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){
       var titleBtn = e.target.closest('[data-action=\"delete-beta-title\"]');
       if(!titleBtn) return;
       var title = titleBtn.dataset.title;
       if(state.betaHiddenTitles.indexOf(title) === -1) state.betaHiddenTitles.push(title);
-      saveState();""",s,count=1)
-if n!=1: raise SystemExit(f'handler replacements={n}')
+      saveState();
+"""
+s=s[:start]+handler+s[end:]
 
+# Settings list: deleted suggestions disappear completely; no restore section.
 start=s.index("    var activeTitles = allTitles.filter(function(t){ return state.betaHiddenTitles.indexOf(t) === -1; })")
 end=s.index("    container.innerHTML = html;", start)
 replacement="""    var activeTitles = allTitles.filter(function(t){ return state.betaHiddenTitles.indexOf(t) === -1; }).sort(function(a,b){ return a.localeCompare(b, 'de'); });
@@ -33,6 +35,7 @@ replacement="""    var activeTitles = allTitles.filter(function(t){ return state
 """
 s=s[:start]+replacement+s[end:]
 
+# Saving a booking with the same title re-enables that suggestion automatically.
 old="""      saveState();
       generateBetaRecurringOccurrences();
       document.getElementById('addBetaOverlay').classList.remove('open');
