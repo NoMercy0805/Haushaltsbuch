@@ -2,9 +2,8 @@ from pathlib import Path
 p=Path('haushaltsbuch-offline-app/app/src/main/assets/index.html')
 s=p.read_text(encoding='utf-8')
 
-# Replace settings click handler by slicing between stable anchors.
 start=s.index("    document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){")
-end=s.index("      renderBetaTitleSuggestionsSettings();", start)
+end=s.index("      saveState();", start)+len("      saveState();\n")
 handler="""    document.getElementById('betaTitleSuggestionsSettings').addEventListener('click', function(e){
       var titleBtn = e.target.closest('[data-action=\"delete-beta-title\"]');
       if(!titleBtn) return;
@@ -14,7 +13,6 @@ handler="""    document.getElementById('betaTitleSuggestionsSettings').addEventL
 """
 s=s[:start]+handler+s[end:]
 
-# Settings list: deleted suggestions disappear completely; no restore section.
 start=s.index("    var activeTitles = allTitles.filter(function(t){ return state.betaHiddenTitles.indexOf(t) === -1; })")
 end=s.index("    container.innerHTML = html;", start)
 replacement="""    var activeTitles = allTitles.filter(function(t){ return state.betaHiddenTitles.indexOf(t) === -1; }).sort(function(a,b){ return a.localeCompare(b, 'de'); });
@@ -35,7 +33,6 @@ replacement="""    var activeTitles = allTitles.filter(function(t){ return state
 """
 s=s[:start]+replacement+s[end:]
 
-# Saving a booking with the same title re-enables that suggestion automatically.
 old="""      saveState();
       generateBetaRecurringOccurrences();
       document.getElementById('addBetaOverlay').classList.remove('open');
