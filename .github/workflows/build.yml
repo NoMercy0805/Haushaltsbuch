@@ -24,62 +24,14 @@ jobs:
           from pathlib import Path
           p=Path('haushaltsbuch-offline-app/app/src/main/assets/index.html')
           s=p.read_text(encoding='utf-8')
-          old="""  (function(){
-    var fab = document.querySelector('.fab-add');
-    if(!fab) return;
-    var lastScrollY = window.scrollY;
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-      if(ticking) return;
-      ticking = true;
-      requestAnimationFrame(function(){
-        var currentY = window.scrollY;
-        if(currentY > lastScrollY && currentY > 40){
-          fab.classList.add('fab-hidden');
-        } else {
-          fab.classList.remove('fab-hidden');
-        }
-        lastScrollY = currentY;
-        ticking = false;
-      });
-    }, {passive:true});
-  })();
-"""
-          new="""  (function(){
-    var fab = document.querySelector('.fab-add');
-    if(!fab) return;
-    // Bei jedem App-Start beginnt der Plus-Kreis sichtbar – unabhängig davon,
-    // ob WebView/Browser eine alte Scrollposition wiederherstellt.
-    fab.classList.remove('fab-hidden');
-    var lastScrollY = window.scrollY;
-    var hasUserScrolled = false;
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-      if(ticking) return;
-      ticking = true;
-      requestAnimationFrame(function(){
-        var currentY = window.scrollY;
-        var delta = currentY - lastScrollY;
-        // Erst eine echte Scrollbewegung des Nutzers darf den Startzustand ändern.
-        if(Math.abs(delta) > 2) hasUserScrolled = true;
-        if(hasUserScrolled && currentY > lastScrollY && currentY > 40){
-          fab.classList.add('fab-hidden');
-        } else if(hasUserScrolled && currentY < lastScrollY){
-          fab.classList.remove('fab-hidden');
-        }
-        lastScrollY = currentY;
-        ticking = false;
-      });
-    }, {passive:true});
-  })();
-"""
-          if old not in s:
-              raise SystemExit('FAB scroll block not found')
+          old="  (function(){\n    var fab = document.querySelector('.fab-add');\n    if(!fab) return;\n    var lastScrollY = window.scrollY;\n    var ticking = false;\n    window.addEventListener('scroll', function(){\n      if(ticking) return;\n      ticking = true;\n      requestAnimationFrame(function(){\n        var currentY = window.scrollY;\n        if(currentY > lastScrollY && currentY > 40){\n          fab.classList.add('fab-hidden');\n        } else {\n          fab.classList.remove('fab-hidden');\n        }\n        lastScrollY = currentY;\n        ticking = false;\n      });\n    }, {passive:true});\n  })();\n"
+          new="  (function(){\n    var fab = document.querySelector('.fab-add');\n    if(!fab) return;\n    // Bei jedem App-Start beginnt der Plus-Kreis sichtbar, auch wenn WebView eine alte Scrollposition wiederherstellt.\n    fab.classList.remove('fab-hidden');\n    var lastScrollY = window.scrollY;\n    var hasUserScrolled = false;\n    var ticking = false;\n    window.addEventListener('scroll', function(){\n      if(ticking) return;\n      ticking = true;\n      requestAnimationFrame(function(){\n        var currentY = window.scrollY;\n        var delta = currentY - lastScrollY;\n        if(Math.abs(delta) > 2) hasUserScrolled = true;\n        if(hasUserScrolled && currentY > lastScrollY && currentY > 40){\n          fab.classList.add('fab-hidden');\n        } else if(hasUserScrolled && currentY < lastScrollY){\n          fab.classList.remove('fab-hidden');\n        }\n        lastScrollY = currentY;\n        ticking = false;\n      });\n    }, {passive:true});\n  })();\n"
+          if old not in s: raise SystemExit('FAB scroll block not found')
           p.write_text(s.replace(old,new,1),encoding='utf-8')
           PY
           git config user.name ChatGPT
           git config user.email chatgpt@users.noreply.github.com
-          git show HEAD^:.github/workflows/build.yml > .github/workflows/build.yml
+          git show HEAD~2:.github/workflows/build.yml > .github/workflows/build.yml
           git add haushaltsbuch-offline-app/app/src/main/assets/index.html .github/workflows/build.yml
           git diff --cached --check
           git commit -m "Keep add button visible on app start [skip ci]"
