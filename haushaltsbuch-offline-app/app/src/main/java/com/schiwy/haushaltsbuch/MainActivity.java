@@ -52,21 +52,15 @@ public class MainActivity extends FragmentActivity {
         "  }, true);" +
         "})();";
 
-    // Der Plus-Kreis bleibt dauerhaft sichtbar und wird nur am Hintergrund
-    // transparenter. Dafuer reicht eine statische CSS-Ueberschreibung; kein
-    // MutationObserver oder permanentes Eingreifen in die Klassenlogik noetig.
+    // Beim Start soll der Plus-Kreis immer sichtbar sein. Danach uebernimmt
+    // wieder die vorhandene Scroll-Logik der Web-App: beim Herunterscrollen
+    // ausblenden, beim Hochscrollen wieder einblenden.
     private static final String FAB_SCROLL_GUARD_JS =
         "(function(){" +
-        "  if(window.__androidFabPermanentInstalled) return;" +
-        "  window.__androidFabPermanentInstalled = true;" +
         "  var fab = document.getElementById('addEntryFab');" +
         "  if(!fab) return;" +
-        "  var style = document.createElement('style');" +
-        "  style.id = 'androidFabPermanentStyle';" +
-        "  style.textContent = '#addEntryFab{background:rgba(18,104,255,0.52)!important;opacity:1!important;transform:none!important;pointer-events:auto!important;}' +" +
-        "    '#addEntryFab.fab-hidden{opacity:1!important;transform:none!important;pointer-events:auto!important;}' +" +
-        "    'html[data-theme=\"dark\"] #addEntryFab{background:rgba(91,156,255,0.52)!important;}';" +
-        "  document.head.appendChild(style);" +
+        "  var oldStyle = document.getElementById('androidFabPermanentStyle');" +
+        "  if(oldStyle) oldStyle.remove();" +
         "  fab.classList.remove('fab-hidden');" +
         "})();";
 
