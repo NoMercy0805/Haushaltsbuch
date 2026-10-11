@@ -52,53 +52,25 @@ public class MainActivity extends FragmentActivity {
         "  }, true);" +
         "})();";
 
-    // Die HTML-App blendet den FAB bei Scroll-Events aus/ein. Android WebView kann
-    // beim Start jedoch selbst Scroll-Events ausloesen (z.B. durch Wiederherstellung
-    // einer alten Scrollposition oder spaete Layout-Aenderungen). Dieser Guard sorgt
-    // dafuer, dass der Plus-Kreis bei jedem echten App-Start sichtbar bleibt, bis der
-    // Nutzer tatsaechlich selbst wischt/scrollt. Danach gilt wieder die normale
-    // Richtung: runter = ausblenden, hoch = einblenden.
+    // Der Plus-Kreis bleibt dauerhaft sichtbar und wird nur am Hintergrund
+    // transparenter. Das weisse Plus selbst bleibt voll sichtbar. Die vorhandene
+    // HTML-Scroll-Logik darf weiterhin Klassen setzen; diese werden hier fuer den
+    // Haupt-FAB ueberschrieben, damit er beim Scrollen nicht mehr verschwindet.
     private static final String FAB_SCROLL_GUARD_JS =
         "(function(){" +
-        "  if(window.__androidFabScrollGuardInstalled) return;" +
-        "  window.__androidFabScrollGuardInstalled = true;" +
+        "  if(window.__androidFabPermanentInstalled) return;" +
+        "  window.__androidFabPermanentInstalled = true;" +
         "  var fab = document.getElementById('addEntryFab');" +
         "  if(!fab) return;" +
-        "  var userScrollStarted = false;" +
-        "  var touchStartY = null;" +
-        "  var lastY = window.scrollY || 0;" +
-        "  var ticking = false;" +
-        "  fab.classList.remove('fab-hidden');" +
-        "  document.addEventListener('touchstart', function(e){" +
-        "    if(e.touches && e.touches.length){ touchStartY = e.touches[0].clientY; }" +
-        "  }, {passive:true, capture:true});" +
-        "  document.addEventListener('touchmove', function(e){" +
-        "    if(touchStartY === null || !e.touches || !e.touches.length) return;" +
-        "    if(Math.abs(e.touches[0].clientY - touchStartY) > 3) userScrollStarted = true;" +
-        "  }, {passive:true, capture:true});" +
-        "  document.addEventListener('touchend', function(){ touchStartY = null; }, {passive:true, capture:true});" +
-        "  window.addEventListener('wheel', function(){ userScrollStarted = true; }, {passive:true, capture:true});" +
-        "  window.addEventListener('keydown', function(e){" +
-        "    if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].indexOf(e.key) !== -1){" +
-        "      userScrollStarted = true;" +
-        "    }" +
-        "  }, true);" +
-        "  window.addEventListener('scroll', function(){" +
-        "    if(ticking) return;" +
-        "    ticking = true;" +
-        "    requestAnimationFrame(function(){" +
-        "      var currentY = window.scrollY || 0;" +
-        "      if(!userScrollStarted){" +
-        "        fab.classList.remove('fab-hidden');" +
-        "      } else if(currentY > lastY && currentY > 40){" +
-        "        fab.classList.add('fab-hidden');" +
-        "      } else if(currentY < lastY){" +
-        "        fab.classList.remove('fab-hidden');" +
-        "      }" +
-        "      lastY = currentY;" +
-        "      ticking = false;" +
-        "    });" +
-        "  }, {passive:true});" +
+        "  var style = document.createElement('style');" +
+        "  style.id = 'androidFabPermanentStyle';" +
+        "  style.textContent = '#addEntryFab{background:rgba(18,104,255,0.52)!important;opacity:1!important;transform:none!important;pointer-events:auto!important;}' +" +
+        "    '#addEntryFab.fab-hidden{opacity:1!important;transform:none!important;pointer-events:auto!important;}' +" +
+        "    'html[data-theme=\"dark\"] #addEntryFab{background:rgba(91,156,255,0.52)!important;}';" +
+        "  document.head.appendChild(style);" +
+        "  function keepVisible(){ fab.classList.remove('fab-hidden'); }" +
+        "  keepVisible();" +
+        "  new MutationObserver(function(){ keepVisible(); }).observe(fab,{attributes:true,attributeFilter:['class']});" +
         "})();";
 
     @Override
