@@ -53,9 +53,8 @@ public class MainActivity extends FragmentActivity {
         "})();";
 
     // Der Plus-Kreis bleibt dauerhaft sichtbar und wird nur am Hintergrund
-    // transparenter. Das weisse Plus selbst bleibt voll sichtbar. Die vorhandene
-    // HTML-Scroll-Logik darf weiterhin Klassen setzen; diese werden hier fuer den
-    // Haupt-FAB ueberschrieben, damit er beim Scrollen nicht mehr verschwindet.
+    // transparenter. Dafuer reicht eine statische CSS-Ueberschreibung; kein
+    // MutationObserver oder permanentes Eingreifen in die Klassenlogik noetig.
     private static final String FAB_SCROLL_GUARD_JS =
         "(function(){" +
         "  if(window.__androidFabPermanentInstalled) return;" +
@@ -68,9 +67,7 @@ public class MainActivity extends FragmentActivity {
         "    '#addEntryFab.fab-hidden{opacity:1!important;transform:none!important;pointer-events:auto!important;}' +" +
         "    'html[data-theme=\"dark\"] #addEntryFab{background:rgba(91,156,255,0.52)!important;}';" +
         "  document.head.appendChild(style);" +
-        "  function keepVisible(){ fab.classList.remove('fab-hidden'); }" +
-        "  keepVisible();" +
-        "  new MutationObserver(function(){ keepVisible(); }).observe(fab,{attributes:true,attributeFilter:['class']});" +
+        "  fab.classList.remove('fab-hidden');" +
         "})();";
 
     @Override
