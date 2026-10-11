@@ -7071,16 +7071,21 @@ if('serviceWorker' in navigator){
   (function(){
     var fab = document.querySelector('.fab-add');
     if(!fab) return;
+    // Bei jedem App-Start beginnt der Plus-Kreis sichtbar, auch wenn WebView eine alte Scrollposition wiederherstellt.
+    fab.classList.remove('fab-hidden');
     var lastScrollY = window.scrollY;
+    var hasUserScrolled = false;
     var ticking = false;
     window.addEventListener('scroll', function(){
       if(ticking) return;
       ticking = true;
       requestAnimationFrame(function(){
         var currentY = window.scrollY;
-        if(currentY > lastScrollY && currentY > 40){
+        var delta = currentY - lastScrollY;
+        if(Math.abs(delta) > 2) hasUserScrolled = true;
+        if(hasUserScrolled && currentY > lastScrollY && currentY > 40){
           fab.classList.add('fab-hidden');
-        } else {
+        } else if(hasUserScrolled && currentY < lastScrollY){
           fab.classList.remove('fab-hidden');
         }
         lastScrollY = currentY;
