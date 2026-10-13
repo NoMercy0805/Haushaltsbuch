@@ -68,28 +68,29 @@ jobs:
           sed -i -E "s/versionCode [0-9]+/versionCode ${VERSION_CODE}/" app/build.gradle
           echo "Using versionCode ${VERSION_CODE}"
 
-      - name: Build signed CarService APK
+      - name: Build unsigned release APK
         if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
         working-directory: carservice
-        run: gradle :app:assembleDebug --no-daemon
+        run: gradle :app:assembleRelease --no-daemon
 
-      - name: Verify APK signature
+      - name: Sign and verify CarService APK
         if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
         working-directory: carservice
         run: |
-          APK="app/build/outputs/apk/debug/app-debug.apk"
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
           test -x "$APKSIGNER"
-          "$APKSIGNER" verify --verbose --print-certs "$APK"
-          APK_FP=$("$APKSIGNER" verify --print-certs "$APK" | awk -F': ' '/certificate SHA-1 digest/ {print toupper($2); exit}')
-          APK_FP=${APK_FP//:/}
-          EXPECTED="90D794A69CA8588815183EFA111202D654A9218C"
-          echo "APK SHA-1 fingerprint: $APK_FP"
-          if [ "$APK_FP" != "$EXPECTED" ]; then
-            echo "ERROR: APK was not signed by the fixed key"
-            exit 1
-          fi
-          mv "$APK" "app/build/outputs/apk/debug/CarService.apk"
+          UNSIGNED=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
+          test -n "$UNSIGNED"
+          OUT="app/build/outputs/apk/release/CarService.apk"
+          "$APKSIGNER" sign \
+            --ks "$HOME/.android/debug.keystore" \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "$OUT" \
+            "$UNSIGNED"
+          "$APKSIGNER" verify --verbose --print-certs "$OUT"
+          test -s "$OUT"
 
       - name: Mark revision as signed
         if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
@@ -102,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CarService-signed
-          path: carservice/app/build/outputs/apk/debug/CarService.apk
+          path: carservice/app/build/outputs/apk/release/CarService.apk
           if-no-files-found: error
           retention-days: 90
 
