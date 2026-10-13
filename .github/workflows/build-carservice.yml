@@ -78,9 +78,13 @@ jobs:
         working-directory: carservice
         run: |
           APK="app/build/outputs/apk/debug/app-debug.apk"
-          APK_FP=$(keytool -printcert -jarfile "$APK" | grep "SHA1:" | awk '{print $2}')
-          echo "APK fingerprint: $APK_FP"
-          EXPECTED="90:D7:94:A6:9C:A8:58:88:15:18:3E:FA:11:12:02:D6:54:A9:21:8C"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          APK_FP=$("$APKSIGNER" verify --print-certs "$APK" | awk -F': ' '/certificate SHA-1 digest/ {print toupper($2); exit}')
+          APK_FP=${APK_FP//:/}
+          EXPECTED="90D794A69CA8588815183EFA111202D654A9218C"
+          echo "APK SHA-1 fingerprint: $APK_FP"
           if [ "$APK_FP" != "$EXPECTED" ]; then
             echo "ERROR: APK was not signed by the fixed key"
             exit 1
