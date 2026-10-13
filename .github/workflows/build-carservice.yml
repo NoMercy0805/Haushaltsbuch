@@ -7,6 +7,9 @@ on:
   schedule:
     - cron: '17 * * * *'
 
+permissions:
+  contents: write
+
 jobs:
   build-carservice:
     runs-on: ubuntu-latest
@@ -92,20 +95,26 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs "$OUT"
           test -s "$OUT"
 
+      - name: Publish signed APK in private GitHub Release
+        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK="carservice/app/build/outputs/apk/release/CarService.apk"
+          if gh release view carservice-latest >/dev/null 2>&1; then
+            gh release upload carservice-latest "$APK#CarService.apk" --clobber
+          else
+            gh release create carservice-latest "$APK#CarService.apk" \
+              --target main \
+              --title "CarService – signierte APK" \
+              --notes "Automatisch gebaute CarService-APK mit festem Signierschlüssel. Quelle: NoMercy0805/CarService."
+          fi
+
       - name: Mark revision as signed
         if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p .carservice-signed-marker
           echo "$CAR_SHA" > .carservice-signed-marker/source-sha.txt
-
-      - name: Upload signed APK
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: CarService-signed
-          path: carservice/app/build/outputs/apk/release/CarService.apk
-          if-no-files-found: error
-          retention-days: 90
 
       - name: Nothing new to sign
         if: steps.signed-cache.outputs.cache-hit == 'true' && github.event_name != 'workflow_dispatch'
