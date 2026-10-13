@@ -1,121 +1,22 @@
-name: Build signed CarService APK
+name: Cleanup CarService migration
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-  schedule:
-    - cron: '17 * * * *'
 
 permissions:
   contents: write
 
 jobs:
-  build-carservice:
+  cleanup:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Haushaltsbuch
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout latest CarService source
-        run: |
-          git clone --depth 1 https://github.com/NoMercy0805/CarService.git carservice
-          cd carservice
-          echo "CAR_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          echo "CarService source: $(git rev-parse HEAD)"
-
-      - name: Check whether this CarService revision was already signed
-        id: signed-cache
-        uses: actions/cache@v4
-        with:
-          path: .carservice-signed-marker
-          key: carservice-signed-${{ env.CAR_SHA }}
-
-      - name: Set up JDK 17
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Set up Gradle
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-
-      - name: Restore fixed signing key
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        run: |
-          mkdir -p ~/.android
-          echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
-          test -s ~/.android/debug.keystore
-
-      - name: Verify signing key fingerprint
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        run: |
-          FINGERPRINT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep "SHA1:" | awk '{print $2}')
-          echo "Found fingerprint: $FINGERPRINT"
-          EXPECTED="90:D7:94:A6:9C:A8:58:88:15:18:3E:FA:11:12:02:D6:54:A9:21:8C"
-          if [ "$FINGERPRINT" != "$EXPECTED" ]; then
-            echo "ERROR: signing key fingerprint does not match the established key"
-            exit 1
-          fi
-
-      - name: Set stable increasing version code
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        working-directory: carservice
-        run: |
-          VERSION_CODE=$((1000 + ${{ github.run_number }}))
-          sed -i -E "s/versionCode [0-9]+/versionCode ${VERSION_CODE}/" app/build.gradle
-          echo "Using versionCode ${VERSION_CODE}"
-
-      - name: Build unsigned release APK
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        working-directory: carservice
-        run: gradle :app:assembleRelease --no-daemon
-
-      - name: Sign and verify CarService APK
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        working-directory: carservice
-        run: |
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
-          test -x "$APKSIGNER"
-          UNSIGNED=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
-          test -n "$UNSIGNED"
-          OUT="app/build/outputs/apk/release/CarService.apk"
-          "$APKSIGNER" sign \
-            --ks "$HOME/.android/debug.keystore" \
-            --ks-key-alias androiddebugkey \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --out "$OUT" \
-            "$UNSIGNED"
-          "$APKSIGNER" verify --verbose --print-certs "$OUT"
-          test -s "$OUT"
-
-      - name: Publish signed APK in private GitHub Release
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
+      - name: Remove migrated CarService release and tag
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          APK="carservice/app/build/outputs/apk/release/CarService.apk"
-          if gh release view carservice-latest >/dev/null 2>&1; then
-            gh release upload carservice-latest "$APK#CarService.apk" --clobber
-          else
-            gh release create carservice-latest "$APK#CarService.apk" \
-              --target main \
-              --title "CarService – signierte APK" \
-              --notes "Automatisch gebaute CarService-APK mit festem Signierschlüssel. Quelle: NoMercy0805/CarService."
-          fi
-
-      - name: Mark revision as signed
-        if: steps.signed-cache.outputs.cache-hit != 'true' || github.event_name == 'workflow_dispatch'
-        run: |
-          mkdir -p .carservice-signed-marker
-          echo "$CAR_SHA" > .carservice-signed-marker/source-sha.txt
-
-      - name: Nothing new to sign
-        if: steps.signed-cache.outputs.cache-hit == 'true' && github.event_name != 'workflow_dispatch'
-        run: echo "CarService revision $CAR_SHA has already been signed; nothing to do."
+          gh release delete carservice-latest --cleanup-tag --yes || true
