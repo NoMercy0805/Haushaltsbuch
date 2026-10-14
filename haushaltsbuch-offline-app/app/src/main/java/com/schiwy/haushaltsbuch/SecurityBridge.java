@@ -1,8 +1,12 @@
 package com.schiwy.haushaltsbuch;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.SystemClock;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -20,6 +24,23 @@ public class SecurityBridge {
 
     private static final String PREFS = "security_prefs";
     private static final String KEY_BIOMETRIC_LOCK = "biometric_lock_enabled";
+    private static final long BACKGROUND_GRACE_MS = 60_000L;
+
+    // ACTION_SCREEN_OFF wird pro Prozess nur einmal am Application-Kontext
+    // registriert. So bleibt kein Activity-Kontext haengen und ein ausgeschaltetes
+    // bzw. gesperrtes Display erzwingt beim naechsten Oeffnen immer eine neue
+    // Authentifizierung - auch wenn die App zuvor nur kurz im Hintergrund war.
+    private static final Object SCREEN_RECEIVER_LOCK = new Object();
+    private static volatile boolean screenOffSinceLastForeground = false;
+    private static boolean screenReceiverRegistered = false;
+    private static final BroadcastReceiver SCREEN_OFF_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                screenOffSinceLastForeground = true;
+            }
+        }
+    };
 
     private final FragmentActivity activity;
     private final WebView webView;
@@ -27,7 +48,7 @@ public class SecurityBridge {
     private final Executor executor;
 
     private boolean firstStart = true;
-    private boolean lockOnNextStart = false;
+    private long backgroundedAtElapsed = -1L;
     private boolean authenticating = false;
     private boolean externalActivityInProgress = false;
 
@@ -61,7 +82,7 @@ public class SecurityBridge {
               '<div class="tab-visibility-row"><span>Mit Fingerabdruck entsperren</span>' +
                 '<label class="toggle-switch"><input type="checkbox" id="biometricLockToggle"><span class="track"></span><span class="thumb"></span></label>' +
               '</div>' +
-              '<p id="biometricLockHint" style="margin:8px 0 0;font-size:13px;color:var(--ink-soft);">Schützt Haushaltsbuch beim Öffnen und nach der Rückkehr aus dem Hintergrund.</p>' +
+              '<p id="biometricLockHint" style="margin:8px 0 0;font-size:13px;color:var(--ink-soft);">Nach einem kurzen App-Wechsel bleibt Haushaltsbuch bis zu 60 Sekunden entsperrt.</p>' +
               '<p id="biometricLockStatus" style="margin:8px 0 0;font-size:12px;color:var(--ink-soft);"></p>' +
             '</div>' +
           '</div>';
@@ -89,7 +110,7 @@ public class SecurityBridge {
             if(!available && !enabled){
               hint.textContent = 'Auf diesem Gerät ist derzeit kein Fingerabdruck bzw. keine Biometrie eingerichtet.';
             }else{
-              hint.textContent = 'Schützt Haushaltsbuch beim Öffnen und nach der Rückkehr aus dem Hintergrund. Beim späteren Entsperren kann Android zusätzlich die Gerätesperre als Rückfall anbieten.';
+              hint.textContent = 'Nach einem kurzen App-Wechsel bleibt Haushaltsbuch bis zu 60 Sekunden entsperrt. Nach längerer Zeit oder wenn das Display gesperrt wurde, ist erneut Fingerabdruck bzw. Gerätesperre nötig.';
             }
           }
 
@@ -122,8 +143,22 @@ public class SecurityBridge {
         this.webView = webView;
         this.prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         this.executor = ContextCompat.getMainExecutor(activity);
+        ensureScreenOffReceiver(activity.getApplicationContext());
         if (isBiometricLockEnabled()) {
             webView.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private static void ensureScreenOffReceiver(Context appContext) {
+        synchronized (SCREEN_RECEIVER_LOCK) {
+            if (screenReceiverRegistered) return;
+            IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+            if (Build.VERSION.SDK_INT >= 33) {
+                appContext.registerReceiver(SCREEN_OFF_RECEIVER, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                appContext.registerReceiver(SCREEN_OFF_RECEIVER, filter);
+            }
+            screenReceiverRegistered = true;
         }
     }
 
@@ -148,6 +183,8 @@ public class SecurityBridge {
         activity.runOnUiThread(() -> {
             if (!enabled) {
                 prefs.edit().putBoolean(KEY_BIOMETRIC_LOCK, false).apply();
+                backgroundedAtElapsed = -1L;
+                screenOffSinceLastForeground = false;
                 webView.setVisibility(View.VISIBLE);
                 notifyWeb(false, "App-Sperre ist deaktiviert.");
                 return;
@@ -162,6 +199,8 @@ public class SecurityBridge {
                     createEnablePrompt(),
                     () -> {
                         prefs.edit().putBoolean(KEY_BIOMETRIC_LOCK, true).apply();
+                        backgroundedAtElapsed = -1L;
+                        screenOffSinceLastForeground = false;
                         webView.setVisibility(View.VISIBLE);
                         notifyWeb(true, "App-Sperre ist aktiviert.");
                     },
@@ -173,14 +212,22 @@ public class SecurityBridge {
     public void onHostStart() {
         if (!isBiometricLockEnabled()) {
             firstStart = false;
-            lockOnNextStart = false;
+            backgroundedAtElapsed = -1L;
+            screenOffSinceLastForeground = false;
             webView.setVisibility(View.VISIBLE);
             return;
         }
 
-        if (firstStart || lockOnNextStart) {
-            firstStart = false;
-            lockOnNextStart = false;
+        long now = SystemClock.elapsedRealtime();
+        boolean graceExpired = backgroundedAtElapsed >= 0L
+                && now - backgroundedAtElapsed >= BACKGROUND_GRACE_MS;
+        boolean mustAuthenticate = firstStart || screenOffSinceLastForeground || graceExpired;
+
+        firstStart = false;
+        backgroundedAtElapsed = -1L;
+        screenOffSinceLastForeground = false;
+
+        if (mustAuthenticate) {
             webView.setVisibility(View.INVISIBLE);
             authenticate(
                     createUnlockPrompt(),
@@ -188,13 +235,17 @@ public class SecurityBridge {
                     () -> activity.finish()
             );
         } else {
-            firstStart = false;
+            // Kurzer App-Wechsel: Inhalt wieder einblenden, ohne erneut nach
+            // Fingerabdruck/Geraetesperre zu fragen.
+            webView.setVisibility(View.VISIBLE);
         }
     }
 
     public void onHostStop() {
         if (isBiometricLockEnabled() && !externalActivityInProgress && !authenticating) {
-            lockOnNextStart = true;
+            backgroundedAtElapsed = SystemClock.elapsedRealtime();
+            // Inhalt im App-Umschalter nicht offen liegen lassen. Bei Rueckkehr
+            // innerhalb der Schonfrist wird er ohne Prompt sofort wieder gezeigt.
             webView.setVisibility(View.INVISIBLE);
         }
     }
