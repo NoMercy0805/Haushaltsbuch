@@ -70,6 +70,73 @@ public class MainActivity extends FragmentActivity {
         "  fab.classList.remove('fab-hidden');" +
         "})();";
 
+    // Kontostand-Eintraege verhalten sich wie die kompakten Listen (z.B.
+    // Rechnungen): Ein Tipp auf die Zeile klappt zuerst Bearbeiten/Loeschen
+    // auf. Erst der Bearbeiten-Button oeffnet das Formular.
+    private static final String BETA_ENTRY_ACTIONS_JS =
+        "(function(){" +
+        "  var list = document.getElementById('betaEntryList');" +
+        "  if(!list || list.__androidExpandableActionsInstalled) return;" +
+        "  list.__androidExpandableActionsInstalled = true;" +
+        "  if(!document.getElementById('androidBetaEntryActionsStyle')){" +
+        "    var style = document.createElement('style');" +
+        "    style.id = 'androidBetaEntryActionsStyle';" +
+        "    style.textContent = '.beta-entry-row{flex-wrap:wrap;cursor:pointer;}' +" +
+        "      '.beta-entry-row .beta-entry-actions{display:flex;justify-content:flex-end;gap:8px;flex-basis:100%;width:100%;max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:max-height .2s ease,opacity .2s ease,margin-top .2s ease;}' +" +
+        "      '.beta-entry-row.expanded .beta-entry-actions{max-height:78px;opacity:1;margin-top:10px;}';" +
+        "    document.head.appendChild(style);" +
+        "  }" +
+        "  function ensureActions(row,id){" +
+        "    var actions = row.querySelector('.beta-entry-actions');" +
+        "    if(actions) return actions;" +
+        "    actions = document.createElement('span');" +
+        "    actions.className = 'beta-entry-actions';" +
+        "    actions.innerHTML = '<span class=\"action-icon-btn-wrap\"><button type=\"button\" class=\"action-icon-btn neutral\" data-beta-row-action=\"edit\" aria-label=\"Bearbeiten\" title=\"Bearbeiten\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z\"/></svg></button><span class=\"action-icon-btn-label\">Bearbeiten</span></span>' +" +
+        "      '<span class=\"action-icon-btn-wrap\"><button type=\"button\" class=\"action-icon-btn danger\" data-beta-row-action=\"delete\" aria-label=\"Löschen\" title=\"Löschen\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h18\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/><path d=\"M10 11v6M14 11v6\"/></svg></button><span class=\"action-icon-btn-label\">Löschen</span></span>';" +
+        "    row.appendChild(actions);" +
+        "    return actions;" +
+        "  }" +
+        "  async function chooseScope(entry){" +
+        "    if(entry.isRecurringTemplate || entry.recurringGroupId){" +
+        "      return await betaRecurringChoiceDialog();" +
+        "    }" +
+        "    return 'this';" +
+        "  }" +
+        "  list.addEventListener('click', async function(e){" +
+        "    if(e.target.closest('.beta-entry-icon')) return;" +
+        "    var row = e.target.closest('.beta-entry-row');" +
+        "    if(!row) return;" +
+        "    var actionButton = e.target.closest('[data-beta-row-action]');" +
+        "    e.preventDefault();" +
+        "    e.stopImmediatePropagation();" +
+        "    var id = row.getAttribute('data-id');" +
+        "    var entry = state.betaEntries.filter(function(x){ return x.id === id; })[0];" +
+        "    if(!entry) return;" +
+        "    if(!actionButton){" +
+        "      ensureActions(row,id);" +
+        "      row.classList.toggle('expanded');" +
+        "      return;" +
+        "    }" +
+        "    var action = actionButton.getAttribute('data-beta-row-action');" +
+        "    var scope = await chooseScope(entry);" +
+        "    if(!scope) return;" +
+        "    if(action === 'edit'){" +
+        "      openBetaEditForm(entry, scope);" +
+        "      return;" +
+        "    }" +
+        "    if(action === 'delete'){" +
+        "      var previousId = editingBetaId;" +
+        "      var previousScope = editingBetaScope;" +
+        "      editingBetaId = entry.id;" +
+        "      editingBetaScope = scope;" +
+        "      var deleteButton = document.getElementById('betaDeleteBtn');" +
+        "      if(deleteButton) deleteButton.click();" +
+        "      editingBetaId = previousId;" +
+        "      editingBetaScope = previousScope;" +
+        "    }" +
+        "  }, true);" +
+        "})();";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +175,7 @@ public class MainActivity extends FragmentActivity {
                 super.onPageFinished(view, url);
                 view.evaluateJavascript(DOWNLOAD_HOOK_JS, null);
                 view.evaluateJavascript(FAB_SCROLL_GUARD_JS, null);
+                view.evaluateJavascript(BETA_ENTRY_ACTIONS_JS, null);
                 if (securityBridge != null) {
                     securityBridge.installSettingsUi();
                 }
