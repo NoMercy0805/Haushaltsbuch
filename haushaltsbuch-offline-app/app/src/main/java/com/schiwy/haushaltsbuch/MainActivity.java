@@ -75,7 +75,7 @@ public class MainActivity extends FragmentActivity {
     // auf. Erst der Bearbeiten-Button oeffnet das Formular.
     private static final String BETA_ENTRY_ACTIONS_JS =
         "(function(){" +
-        "  var list = document.getElementById('betaEntryList');" +
+        "  var list = document.getElementById('betaList');" +
         "  if(!list || list.__androidExpandableActionsInstalled) return;" +
         "  list.__androidExpandableActionsInstalled = true;" +
         "  if(!document.getElementById('androidBetaEntryActionsStyle')){" +
@@ -125,14 +125,10 @@ public class MainActivity extends FragmentActivity {
         "      return;" +
         "    }" +
         "    if(action === 'delete'){" +
-        "      var previousId = editingBetaId;" +
-        "      var previousScope = editingBetaScope;" +
         "      editingBetaId = entry.id;" +
         "      editingBetaScope = scope;" +
         "      var deleteButton = document.getElementById('betaDeleteBtn');" +
         "      if(deleteButton) deleteButton.click();" +
-        "      editingBetaId = previousId;" +
-        "      editingBetaScope = previousScope;" +
         "    }" +
         "  }, true);" +
         "})();";
