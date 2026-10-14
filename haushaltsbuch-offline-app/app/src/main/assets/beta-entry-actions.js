@@ -8,16 +8,31 @@
   var betaList = document.getElementById('betaList');
   if(betaList) betaList.__androidExpandableActionsInstalled = true;
 
+  // Gleiche Aufklapp-Animation wie bei den kompakten Listen/Rechnungen:
+  // Hoehe, Transparenz und Abstand werden weich animiert, statt die Aktionen
+  // hart ueber display:none / display:flex ein- und auszublenden.
+  if(!document.getElementById('betaEntryActionsV3Style')){
+    var style = document.createElement('style');
+    style.id = 'betaEntryActionsV3Style';
+    style.textContent =
+      '.beta-entry-row{flex-wrap:wrap;cursor:pointer;}' +
+      '.beta-entry-row .beta-entry-actions-v3{' +
+        'display:flex;justify-content:flex-end;gap:8px;flex-basis:100%;width:100%;' +
+        'max-height:0;opacity:0;overflow:hidden;margin-top:0;pointer-events:none;' +
+        'transition:max-height .2s ease,opacity .2s ease,margin-top .2s ease;' +
+      '}' +
+      '.beta-entry-row[data-beta-actions-open-v3="1"] .beta-entry-actions-v3{' +
+        'max-height:78px;opacity:1;margin-top:10px;pointer-events:auto;' +
+      '}';
+    document.head.appendChild(style);
+  }
+
   function makeActions(row){
     var existing = row.querySelector('.beta-entry-actions-v3');
     if(existing) return existing;
 
-    row.style.flexWrap = 'wrap';
-    row.style.cursor = 'pointer';
-
     var actions = document.createElement('span');
     actions.className = 'beta-entry-actions-v3';
-    actions.style.cssText = 'display:none;justify-content:flex-end;gap:8px;flex-basis:100%;width:100%;margin-top:10px;';
     actions.innerHTML =
       '<span class="action-icon-btn-wrap" data-beta-row-action-v3="edit">'+
         '<button type="button" class="action-icon-btn neutral" data-beta-row-action-v3="edit" aria-label="Bearbeiten" title="Bearbeiten">'+
@@ -38,8 +53,6 @@
     if(!list) return;
     Array.prototype.forEach.call(list.querySelectorAll('.beta-entry-row'), function(r){
       if(r === exceptRow) return;
-      var a = r.querySelector('.beta-entry-actions-v3');
-      if(a) a.style.display = 'none';
       r.removeAttribute('data-beta-actions-open-v3');
     });
   }
@@ -106,14 +119,12 @@
     e.stopPropagation();
     if(e.stopImmediatePropagation) e.stopImmediatePropagation();
 
-    var actions = makeActions(row);
+    makeActions(row);
     var isOpen = row.getAttribute('data-beta-actions-open-v3') === '1';
     closeOtherRows(row);
     if(isOpen){
-      actions.style.display = 'none';
       row.removeAttribute('data-beta-actions-open-v3');
     } else {
-      actions.style.display = 'flex';
       row.setAttribute('data-beta-actions-open-v3','1');
     }
   }, true);
