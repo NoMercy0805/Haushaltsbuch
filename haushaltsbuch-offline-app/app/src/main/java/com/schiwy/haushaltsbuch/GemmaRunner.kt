@@ -3,7 +3,6 @@ package com.schiwy.haushaltsbuch
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
-import com.google.ai.edge.litertlm.ConversationConfig
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -21,7 +20,7 @@ object GemmaRunner {
         )
         Engine(config).use { engine ->
             engine.initialize()
-            engine.createConversation(ConversationConfig(maxOutputToken = 500)).use { conversation ->
+            engine.createConversation().use { conversation ->
                 conversation.sendMessage(prompt).toString()
             }
         }
