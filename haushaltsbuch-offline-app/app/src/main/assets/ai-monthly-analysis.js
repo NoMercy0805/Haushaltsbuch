@@ -3,10 +3,10 @@
   'use strict';
   if(window.__householdAiMonthlyInstalled) return;
   window.__householdAiMonthlyInstalled=true;
-  var REPORT_KEY='household-ai-reports-v1';
+  var REPORT_KEY='household-monthly-reports-v2';
   var DATA_KEY='household-data-v8';
   var monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  var activeKey='',currentReport=null,working=false,requestNumber=0;
+  var activeKey='';
 
   function storageGet(key){
     try{if(window.AndroidBridge&&window.AndroidBridge.nativeGetItem)return window.AndroidBridge.nativeGetItem(key);}
@@ -76,99 +76,182 @@
   }
   function compute(k){
     var all=getEntries(),cur=all.filter(function(e){return e.date.slice(0,7)===k;}),prev=all.filter(function(e){return e.date.slice(0,7)===prevKey(k);});
+    var beforePrev=prevKey(prevKey(k));
+    var history=all.filter(function(e){return e.date.slice(0,7)<=k&&e.date.slice(0,7)>=beforePrev;});
     var sums=sumEntries(cur),older=sumEntries(prev);
     var balance=all.filter(function(e){return e.date.slice(0,7)<=k;}).reduce(function(acc,e){return acc+(e.type==='einnahme'?1:-1)*Number(e.amount);},0);
     var categories=groupsFor(cur),prevCategories=groupsFor(prev);
-    var expenseDelta=sums.expense-older.expense;
-    return {key:k,entries:cur,previousEntries:prev,hash:hashEntries(cur.concat(prev)),
-      income:sums.income,expense:sums.expense,remaining:sums.income-sums.expense,balance:balance,
-      previousIncome:older.income,previousExpense:older.expense,expenseDelta:expenseDelta,
+    return {key:k,entries:cur,previousEntries:prev,history:history,
+      hash:hashEntries(history),income:sums.income,expense:sums.expense,
+      remaining:sums.income-sums.expense,balance:balance,
+      previousIncome:older.income,previousExpense:older.expense,
+      expenseDelta:sums.expense-older.expense,incomeDelta:sums.income-older.income,
       categories:categories,previousCategories:prevCategories,previousCount:prev.length};
   }
+  function byTitle(entries){
+    var groups={};
+    entries.forEach(function(e){
+      if(e.type==='einnahme')return;
+      var title=String(e.title||'Ohne Titel').replace(/\s+/g,' ').trim();
+      var key=title.toLocaleLowerCase('de-DE');
+      if(!groups[key])groups[key]={title:title,amount:0,count:0};
+      groups[key].amount+=Number(e.amount);groups[key].count++;
+    });
+    return Object.keys(groups).map(function(k){return groups[k];}).sort(function(a,b){return b.amount-a.amount;});
+  }
+  function recurringTitles(m){
+    var seen={};
+    m.history.forEach(function(e){
+      if(e.type==='einnahme')return;
+      var title=String(e.title||'').replace(/\s+/g,' ').trim();
+      if(!title)return;
+      var key=title.toLocaleLowerCase('de-DE');
+      if(!seen[key])seen[key]={title:title,months:{},thisAmount:0,thisCount:0};
+      seen[key].months[e.date.slice(0,7)]=true;
+      if(e.date.slice(0,7)===m.key){seen[key].thisAmount+=Number(e.amount);seen[key].thisCount++;}
+    });
+    return Object.keys(seen).map(function(k){var e=seen[k];return {title:e.title,monthCount:Object.keys(e.months).length,amount:e.thisAmount,count:e.thisCount};})
+      .filter(function(e){return e.monthCount>=2&&e.thisCount>0;})
+      .sort(function(a,b){return b.amount-a.amount;}).slice(0,6);
+  }
+  function shortDate(iso){var parts=String(iso||'').split('-');return parts.length===3?parts[2]+'.'+parts[1]+'.'+parts[0]:iso;}
+  function pctChange(diff,base){
+    if(base<=0)return '';
+    var value=Math.abs(diff/base*100);
+    return ' ('+value.toLocaleString('de-DE',{maximumFractionDigits:1})+' %)';
+  }
   function baseAnalysis(m){
-    var good=[],notice=[],tips=[],prev=m.previousCount>0;
-    if(!m.entries.length){return {good:['Für diesen Monat sind noch keine Kontostand-Buchungen vorhanden.'],notice:['Ohne Einträge ist keine sinnvolle Bewertung möglich.'],tips:['Trage Einnahmen und Ausgaben für diesen Monat ein und starte die Auswertung erneut.']};}
-    if(m.remaining>0)good.push('Du hast '+euros(m.remaining)+' mehr eingenommen als ausgegeben.');
-    else if(m.remaining<0)notice.push('Deine Ausgaben lagen '+euros(Math.abs(m.remaining))+' über deinen Einnahmen. Prüfe größere Einmalzahlungen und wiederkehrende Kosten.');
-    else good.push('Einnahmen und Ausgaben waren in diesem Monat ausgeglichen.');
+    var good=[],notice=[],tips=[],prev=m.previousCount>0,ongoing=m.key===currentMonthKey();
+    var largest=m.entries.filter(function(e){return e.type!=='einnahme';})
+      .slice().sort(function(a,b){return Number(b.amount)-Number(a.amount);}).slice(0,5)
+      .map(function(e){return {title:String(e.title||'Ohne Titel'),amount:Number(e.amount),date:e.date};});
+    var merchants=byTitle(m.entries).slice(0,6);
+    var regular=recurringTitles(m);
+    if(!m.entries.length) return {good:['Keine erfassten Buchungen in diesem Monat.'],notice:[],tips:['Trage zunächst Buchungen im Kontostand ein.'],largest:[],merchants:[],regular:[]};
+    if(m.remaining>0){
+      good.push('Der erfasste Monatsüberschuss beträgt '+euros(m.remaining)+'.'+(m.income>0?' Das sind '+(100*m.remaining/m.income).toLocaleString('de-DE',{maximumFractionDigits:1})+' % deiner erfassten Einnahmen.':''));
+    } else if(m.remaining<0){
+      notice.push('Die Ausgaben übersteigen die Einnahmen im betrachteten Monat um '+euros(-m.remaining)+'. Das kann auch an größeren notwendigen Einmalausgaben liegen.');
+    } else good.push('Einnahmen und Ausgaben sind im betrachteten Monat ausgeglichen.');
+    if(ongoing)notice.push('Der ausgewählte Monat läuft noch: Der Vergleich zum vollständigen Vormonat ist vorläufig.');
     if(prev){
-      if(m.expenseDelta < -0.01)good.push('Gegenüber '+keyLabel(prevKey(m.key))+' sind die erfassten Ausgaben um '+euros(-m.expenseDelta)+' gesunken.');
-      else if(m.expenseDelta > 0.01)notice.push('Die erfassten Ausgaben sind gegenüber dem Vormonat um '+euros(m.expenseDelta)+' gestiegen. Das muss nicht schlecht sein – einmalige notwendige Käufe können die Ursache sein.');
-    }else notice.push('Für den Vormonat fehlen Vergleichsbuchungen. Ein Monatsvergleich ist noch nicht zuverlässig möglich.');
+      var d=m.expenseDelta;
+      if(d < -0.005)good.push('Die erfassten Ausgaben liegen '+euros(-d)+pctChange(d,m.previousExpense)+' unter '+keyLabel(prevKey(m.key))+'.');
+      else if(d > 0.005)notice.push('Die erfassten Ausgaben liegen '+euros(d)+pctChange(d,m.previousExpense)+' über '+keyLabel(prevKey(m.key))+'.');
+      if(m.incomeDelta>0.005)good.push('Die Einnahmen sind gegenüber dem Vormonat um '+euros(m.incomeDelta)+' gestiegen.');
+      else if(m.incomeDelta< -0.005)notice.push('Die Einnahmen liegen '+euros(-m.incomeDelta)+' unter dem Vormonat.');
+    }else notice.push('Für '+keyLabel(prevKey(m.key))+' liegen keine Buchungen vor; Trends zum Vormonat sind nicht belastbar.');
+    if(m.balance<0)notice.push('Der errechnete Kontostand zum Monatsende ist mit '+euros(m.balance)+' negativ. Wichtig ist auch, welche Zahlungen in den nächsten Wochen anstehen.');
+    else if(m.balance>0)good.push('Der errechnete Kontostand zum Monatsende liegt bei '+euros(m.balance)+'.');
     if(m.categories.length){
-      var largest=m.categories[0];
-      notice.push('Größter erfasster Ausgabenbereich: '+largest.name+' mit '+euros(largest.amount)+' ('+largest.count+' Buchungen).');
-      var ambiguous=m.categories.filter(function(c){return c.name==='Nicht eindeutig';})[0];
-      if(ambiguous){notice.push(euros(ambiguous.amount)+' lassen sich anhand der Titel nicht eindeutig zuordnen. Die Ausgaben sind deshalb nicht automatisch unnötig.');}
-      var subs=m.categories.filter(function(c){return /abo|medien/i.test(c.name);})[0];
-      if(subs){tips.push('Prüfe, ob du alle Abos und Medienangebote regelmäßig nutzt ('+euros(subs.amount)+' erfasst).');}
+      var top=m.categories[0];
+      notice.push('Der größte Ausgabenbereich ist '+top.name+' mit '+euros(top.amount)+(m.expense>0?' ('+(top.amount/m.expense*100).toLocaleString('de-DE',{maximumFractionDigits:1})+' % aller Ausgaben).':'.'));
+      var unknown=m.categories.filter(function(g){return g.name==='Nicht eindeutig';})[0];
+      if(unknown && unknown.amount>0){notice.push('Ausgaben von '+euros(unknown.amount)+' lassen sich nicht sicher aus Titel oder Kategorie einordnen. Sie werden nicht automatisch als vermeidbar bewertet.');}
       if(prev){
-        var prevMap={};m.previousCategories.forEach(function(g){prevMap[g.name]=g.amount;});
-        var increases=m.categories.map(function(g){return {name:g.name,delta:g.amount-(prevMap[g.name]||0)};}).filter(function(g){return g.delta>15;}).sort(function(a,b){return b.delta-a.delta;});
-        if(increases.length)tips.push('Vergleiche besonders '+increases[0].name+': hier liegen die erfassten Ausgaben '+euros(increases[0].delta)+' über dem Vormonat.');
+        var previousAmounts={};m.previousCategories.forEach(function(g){previousAmounts[g.name]=g.amount;});
+        var changes=m.categories.map(function(g){return {name:g.name,amount:g.amount,previous:previousAmounts[g.name]||0,delta:g.amount-(previousAmounts[g.name]||0)};})
+          .filter(function(g){return g.previous>0&&g.delta>=20;}).sort(function(a,b){return b.delta-a.delta;});
+        if(changes.length){
+          var rise=changes[0];
+          notice.push('Besonders gestiegen ist '+rise.name+': '+euros(rise.amount)+' statt '+euros(rise.previous)+' im Vormonat (+'+euros(rise.delta)+').');
+          tips.push('Prüfe die Buchungen im Bereich '+rise.name+'. Der Anstieg muss nicht unnötig gewesen sein.');
+        }
+        var falling=m.categories.map(function(g){return {name:g.name,amount:g.amount,delta:g.amount-(previousAmounts[g.name]||0),previous:previousAmounts[g.name]||0};})
+          .filter(function(g){return g.previous>0&&g.delta<=-20;}).sort(function(a,b){return a.delta-b.delta;});
+        if(falling.length)good.push('Im Bereich '+falling[0].name+' wurden '+euros(-falling[0].delta)+' weniger erfasst als im Vormonat.');
       }
     }
-    if(!tips.length)tips.push('Behalte größere Einzelbuchungen und wiederkehrende Kosten im Blick. Eine höhere Ausgabe ist nicht automatisch vermeidbar.');
-    return {good:good,notice:notice,tips:tips};
+    if(largest.length && largest[0].amount>=Math.max(100,m.expense*0.15))notice.push('Größte Einzelbuchung: '+largest[0].title+' am '+shortDate(largest[0].date)+' mit '+euros(largest[0].amount)+'. Aus dem Titel allein lässt sich nicht beurteilen, ob sie notwendig war.');
+    if(regular.length){
+      tips.push('Möglicherweise wiederkehrend: '+regular.slice(0,3).map(function(x){return x.title;}).join(', ')+'. Diese Titel erscheinen in mindestens zwei der letzten drei Monate – prüfe, ob alle Zahlungen gewollt sind.');
+    }
+    if(m.remaining<0)tips.push('Sieh dir zuerst größere Einzelbeträge und wiederkehrende Verpflichtungen an, statt pauschal bei Lebensmitteln oder notwendigen Ausgaben zu sparen.');
+    if(!tips.length)tips.push('Vergleiche ähnliche Monate und behalte besonders größere Ausgaben im Blick. Auch unregelmäßige Zahlungen sollten realistisch eingeplant sein.');
+    return {good:good,notice:notice,tips:tips,largest:largest,merchants:merchants,regular:regular};
   }
   function reports(){try{return JSON.parse(storageGet(REPORT_KEY)||'{}')||{};}catch(e){return {};}}
   function saveReport(report){var data=reports();data[report.key]=report;storageSet(REPORT_KEY,JSON.stringify(data));}
-  function showFeedback(msg,isError){var el=document.getElementById('aiFeedback');el.textContent=msg||'';el.style.color=isError?'var(--expense)':'var(--ink-soft)';}
-  function installAvailable(){return !!(window.LocalAiBridge&&typeof window.LocalAiBridge.importModel==='function');}
-  function hasModel(){try{return installAvailable()&&!!window.LocalAiBridge.hasModel();}catch(e){return false;}}
-  function setBusy(val){working=val;['aiGenerate','aiBaseGenerate','aiImportModel','aiMonthSelect'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=val;});}
+  function showFeedback(msg,isError){
+    var el=document.getElementById('aiFeedback');
+    el.textContent=msg||'';
+    el.style.color=isError?'var(--expense)':'var(--ink-soft)';
+  }
   function renderReport(report){
-    var target=document.getElementById('aiReport');target.innerHTML='';
+    var target=document.getElementById('aiReport');
+    target.innerHTML='';
     if(!report){target.style.display='none';return;}
     target.style.display='block';
     var metrics=document.createElement('div');metrics.className='ai-metrics';
-    [['Einnahmen',euros(report.income),'positive'],['Ausgaben',euros(report.expense),'negative'],['Monatlicher Rest',euros(report.remaining),report.remaining>=0?'positive':'negative'],['Kontostand Monatsende',euros(report.balance),report.balance>=0?'positive':'negative']].forEach(function(m){var card=document.createElement('div');card.className='ai-metric';card.innerHTML='<span>'+m[0]+'</span><strong class="'+m[2]+'">'+escapeHtml(m[1])+'</strong>';metrics.appendChild(card);});
+    [['Einnahmen',euros(report.income),'positive'],['Ausgaben',euros(report.expense),'negative'],
+     ['Monatlicher Rest',euros(report.remaining),report.remaining>=0?'positive':'negative'],
+     ['Kontostand Monatsende',euros(report.balance),report.balance>=0?'positive':'negative']]
+      .forEach(function(m){
+        var card=document.createElement('div');card.className='ai-metric';
+        var name=document.createElement('span');name.textContent=m[0];
+        var value=document.createElement('strong');value.className=m[2];value.textContent=m[1];
+        card.appendChild(name);card.appendChild(value);metrics.appendChild(card);
+      });
     target.appendChild(metrics);
-    var label=document.createElement('div');label.className='ai-report-label';
-    label.textContent=report.mode==='gemma'?'Mit lokalem Sprachmodell erstellt · '+keyLabel(report.key):'Zahlenbasierte Auswertung · '+keyLabel(report.key);
-    target.appendChild(label);
-    var sections=report.mode==='gemma'?[{title:'Deine Monatsanalyse',items:[report.text||'Keine Antwort vom Modell.']}]:[
-      {title:'Das lief gut',items:report.good,kind:'good'},
-      {title:'Das ist aufgefallen',items:report.notice,kind:'notice'},
-      {title:'Deine Tipps',items:report.tips,kind:'tip'}
-    ];
-    sections.forEach(function(section){
-      var card=document.createElement('section');card.className='ai-section '+(section.kind||'');
-      var h=document.createElement('h3');h.textContent=section.title;card.appendChild(h);
-      section.items.forEach(function(str){var p=document.createElement('p');p.textContent=str;card.appendChild(p);});
-      target.appendChild(card);
-    });
-    if(report.categories&&report.categories.length){
-      var area=document.createElement('section');area.className='ai-section';
-      area.innerHTML='<h3>Ausgaben nach Bereichen</h3>';
-      report.categories.forEach(function(c){var p=document.createElement('div');p.className='ai-cat';var n=document.createElement('span');n.textContent=c.name;var val=document.createElement('strong');val.textContent=euros(c.amount);p.appendChild(n);p.appendChild(val);area.appendChild(p);});
-      target.appendChild(area);
+    var meta=document.createElement('p');meta.className='ai-report-label';
+    meta.textContent='Monatsbericht · '+keyLabel(report.key)+' · '+report.entryCount+' Buchungen';
+    target.appendChild(meta);
+    function section(title,items,kind){
+      if(!items||!items.length)return;
+      var block=document.createElement('section');block.className='ai-section '+(kind||'');
+      var h=document.createElement('h3');h.textContent=title;block.appendChild(h);
+      items.forEach(function(str){var p=document.createElement('p');p.textContent=str;block.appendChild(p);});
+      target.appendChild(block);
     }
+    section('Das lief gut',report.good,'good');
+    section('Das ist aufgefallen',report.notice,'notice');
+    section('Worauf du achten könntest',report.tips,'tip');
+    if(report.categories&&report.categories.length){
+      var cat=document.createElement('section');cat.className='ai-section';
+      var h=document.createElement('h3');h.textContent='Wofür wurde Geld ausgegeben?';cat.appendChild(h);
+      report.categories.forEach(function(c){
+        var row=document.createElement('div');row.className='ai-cat ai-category-line';
+        var name=document.createElement('span');name.textContent=c.name+' · '+c.count+'×';
+        var right=document.createElement('strong');right.textContent=euros(c.amount);
+        row.appendChild(name);row.appendChild(right);cat.appendChild(row);
+        var progress=document.createElement('div');progress.className='ai-progress';
+        var bar=document.createElement('span');bar.style.width=(report.expense>0?Math.min(100,c.amount/report.expense*100):0)+'%';
+        progress.appendChild(bar);cat.appendChild(progress);
+      });
+      target.appendChild(cat);
+    }
+    function entrySection(title,rows,mapper){
+      if(!rows||!rows.length)return;
+      var block=document.createElement('section');block.className='ai-section';
+      var h=document.createElement('h3');h.textContent=title;block.appendChild(h);
+      rows.forEach(function(item){
+        var pair=mapper(item),row=document.createElement('div');row.className='ai-cat';
+        var name=document.createElement('span');name.textContent=pair[0];
+        var amount=document.createElement('strong');amount.textContent=pair[1];
+        row.appendChild(name);row.appendChild(amount);block.appendChild(row);
+      });
+      target.appendChild(block);
+    }
+    entrySection('Größte Einzelbuchungen',report.largest,function(e){return [e.title+' · '+shortDate(e.date),euros(e.amount)];});
+    entrySection('Häufige Ausgabetitel',report.merchants,function(e){return [e.title+' · '+e.count+'×',euros(e.amount)];});
+    entrySection('Über mehrere Monate wiederkehrend',report.regular,function(e){return [e.title+' · '+e.monthCount+' von 3 Monaten',euros(e.amount)+' aktuell'];});
     var note=document.createElement('p');note.className='ai-disclaimer';
-    note.textContent='Grundlage sind ausschließlich die gespeicherten Kontostand-Buchungen. Kategorien aus Titeln sind Schätzungen. Beträge werden von der App berechnet, nicht vom Sprachmodell.';
+    note.textContent='Die Auswertung erfolgt vollständig offline und ohne Sprachmodell. Bekannte Händler werden anhand von Titel-Regeln grob zugeordnet, eigene Kategorien übernommen. Unbekannte Titel bleiben ungeklärt; die App kann nicht erkennen, ob ein Kauf notwendig war.';
     target.appendChild(note);
   }
-  function reportFrom(m,mode,text){
+  function reportFrom(m){
     var base=baseAnalysis(m);
-    return {key:m.key,hash:m.hash,mode:mode,generatedAt:new Date().toISOString(),
-      income:m.income,expense:m.expense,remaining:m.remaining,balance:m.balance,categories:m.categories,
-      good:base.good,notice:base.notice,tips:base.tips,text:text||''};
+    return {key:m.key,hash:m.hash,generatedAt:new Date().toISOString(),
+      entryCount:m.entries.length,income:m.income,expense:m.expense,
+      remaining:m.remaining,balance:m.balance,categories:m.categories,
+      good:base.good,notice:base.notice,tips:base.tips,
+      largest:base.largest,merchants:base.merchants,regular:base.regular};
   }
   function refreshReport(){
     var m=compute(activeKey),cached=reports()[activeKey];
-    currentReport=cached||null;renderReport(currentReport);
+    renderReport(cached||null);
     if(cached&&cached.hash!==m.hash)showFeedback('Seit diesem Bericht wurden Buchungen geändert. Bitte eine neue Auswertung erstellen.',false);
     else showFeedback(cached?'Gespeicherter Bericht vom '+new Date(cached.generatedAt).toLocaleDateString('de-DE')+'.':'',false);
-  }
-  function refreshModel(){
-    var el=document.getElementById('aiModelStatus'),button=document.getElementById('aiGenerate'),importBtn=document.getElementById('aiImportModel');
-    if(hasModel()){
-      el.textContent='Gemma-Modell auf diesem Gerät vorhanden · Analyse funktioniert offline.';
-      button.style.display='block';importBtn.textContent='Modell ersetzen';
-    }else{
-      el.textContent=installAvailable()?'Noch kein lokales Gemma-Modell importiert. Für die echte KI-Analyse wird einmalig eine .litertlm-Datei benötigt.':'Sprachmodell ist in dieser App-Version nicht verfügbar. Die zahlenbasierte Auswertung funktioniert offline.';
-      button.style.display='none';importBtn.style.display=installAvailable()?'block':'none';
-    }
   }
   function open(){
     var options=monthOptions(),wanted=prevKey(currentMonthKey());
@@ -177,110 +260,21 @@
     options.forEach(function(k){var el=document.createElement('option');el.value=k;el.textContent=keyLabel(k);sel.appendChild(el);});
     sel.value=activeKey;
     document.getElementById('aiMonthlyOverlay').classList.add('open');
-    refreshModel();refreshReport();
+    refreshReport();
   }
   function close(){
-    if(working)return;
     document.getElementById('aiMonthlyOverlay').classList.remove('open');
-  }
-  // Gemma auf Android hat ein begrenztes Kontextfenster (Eingabe + Antwort).
-  // Deshalb fassen wir auch hunderte Buchungen deterministisch nach Titel
-  // zusammen. Die KI sieht echte Händler/Titel, aber nie riesige JSON-Listen.
-  function makePrompt(m,compact){
-    var groups={};
-    m.entries.forEach(function(e){
-      var title=String(e.title||'Ohne Titel').replace(/\s+/g,' ').trim().slice(0,42);
-      var kind=e.type==='einnahme'?'E':'A';
-      var k=kind+'|'+title.toLowerCase();
-      if(!groups[k])groups[k]={titel:title,art:kind,gesamt:0,anzahl:0,kategorie:categoryFor(e).slice(0,35)};
-      groups[k].gesamt+=Number(e.amount)||0;
-      groups[k].anzahl++;
-    });
-    var all=Object.keys(groups).map(function(k){var g=groups[k];g.gesamt=Number(g.gesamt.toFixed(2));return g;});
-    var expenses=all.filter(function(g){return g.art==='A';}).sort(function(a,b){return b.gesamt-a.gesamt;});
-    var incomes=all.filter(function(g){return g.art==='E';}).sort(function(a,b){return b.gesamt-a.gesamt;});
-    var categoryExpenses=m.categories.slice(0,compact?3:7).map(function(g){
-      return [String(g.name).slice(0,32),Number(g.amount.toFixed(2))];
-    });
-    var previous=m.previousCategories.slice(0,compact?2:6).map(function(g){
-      return [String(g.name).slice(0,32),Number(g.amount.toFixed(2))];
-    });
-    var summary={
-      monat:keyLabel(m.key),einnahmen:Number(m.income.toFixed(2)),
-      ausgaben:Number(m.expense.toFixed(2)),rest:Number(m.remaining.toFixed(2)),
-      kontostand:Number(m.balance.toFixed(2)),
-      vormonat_ausgaben:m.previousCount?Number(m.previousExpense.toFixed(2)):null,
-      ausgaben_bereiche:categoryExpenses,vorherige_bereiche:previous,
-      top_ausgaben_titel:expenses.slice(0,compact?3:14),
-      top_einnahmen_titel:incomes.slice(0,compact?1:3),
-      sonstige_titel:0,
-      gesamt_buchungen:m.entries.length
-    };
-    var instruction=compact
-      ? 'Schreibe auf Deutsch 100-140 Wörter: Das lief gut; Das fiel auf; Mein Tipp. Nutze nur angegebene Zahlen. Werte Buchungstitel vorsichtig aus; unklare Käufe nicht erraten. Zahlen nicht selbst neu berechnen. '
-      : 'Du bist ein sachlicher deutscher Finanzassistent. Schreibe einen freundlichen Monatsbericht von 150-220 Wörtern mit \"Das lief gut\", \"Das ist aufgefallen\" und \"Mein Tipp\". Deute echte Buchungstitel, aber rate nie, was bei unklaren Händlern gekauft wurde. Eine teure Ausgabe ist nicht automatisch schlecht. Erfinde keine Zahlen. Nutze nur die berechneten Werte. Fehlende Vergleiche offen benennen. ';
-    var maxChars=compact?1350:2450;
-    var totalTitles=expenses.length+incomes.length;
-    var prompt='';
-    for(var attempt=0;attempt<80;attempt++){
-      summary.sonstige_titel=totalTitles-summary.top_ausgaben_titel.length-summary.top_einnahmen_titel.length;
-      prompt=instruction+'EUR-Daten: '+JSON.stringify(summary);
-      if(prompt.length<=maxChars)break;
-      if(summary.top_ausgaben_titel.length>1)summary.top_ausgaben_titel.pop();
-      else if(summary.top_einnahmen_titel.length>0)summary.top_einnahmen_titel.pop();
-      else if(summary.ausgaben_bereiche.length>1)summary.ausgaben_bereiche.pop();
-      else if(summary.vorherige_bereiche.length>0)summary.vorherige_bereiche.pop();
-      else break;
-    }
-    return prompt;
   }
   function generateBase(){
     var m=compute(activeKey);
     if(!m.entries.length){showFeedback('Für '+keyLabel(activeKey)+' sind keine Kontostand-Einträge vorhanden.',true);return;}
-    var r=reportFrom(m,'basis');saveReport(r);currentReport=r;renderReport(r);
-    showFeedback('Auswertung auf diesem Gerät erstellt und gespeichert – ohne Sprachmodell.',false);
+    var report=reportFrom(m);
+    saveReport(report);renderReport(report);
+    showFeedback('Auswertung auf diesem Gerät erstellt und gespeichert.',false);
   }
-  function generateGemma(){
-    if(working)return;
-    if(!hasModel()){showFeedback('Bitte zuerst eine .litertlm-Modell-Datei importieren.',true);return;}
-    var m=compute(activeKey);
-    if(!m.entries.length){showFeedback('Für diesen Monat sind keine Einträge vorhanden.',true);return;}
-    var id='ai-'+(++requestNumber),key=activeKey,hash=m.hash;
-    window.__aiPending={id:id,key:key,hash:hash,retries:0};
-    setBusy(true);showFeedback('Gemma wird nur für diese Auswertung geladen. Bitte App geöffnet lassen …',false);
-    try{window.LocalAiBridge.generate(makePrompt(m),id);}
-    catch(e){window.__aiPending=null;setBusy(false);showFeedback('Lokale KI konnte nicht gestartet werden: '+e.message,true);}
-  }
-  window.__aiLocalResult=function(id,response,error){
-    var req=window.__aiPending;if(!req||req.id!==id)return;
-    if(error && req.retries===0 && /token ids|maximum number of tokens|context length|resource_exhausted/i.test(error)){
-      var current=compute(req.key);
-      if(current.hash===req.hash){
-        req.retries=1;
-        showFeedback('Der erste Eingabetext war zu lang. Gemma versucht es jetzt mit einem kürzeren Bericht …',false);
-        try{window.LocalAiBridge.generate(makePrompt(current,true),req.id);return;}
-        catch(e){error='Auch die Kurz-Auswertung konnte nicht gestartet werden: '+e.message;}
-      }
-    }
-    window.__aiPending=null;setBusy(false);
-    if(error){showFeedback('Die lokale KI konnte nicht antworten: '+error,true);return;}
-    var m=compute(req.key);
-    if(m.hash!==req.hash){showFeedback('Buchungen haben sich während der Analyse geändert. Bitte erneut starten.',true);return;}
-    var responseText=String(response||'').trim();
-    if(!responseText){showFeedback('Das lokale Modell hat keinen Bericht zurückgegeben.',true);return;}
-    var report=reportFrom(m,'gemma',responseText);saveReport(report);
-    if(activeKey===req.key){currentReport=report;renderReport(report);}
-    showFeedback('Lokale KI-Auswertung erstellt und gespeichert. Das Modell wurde aus dem RAM entladen.',false);
-  };
-  window.__aiModelEvent=function(status,message){
-    if(status==='done'){refreshModel();showFeedback('Lokales KI-Modell erfolgreich eingerichtet.',false);}
-    else if(status==='progress'){showFeedback('Modell wird kopiert: '+message,false);}
-    else if(status==='error'){refreshModel();showFeedback('Modellimport fehlgeschlagen: '+message,true);}
-    else if(status==='cancel'){refreshModel();showFeedback('Modellimport abgebrochen.',false);}
-  };
   function init(){
     var settings=document.getElementById('settingsIconBtn');if(!settings)return;
-    var ai=document.createElement('button');ai.type='button';ai.id='aiHeaderBtn';ai.className='settings-icon-btn';ai.setAttribute('aria-label','KI-Monatsauswertung');ai.setAttribute('title','KI-Monatsauswertung');
+    var ai=document.createElement('button');ai.type='button';ai.id='aiHeaderBtn';ai.className='settings-icon-btn';ai.setAttribute('aria-label','Monatsauswertung');ai.setAttribute('title','Monatsauswertung');
     ai.innerHTML='<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/><path d="M3 3v4M1 5h4"/></svg>';
     settings.parentNode.insertBefore(ai,settings);
     var css=document.createElement('style');
@@ -305,18 +299,14 @@
       '.ai-section.good{border-left:3px solid var(--savings)}.ai-section.notice{border-left:3px solid var(--expense)}.ai-section.tip{border-left:3px solid var(--primary)}'+
       '.ai-section h3{margin:0 0 8px;font-size:14px}.ai-section p{white-space:pre-wrap;font-size:13px;line-height:1.65;margin:8px 0}'+
       '.ai-cat{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:12px}.ai-cat:last-child{border:0}'+
-      '.ai-disclaimer{font-size:11px;line-height:1.5;color:var(--ink-soft)}';
+      '.ai-disclaimer{font-size:11px;line-height:1.5;color:var(--ink-soft)}'+
+      '.ai-progress{height:5px;background:var(--rule);border-radius:5px;margin:0 0 10px;overflow:hidden}.ai-progress span{display:block;height:100%;border-radius:5px;background:var(--primary)}';
     document.head.appendChild(css);
     var root=document.createElement('div');root.id='aiMonthlyOverlay';root.className='ai-overlay';
-    root.innerHTML='<div class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle"><div class="ai-head"><h2 id="aiTitle">✦ KI-Monatsauswertung</h2><button type="button" class="ai-close" id="aiClose" aria-label="Schließen">×</button></div>'+
+    root.innerHTML='<div class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle"><div class="ai-head"><h2 id="aiTitle">✦ Monatsauswertung</h2><button type="button" class="ai-close" id="aiClose" aria-label="Schließen">×</button></div>'+
       '<div class="ai-body"><label for="aiMonthSelect" style="font-weight:700;font-size:14px">Monat auswählen</label><select id="aiMonthSelect"></select>'+
-      '<div class="ai-intro">Dein Finanzrückblick bewertet die tatsächlichen Kontostand-Einträge und vergleicht sie mit dem Vormonat. Die Beträge berechnet immer das Haushaltsbuch.</div>'+
-      '<button type="button" id="aiBaseGenerate" class="ai-action secondary">Zahlenbasierte Auswertung erstellen</button>'+
-      '<div class="ai-box"><h3>✦ Lokale KI mit Gemma</h3><p id="aiModelStatus" class="ai-small"></p>'+
-      '<button type="button" id="aiGetModel" class="ai-action secondary" style="margin-bottom:8px">Offizielle Modell-Datei herunterladen</button>'+
-      '<button type="button" id="aiImportModel" class="ai-action secondary">Gemma-Modell importieren</button>'+
-      '<p class="ai-small">Importiere einmalig die offizielle Gemma-4-E2B-Datei im Format .litertlm (ca. 2,6 GB). Die KI läuft danach nur auf Knopfdruck, offline auf diesem Gerät.</p>'+
-      '<button type="button" id="aiGenerate" class="ai-action" style="margin-top:10px">Mit Gemma 4 analysieren</button></div>'+
+      '<div class="ai-intro">Dein persönlicher Monatsrückblick – mit Einnahmen, Ausgaben, Kontostand, auffälligen Buchungen, häufigen Titeln und Vergleich zum Vormonat. Alles lokal, ohne KI-Modell.</div>'+
+      '<button type="button" id="aiBaseGenerate" class="ai-action">Monat auswerten</button>'+
       '<div id="aiFeedback" role="status" aria-live="polite"></div><div id="aiReport" style="display:none"></div></div></div>';
     document.body.appendChild(root);
     ai.addEventListener('click',open);
@@ -324,18 +314,9 @@
     root.addEventListener('click',function(e){if(e.target===root)close();});
     document.getElementById('aiMonthSelect').addEventListener('change',function(e){activeKey=e.target.value;refreshReport();});
     document.getElementById('aiBaseGenerate').addEventListener('click',generateBase);
-    document.getElementById('aiGenerate').addEventListener('click',generateGemma);
-    document.getElementById('aiGetModel').addEventListener('click',function(){
-      try{window.LocalAiBridge.openModelDownloadPage();}
-      catch(e){showFeedback('Bitte Modell-Datei auf Hugging Face herunterladen.',true);}
-    });
-    document.getElementById('aiImportModel').addEventListener('click',function(){
-      try{window.LocalAiBridge.importModel();showFeedback('Wähle die heruntergeladene .litertlm-Modell-Datei aus.',false);}
-      catch(e){showFeedback('Modellimport ist nicht verfügbar.',true);}
-    });
     document.addEventListener('keydown',function(e){if(e.key==='Escape'&&root.classList.contains('open'))close();});
     var oldClose=window.closeAnyOpenOverlay;
-    window.closeAnyOpenOverlay=function(){if(root.classList.contains('open')){if(!working)close();return true;}return typeof oldClose==='function'?oldClose():false;};
+    window.closeAnyOpenOverlay=function(){if(root.classList.contains('open')){close();return true;}return typeof oldClose==='function'?oldClose():false;};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
