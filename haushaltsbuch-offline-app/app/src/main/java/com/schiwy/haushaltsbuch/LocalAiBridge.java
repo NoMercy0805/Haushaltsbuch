@@ -45,6 +45,23 @@ public final class LocalAiBridge {
     }
 
     @JavascriptInterface
+    public void openModelDownloadPage() {
+        main.post(new Runnable() {
+            @Override public void run() {
+                try {
+                    android.content.Intent intent = new android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        Uri.parse("https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/blob/main/gemma-4-E2B-it.litertlm")
+                    );
+                    activity.startActivity(intent);
+                } catch (Exception error) {
+                    js("__aiModelEvent", "error", "Browser konnte nicht geöffnet werden.", "");
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
     public void importModel() {
         if (!importing.get() && !generating.get()) {
             main.post(new Runnable() {
