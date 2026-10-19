@@ -266,6 +266,7 @@
       '<div class="ai-intro">Dein Finanzrückblick bewertet die tatsächlichen Kontostand-Einträge und vergleicht sie mit dem Vormonat. Die Beträge berechnet immer das Haushaltsbuch.</div>'+
       '<button type="button" id="aiBaseGenerate" class="ai-action secondary">Zahlenbasierte Auswertung erstellen</button>'+
       '<div class="ai-box"><h3>✦ Lokale KI mit Gemma</h3><p id="aiModelStatus" class="ai-small"></p>'+
+      '<button type="button" id="aiGetModel" class="ai-action secondary" style="margin-bottom:8px">Offizielle Modell-Datei herunterladen</button>'+
       '<button type="button" id="aiImportModel" class="ai-action secondary">Gemma-Modell importieren</button>'+
       '<p class="ai-small">Importiere einmalig die offizielle Gemma-4-E2B-Datei im Format .litertlm (ca. 2,6 GB). Die KI läuft danach nur auf Knopfdruck, offline auf diesem Gerät.</p>'+
       '<button type="button" id="aiGenerate" class="ai-action" style="margin-top:10px">Mit Gemma 4 analysieren</button></div>'+
@@ -277,6 +278,10 @@
     document.getElementById('aiMonthSelect').addEventListener('change',function(e){activeKey=e.target.value;refreshReport();});
     document.getElementById('aiBaseGenerate').addEventListener('click',generateBase);
     document.getElementById('aiGenerate').addEventListener('click',generateGemma);
+    document.getElementById('aiGetModel').addEventListener('click',function(){
+      try{window.LocalAiBridge.openModelDownloadPage();}
+      catch(e){showFeedback('Bitte Modell-Datei auf Hugging Face herunterladen.',true);}
+    });
     document.getElementById('aiImportModel').addEventListener('click',function(){
       try{window.LocalAiBridge.importModel();showFeedback('Wähle die heruntergeladene .litertlm-Modell-Datei aus.',false);}
       catch(e){showFeedback('Modellimport ist nicht verfügbar.',true);}
