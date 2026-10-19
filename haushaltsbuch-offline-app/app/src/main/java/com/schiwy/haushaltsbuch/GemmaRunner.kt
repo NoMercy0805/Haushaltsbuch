@@ -20,7 +20,7 @@ object GemmaRunner {
         Engine(config).use { engine ->
             engine.initialize()
             engine.createConversation().use { conversation ->
-                conversation.sendMessage(prompt, maxOutputToken = 700).toString()
+                conversation.sendMessage(prompt).toString()
             }
         }
     }
