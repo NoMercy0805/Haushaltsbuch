@@ -111,7 +111,7 @@
       if(e.date.slice(0,7)===m.key){seen[key].thisAmount+=Number(e.amount);seen[key].thisCount++;}
     });
     return Object.keys(seen).map(function(k){var e=seen[k];return {title:e.title,monthCount:Object.keys(e.months).length,amount:e.thisAmount,count:e.thisCount};})
-      .filter(function(e){return e.monthCount>=2&&e.thisCount>0;})
+      .filter(function(e){return e.monthCount>=2&&e.count>0;})
       .sort(function(a,b){return b.amount-a.amount;}).slice(0,6);
   }
   function shortDate(iso){var parts=String(iso||'').split('-');return parts.length===3?parts[2]+'.'+parts[1]+'.'+parts[0]:iso;}
