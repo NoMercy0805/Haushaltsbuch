@@ -48,5 +48,5 @@ configurations.configureEach {
 dependencies {
     implementation "androidx.core:core:1.13.1"
     implementation "androidx.biometric:biometric:1.1.0"
-    implementation "com.google.ai.edge.litertlm:litertlm-android:0.18.0"
+    implementation "com.google.ai.edge.litertlm:litertlm-android:0.13.1"
 }
