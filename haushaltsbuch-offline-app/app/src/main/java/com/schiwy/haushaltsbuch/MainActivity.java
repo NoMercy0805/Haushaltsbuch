@@ -20,11 +20,13 @@ public class MainActivity extends FragmentActivity {
     private WebView webView;
     private WebAppInterface bridge;
     private SecurityBridge securityBridge;
+    private LocalAiBridge localAiBridge;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 777;
     private static final int FOLDER_PICKER_REQUEST = 778;
     private static final int STORAGE_PERMISSION_REQUEST = 502;
     private static final int NOTIFICATION_PERMISSION_REQUEST = 503;
+    private static final int AI_MODEL_PICKER_REQUEST = 779;
 
     private static final String DOWNLOAD_HOOK_JS =
         "(function(){" +
@@ -165,6 +167,9 @@ public class MainActivity extends FragmentActivity {
         securityBridge = new SecurityBridge(this, webView);
         webView.addJavascriptInterface(securityBridge, "SecurityBridge");
 
+        localAiBridge = new LocalAiBridge(this, webView);
+        webView.addJavascriptInterface(localAiBridge, "LocalAiBridge");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -250,6 +255,20 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    /** Benutzer importiert das große .litertlm-Modell einmalig aus Downloads. */
+    void launchAiModelPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        try {
+            if (securityBridge != null) securityBridge.setExternalActivityInProgress(true);
+            startActivityForResult(intent, AI_MODEL_PICKER_REQUEST);
+        } catch (Exception e) {
+            if (securityBridge != null) securityBridge.setExternalActivityInProgress(false);
+            if (localAiBridge != null) localAiBridge.cancelledImport();
+        }
+    }
+
     private void notifyFolderPicked(boolean success, String folderName) {
         String safeName = folderName == null ? "null" : "'" + folderName.replace("'", "\\'") + "'";
         String js = "window.onBackupFolderPicked && window.onBackupFolderPicked("
@@ -300,8 +319,20 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_CHOOSER_REQUEST || requestCode == FOLDER_PICKER_REQUEST) {
+        if (requestCode == FILE_CHOOSER_REQUEST || requestCode == FOLDER_PICKER_REQUEST
+                || requestCode == AI_MODEL_PICKER_REQUEST) {
             if (securityBridge != null) securityBridge.setExternalActivityInProgress(false);
+        }
+
+        if (requestCode == AI_MODEL_PICKER_REQUEST) {
+            if (localAiBridge != null) {
+                if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                    localAiBridge.importSelectedModel(data.getData());
+                } else {
+                    localAiBridge.cancelledImport();
+                }
+            }
+            return;
         }
 
         if (requestCode == FILE_CHOOSER_REQUEST) {
@@ -362,6 +393,12 @@ public class MainActivity extends FragmentActivity {
                     "window.onNativeThemeChanged && window.onNativeThemeChanged(" + isDark + ");",
                     null);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (localAiBridge != null) localAiBridge.shutdown();
+        super.onDestroy();
     }
 
     @Override
