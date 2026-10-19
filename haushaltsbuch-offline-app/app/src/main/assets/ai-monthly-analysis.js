@@ -183,18 +183,56 @@
     if(working)return;
     document.getElementById('aiMonthlyOverlay').classList.remove('open');
   }
-  function makePrompt(m){
-    var recent=m.entries.map(function(e){return {datum:e.date,titel:String(e.title||'').slice(0,75),betrag:Number(e.amount),art:e.type==='einnahme'?'Einnahme':'Ausgabe',kategorie:categoryFor(e)};});
-    var previous=m.previousCategories.map(function(c){return {bereich:c.name,ausgaben:Number(c.amount.toFixed(2))};});
-    var summary={monat:keyLabel(m.key),einnahmen:m.income,ausgaben:m.expense,rest:m.remaining,kontostand_monatsende:m.balance,
-      ausgaben_vormonat:m.previousCount?m.previousExpense:null,kategorien:m.categories,vorherige_kategorien:previous,buchungen:recent.slice(0,110),
-      ausgelassene_buchungen:Math.max(0,recent.length-110)};
-    return 'Du bist ein sachlicher, respektvoller deutscher Finanzassistent. Schreibe einen persönlichen Monatsrückblick in verständlichem Deutsch, etwa 180 bis 260 Wörter. '+
-      'Strukturiere ihn mit \"Das lief gut\", \"Das ist aufgefallen\" und \"Mein Tipp\". '+
-      'Nutze AUSSCHLIESSLICH die folgenden berechneten Summen und Buchungen; rechne keine neuen Summen im Kopf. '+
-      'Bewerte notwendige Ausgaben nicht pauschal negativ. Aus unklaren Titeln (z.B. Amazon) darfst du den konkreten Kauf NICHT erraten. '+
-      'Falls Daten fehlen, benenne die Unsicherheit. Keine erfundenen Werte, keine Anlageberatung. '+
-      'Alle Werte sind in Euro. Daten als JSON:\n'+JSON.stringify(summary);
+  // Gemma auf Android hat ein begrenztes Kontextfenster (Eingabe + Antwort).
+  // Deshalb fassen wir auch hunderte Buchungen deterministisch nach Titel
+  // zusammen. Die KI sieht echte Händler/Titel, aber nie riesige JSON-Listen.
+  function makePrompt(m,compact){
+    var groups={};
+    m.entries.forEach(function(e){
+      var title=String(e.title||'Ohne Titel').replace(/\s+/g,' ').trim().slice(0,42);
+      var kind=e.type==='einnahme'?'E':'A';
+      var k=kind+'|'+title.toLowerCase();
+      if(!groups[k])groups[k]={titel:title,art:kind,gesamt:0,anzahl:0,kategorie:categoryFor(e).slice(0,35)};
+      groups[k].gesamt+=Number(e.amount)||0;
+      groups[k].anzahl++;
+    });
+    var all=Object.keys(groups).map(function(k){var g=groups[k];g.gesamt=Number(g.gesamt.toFixed(2));return g;});
+    var expenses=all.filter(function(g){return g.art==='A';}).sort(function(a,b){return b.gesamt-a.gesamt;});
+    var incomes=all.filter(function(g){return g.art==='E';}).sort(function(a,b){return b.gesamt-a.gesamt;});
+    var categoryExpenses=m.categories.slice(0,compact?3:7).map(function(g){
+      return [String(g.name).slice(0,32),Number(g.amount.toFixed(2))];
+    });
+    var previous=m.previousCategories.slice(0,compact?2:6).map(function(g){
+      return [String(g.name).slice(0,32),Number(g.amount.toFixed(2))];
+    });
+    var summary={
+      monat:keyLabel(m.key),einnahmen:Number(m.income.toFixed(2)),
+      ausgaben:Number(m.expense.toFixed(2)),rest:Number(m.remaining.toFixed(2)),
+      kontostand:Number(m.balance.toFixed(2)),
+      vormonat_ausgaben:m.previousCount?Number(m.previousExpense.toFixed(2)):null,
+      ausgaben_bereiche:categoryExpenses,vorherige_bereiche:previous,
+      top_ausgaben_titel:expenses.slice(0,compact?3:14),
+      top_einnahmen_titel:incomes.slice(0,compact?1:3),
+      sonstige_titel:0,
+      gesamt_buchungen:m.entries.length
+    };
+    var instruction=compact
+      ? 'Schreibe auf Deutsch 100-140 Wörter: Das lief gut; Das fiel auf; Mein Tipp. Nutze nur angegebene Zahlen. Werte Buchungstitel vorsichtig aus; unklare Käufe nicht erraten. Zahlen nicht selbst neu berechnen. '
+      : 'Du bist ein sachlicher deutscher Finanzassistent. Schreibe einen freundlichen Monatsbericht von 150-220 Wörtern mit \"Das lief gut\", \"Das ist aufgefallen\" und \"Mein Tipp\". Deute echte Buchungstitel, aber rate nie, was bei unklaren Händlern gekauft wurde. Eine teure Ausgabe ist nicht automatisch schlecht. Erfinde keine Zahlen. Nutze nur die berechneten Werte. Fehlende Vergleiche offen benennen. ';
+    var maxChars=compact?1350:2450;
+    var totalTitles=expenses.length+incomes.length;
+    var prompt='';
+    for(var attempt=0;attempt<80;attempt++){
+      summary.sonstige_titel=totalTitles-summary.top_ausgaben_titel.length-summary.top_einnahmen_titel.length;
+      prompt=instruction+'EUR-Daten: '+JSON.stringify(summary);
+      if(prompt.length<=maxChars)break;
+      if(summary.top_ausgaben_titel.length>1)summary.top_ausgaben_titel.pop();
+      else if(summary.top_einnahmen_titel.length>0)summary.top_einnahmen_titel.pop();
+      else if(summary.ausgaben_bereiche.length>1)summary.ausgaben_bereiche.pop();
+      else if(summary.vorherige_bereiche.length>0)summary.vorherige_bereiche.pop();
+      else break;
+    }
+    return prompt;
   }
   function generateBase(){
     var m=compute(activeKey);
@@ -208,13 +246,22 @@
     var m=compute(activeKey);
     if(!m.entries.length){showFeedback('Für diesen Monat sind keine Einträge vorhanden.',true);return;}
     var id='ai-'+(++requestNumber),key=activeKey,hash=m.hash;
-    window.__aiPending={id:id,key:key,hash:hash};
+    window.__aiPending={id:id,key:key,hash:hash,retries:0};
     setBusy(true);showFeedback('Gemma wird nur für diese Auswertung geladen. Bitte App geöffnet lassen …',false);
     try{window.LocalAiBridge.generate(makePrompt(m),id);}
     catch(e){window.__aiPending=null;setBusy(false);showFeedback('Lokale KI konnte nicht gestartet werden: '+e.message,true);}
   }
   window.__aiLocalResult=function(id,response,error){
     var req=window.__aiPending;if(!req||req.id!==id)return;
+    if(error && req.retries===0 && /token ids|maximum number of tokens|context length|resource_exhausted/i.test(error)){
+      var current=compute(req.key);
+      if(current.hash===req.hash){
+        req.retries=1;
+        showFeedback('Der erste Eingabetext war zu lang. Gemma versucht es jetzt mit einem kürzeren Bericht …',false);
+        try{window.LocalAiBridge.generate(makePrompt(current,true),req.id);return;}
+        catch(e){error='Auch die Kurz-Auswertung konnte nicht gestartet werden: '+e.message;}
+      }
+    }
     window.__aiPending=null;setBusy(false);
     if(error){showFeedback('Die lokale KI konnte nicht antworten: '+error,true);return;}
     var m=compute(req.key);
