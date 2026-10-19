@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.schiwy.haushaltsbuch"
-        minSdk 21
+        minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -28,6 +28,10 @@ android {
             signingConfig signingConfigs.release
             debuggable false
         }
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
     }
 
     compileOptions {
