@@ -1598,13 +1598,14 @@ var nativeStorage = {
   var showPaidLoansHistory = loadBoolPref('household-show-paid-loans', false);
   var showTilgungHistory = loadBoolPref('household-show-tilgung-history', false);
   var showPaidInvoicesHistory = loadBoolPref('household-show-paid-invoices', false);
-  // Auswahl ist rein visuell: es werden keine Rechnungen veraendert.
-  var paidInvoicesMonth = (function(){
-    try{
-      var saved = nativeStorage.getItem('household-paid-invoices-month');
-      return saved === 'all' || saved === 'undated' || /^\d{4}-(0[1-9]|1[0-2])$/.test(saved||'') ? saved : 'all';
-    }catch(e){return 'all';}
-  })();
+  // Beim App-Start ist immer der aktuelle lokale Bezahlmonat vorausgewaehlt.
+  // Eine manuelle Auswahl gilt nur solange der Bereich aufgeklappt bleibt.
+  function currentPaidInvoicesMonth(){
+    var now = new Date();
+    return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  }
+  var paidInvoicesMonth = currentPaidInvoicesMonth();
+  var paidInvoicesMonthManuallySelected = false;
   var showBetaTemplates = loadBoolPref('household-show-beta-templates', false);
   var showBetaTitleSuggestions = loadBoolPref('household-show-beta-title-suggestions', false);
   var showSparList = loadBoolPref('household-show-sparlist', true);
@@ -2530,6 +2531,10 @@ var nativeStorage = {
       return;
     }
 
+    // Auch bei geoeffnetem Bereich waehrend eines Monatswechsels
+    // automatisch den aktuellen Monat verwenden, sofern keine manuelle Wahl aktiv ist.
+    if(!paidInvoicesMonthManuallySelected) paidInvoicesMonth = currentPaidInvoicesMonth();
+
     // Bezahlmonat, nicht Faelligkeitsmonat. Eintraege ohne Bezahldatum
     // bleiben bei "Alle Monate" sichtbar und sind separat waehlbar.
     function monthOf(invoice){
@@ -2543,13 +2548,14 @@ var nativeStorage = {
       if(month === 'undated') hasUndated = true;
       else months[month] = true;
     });
+    // Den aktuellen Monat immer anbieten, auch ohne bezahlte Rechnung.
+    months[currentPaidInvoicesMonth()] = true;
+    // Eine noch gewaehlte Monatsansicht bei Aenderungen nicht ploetzlich verwerfen.
+    if(paidInvoicesMonth !== 'all' && paidInvoicesMonth !== 'undated') months[paidInvoicesMonth] = true;
     var availableMonths = Object.keys(months).sort().reverse();
-    // Ist ein gewaehlter Monat nach Loeschen/Umschalten leer geworden,
-    // zur Gesamtuebersicht zurueckkehren.
-    if(paidInvoicesMonth !== 'all' &&
-       (paidInvoicesMonth === 'undated' ? !hasUndated : !months[paidInvoicesMonth])){
-      paidInvoicesMonth = 'all';
-      nativeStorage.setItem('household-paid-invoices-month', 'all');
+    if(paidInvoicesMonth === 'undated' && !hasUndated){
+      paidInvoicesMonth = currentPaidInvoicesMonth();
+      paidInvoicesMonthManuallySelected = false;
     }
     var select = document.getElementById('paidInvoicesMonthSelect');
     select.innerHTML = '';
@@ -4190,12 +4196,17 @@ var nativeStorage = {
 
     document.getElementById('paidInvoicesMonthSelect').addEventListener('change', function(){
       paidInvoicesMonth = this.value;
-      nativeStorage.setItem('household-paid-invoices-month', paidInvoicesMonth);
+      paidInvoicesMonthManuallySelected = true;
       renderPaidInvoicesHistory();
     });
 
     document.getElementById('paidInvoicesHeader').addEventListener('click', function(){
       showPaidInvoicesHistory = !showPaidInvoicesHistory;
+      if(showPaidInvoicesHistory){
+        // Beim erneuten Aufklappen immer wieder auf den aktuellen Monat setzen.
+        paidInvoicesMonth = currentPaidInvoicesMonth();
+        paidInvoicesMonthManuallySelected = false;
+      }
       saveBoolPref('household-show-paid-invoices', showPaidInvoicesHistory);
       renderInvoices();
     });
