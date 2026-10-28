@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -76,3 +79,15 @@ jobs:
           path: haushaltsbuch-offline-app/app/build/outputs/apk/release/Haushaltsbuch.apk
 
 # Manual rebuild trigger 2026-10-10
+
+      - name: Publish signed APK for MyAppHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/release/Haushaltsbuch.apk"
+          test -s "$APK"
+          TAG="haushaltsbuch-build-${{ github.run_number }}"
+          gh release create "$TAG" "$APK#Haushaltsbuch.apk" --target "$GITHUB_SHA" \
+            --title "Haushaltsbuch Build ${{ github.run_number }}" \
+            --notes "Android-versionCode: ${{ github.run_number }}"
