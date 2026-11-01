@@ -228,6 +228,20 @@
   main{flex:1;padding:0 0 110px;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
+  /* Einheitliche volle Breite in allen Tabs und Unteransichten. */
+  main > .tab-panel, main .tab-panel, main .tab-panel.active{width:100%;max-width:none;margin-left:0;margin-right:0;box-sizing:border-box;}
+  main .tab-panel > .beta-day-group,
+  main .tab-panel .beta-day-group,
+  main .tab-panel .summary-card,
+  main .tab-panel .hero-card,
+  main .tab-panel .vc-card,
+  main .tab-panel .loan-card,
+  main .tab-panel .list-card,
+  main .tab-panel .chart-block,
+  main .tab-panel .compact-list,
+  main .tab-panel .stat{
+    width:100%;max-width:none;box-sizing:border-box;
+  }
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
 
   h2.section-title{font-family:var(--serif);font-size:20px;font-weight:800;margin:26px 4px 12px;color:var(--ink);letter-spacing:-0.01em;display:flex;align-items:center;gap:8px;}
