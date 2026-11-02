@@ -3176,7 +3176,11 @@ var nativeStorage = {
           if(loanForFreed && loanForFreed.monthlyPayment > 0){
             var loanPct = getLoanCarryoverPct(loanForFreed);
             var freedAmount = roundCents(loanForFreed.monthlyPayment * loanPct / 100);
-            freedLine = '<div style="font-size:13px;color:var(--savings);margin-top:2px;">+'+fmtEUR(freedAmount)+' zum Extra-Betrag</div>';
+            var availableAmount = roundCents(Math.max(0, loanForFreed.monthlyPayment - freedAmount));
+            freedLine = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;font-size:13px;margin-top:2px;">'+
+              '<span style="color:var(--savings);">+'+fmtEUR(freedAmount)+' zum Extra-Betrag</span>'+
+              '<span style="color:var(--ink-soft);">'+fmtEUR(availableAmount)+' monatlich frei</span>'+
+              '</div>';
             pctChipsLine = '<div class="loan-carryover-chips" data-loan-id="'+loanForFreed.id+'" style="display:flex;gap:6px;margin-top:8px;">'+
               [0,25,50,75,100].map(function(v){
                 return '<button type="button" class="loan-carryover-chip'+(v===loanPct?' active':'')+'" data-carryover-value="'+v+'">'+v+'%</button>';
