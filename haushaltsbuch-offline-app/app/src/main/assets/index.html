@@ -366,6 +366,12 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
+  .icon-picker-compact{width:100%;margin:8px 0 12px;}
+  .icon-picker-trigger{width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:14px;text-align:left;font:inherit;cursor:pointer;}
+  .icon-picker-trigger .icon-picker-circle{flex-shrink:0;}
+  .icon-picker-chevron{margin-left:auto;font-size:18px;color:var(--ink-soft);}
+  .icon-picker-options[hidden]{display:none!important;}
+  .icon-picker-options{padding:12px 4px 4px;}
   .icon-picker{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 10px;}
   .icon-picker-group-label{color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;margin:8px 0 4px;}
   .icon-picker-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:58px;background:none;border:none;cursor:pointer;flex-shrink:0;}
@@ -2257,7 +2263,15 @@ var nativeStorage = {
       byGroup[groupKey].forEach(function(key){ html += tile(key); });
       html += '</div>';
     });
-    return html;
+    var color = ICON_COLORS[current] || ICON_COLORS.tag;
+    var label = ICON_PICKER_LABELS[current] || 'Automatisch';
+    return '<div class="icon-picker-compact full">'+
+      '<button type="button" class="icon-picker-trigger" data-action="toggle-icon-picker" aria-expanded="false">'+
+        '<span class="icon-picker-circle" style="background:'+color+';color:#fff;">'+iconSvgMarkup(current)+'</span>'+
+        '<span>Symbol: '+escapeHtml(label)+'</span><span class="icon-picker-chevron">▾</span>'+
+      '</button>'+
+      '<div class="icon-picker-options" hidden>'+html+'</div>'+
+    '</div>';
   }
 
   function fixedExpenseIconKey(name){
@@ -2412,11 +2426,25 @@ var nativeStorage = {
       } else if(action === 'cancel-edit'){
         editing[listKey] = null;
         rerenderFn();
+      } else if(action === 'toggle-icon-picker'){
+        var picker = btn.closest('.icon-picker-compact');
+        var options = picker.querySelector('.icon-picker-options');
+        options.hidden = !options.hidden;
+        btn.setAttribute('aria-expanded', String(!options.hidden));
       } else if(action === 'select-icon'){
         var pickerRow = btn.closest('.edit-row');
         pickerRow.querySelectorAll('.icon-picker-tile').forEach(function(b){ b.classList.remove('selected'); });
         btn.classList.add('selected');
         pickerRow.dataset.selectedIcon = btn.dataset.iconKey;
+        var picker = btn.closest('.icon-picker-compact');
+        if(picker){
+          var trigger = picker.querySelector('.icon-picker-trigger');
+          var circle = btn.querySelector('.icon-picker-circle');
+          trigger.querySelector('.icon-picker-circle').outerHTML = circle.outerHTML;
+          trigger.querySelector('span:nth-child(2)').textContent = 'Symbol: '+(ICON_PICKER_LABELS[btn.dataset.iconKey] || 'Automatisch');
+          picker.querySelector('.icon-picker-options').hidden = true;
+          trigger.setAttribute('aria-expanded', 'false');
+        }
       } else if(action === 'save-edit'){
         var row = btn.closest('.edit-row');
         var name = row.querySelector('.edit-name').value.trim();
