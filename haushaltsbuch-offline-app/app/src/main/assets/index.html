@@ -366,6 +366,10 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
+  .combined-bookings-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;}
+  .combined-bookings-hero .hero-card-value{font-size:clamp(19px,5vw,38px);white-space:nowrap;letter-spacing:-.035em;}
+  .combined-bookings-hero .hero-card-label{font-size:13px;margin-bottom:8px;}
+  .income-category-header{margin-top:8px;}
   .icon-picker-compact{width:100%;margin:8px 0 12px;}
   .icon-picker-trigger{width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:14px;text-align:left;font:inherit;cursor:pointer;}
   .icon-picker-trigger .icon-picker-circle{flex-shrink:0;}
@@ -694,13 +698,9 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 14l2 2 4-4"/></svg>
             Rechnungen
           </button>
-          <button type="button" class="sub-nav-btn" data-sub-view="einnahmen">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M6 10l6-6 6 6"/></svg>
-            Einnahmen
-          </button>
           <button type="button" class="sub-nav-btn" data-sub-view="fixkosten">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 20.4l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>
-            Fixkosten
+            Einnahmen & Fixkosten
           </button>
         </div>
 
@@ -721,13 +721,11 @@
         <div id="paidInvoicesList"></div>
         </div>
 
-        <div id="einnahmenSubView" style="display:none;">
-        <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="incomeSummary"></div></div>
-        <div id="incomeList"></div>
-        </div>
+        <div id="einnahmenSubView" style="display:none;"></div>
 
         <div id="fixkostenSubView" style="display:none;">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fixedSummary"></div></div>
+        <div id="incomeList"></div>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
         </div>
@@ -2477,23 +2475,18 @@ var nativeStorage = {
     renderIncomeList(document.getElementById('incomeList'), state.income);
     renderGroupedFixedList(document.getElementById('fixedList'), state.fixedExpenses);
     renderAutoFixedEntries();
-    document.getElementById('incomeSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Einnahmen gesamt</div>'+
-      '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div>'+
-      '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.income.length+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Monatlicher Rest</div><div class="hero-card-sub-value">'+fmtEUR(heroRest)+'</div></div>'+
-      '</div>';
     var fixedManualTotal = sum(state.fixedExpenses,'amount');
     var fixedActiveLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var fixedAutoTotal = sum(fixedActiveLoans, 'monthlyPayment') + getTilgungExtra() + sum(state.variableCosts, 'monthlyAmount');
     document.getElementById('fixedSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Fixkosten gesamt</div>'+
-      '<div class="hero-card-value">'+fmtEUR(fixedManualTotal)+'</div>'+
-      '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Einträge</div><div class="hero-card-sub-value">'+state.fixedExpenses.length+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Inkl. automatisch</div><div class="hero-card-sub-value">'+fmtEUR(fixedManualTotal+fixedAutoTotal)+'</div></div>'+
+      '<div class="combined-bookings-hero">'+
+        '<div><div class="hero-card-label" style="color:var(--hero-blue-text);">Einnahmen gesamt</div>'+
+        '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div></div>'+
+        '<div><div class="hero-card-label" style="color:var(--hero-blue-text);">Fixkosten gesamt</div>'+
+        '<div class="hero-card-value">'+fmtEUR(fixedManualTotal)+'</div></div>'+
       '</div>';
+    document.getElementById('incomeList').insertAdjacentHTML('afterbegin',
+      '<div class="compact-group-header income-category-header"><span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--savings);font-size:19px;">↑</span><span>EINNAHMEN</span></span><span>'+fmtEUR(sum(state.income,'amount'))+'</span></div>');
     renderInvoices();
   }
 
@@ -3894,6 +3887,7 @@ var nativeStorage = {
   var activeBuchungenSubView = 'rechnungen';
   var BUCHUNGEN_SUB_VIEWS = ['rechnungen', 'einnahmen', 'fixkosten'];
   function switchBuchungenSubView(view){
+    if(view === 'einnahmen') view = 'fixkosten';
     activeBuchungenSubView = view;
     BUCHUNGEN_SUB_VIEWS.forEach(function(v){
       document.getElementById(v+'SubView').style.display = v === view ? '' : 'none';
@@ -4068,7 +4062,7 @@ var nativeStorage = {
       var options = speedDial.querySelectorAll('[data-tab-group]');
       var matchCount = 0;
       options.forEach(function(opt){
-        var matches = !tab || opt.getAttribute('data-tab-group') === tab;
+        var matches = !tab || opt.getAttribute('data-tab-group') === tab || (tab === 'fixkosten' && opt.getAttribute('data-tab-group') === 'einnahmen');
         opt.style.display = matches ? '' : 'none';
         if(matches) matchCount++;
       });
