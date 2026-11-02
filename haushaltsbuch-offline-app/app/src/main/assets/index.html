@@ -2285,7 +2285,14 @@ var nativeStorage = {
 
   function renderIncomeList(container, list){
     if(list.length === 0){ container.innerHTML = '<div class="empty-state">Noch nichts eingetragen.</div>'; return; }
-    var html = '<div class="compact-list">';
+    var html = '<div class="compact-list">'+
+      '<div class="compact-group-header">'+
+        '<span style="display:flex;align-items:center;gap:8px;">'+
+          '<span style="width:22px;height:22px;border-radius:50%;background:var(--savings);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;">↑</span>'+
+          '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">Einnahmen</span>'+
+        '</span>'+
+        '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(sum(list,'amount'))+'</span>'+
+      '</div>';
     list.forEach(function(item){
       if(editing.income === item.id){
         html += '</div><div class="edit-row" data-id="'+item.id+'">'+
@@ -2489,14 +2496,6 @@ var nativeStorage = {
         '<div class="hero-card-sub-label" style="color:var(--hero-blue-sub);margin-top:12px;">Inkl. automatisch</div>'+
         '<div class="hero-card-sub-value">'+fmtEUR(fixedManualTotal+fixedAutoTotal)+'</div></div>'+
       '</div>';
-    document.getElementById('incomeList').insertAdjacentHTML('afterbegin',
-      '<div class="compact-group-header income-category-header">'+
-        '<span style="display:flex;align-items:center;gap:8px;">'+
-          '<span style="width:22px;height:22px;border-radius:50%;background:var(--savings);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;">↑</span>'+
-          '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">Einnahmen</span>'+
-        '</span>'+
-        '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(sum(state.income,'amount'))+'</span>'+
-      '</div>');
     renderInvoices();
   }
 
