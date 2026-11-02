@@ -2481,9 +2481,13 @@ var nativeStorage = {
     document.getElementById('fixedSummary').innerHTML =
       '<div class="combined-bookings-hero">'+
         '<div><div class="hero-card-label" style="color:var(--hero-blue-text);">Einnahmen gesamt</div>'+
-        '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div></div>'+
+        '<div class="hero-card-value">'+fmtEUR(sum(state.income,'amount'))+'</div>'+
+        '<div class="hero-card-sub-label" style="color:var(--hero-blue-sub);margin-top:12px;">Monatlicher Rest</div>'+
+        '<div class="hero-card-sub-value">'+fmtEUR(heroRest)+'</div></div>'+
         '<div><div class="hero-card-label" style="color:var(--hero-blue-text);">Fixkosten gesamt</div>'+
-        '<div class="hero-card-value">'+fmtEUR(fixedManualTotal)+'</div></div>'+
+        '<div class="hero-card-value">'+fmtEUR(fixedManualTotal)+'</div>'+
+        '<div class="hero-card-sub-label" style="color:var(--hero-blue-sub);margin-top:12px;">Inkl. automatisch</div>'+
+        '<div class="hero-card-sub-value">'+fmtEUR(fixedManualTotal+fixedAutoTotal)+'</div></div>'+
       '</div>';
     document.getElementById('incomeList').insertAdjacentHTML('afterbegin',
       '<div class="compact-group-header income-category-header"><span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--savings);font-size:19px;">↑</span><span>EINNAHMEN</span></span><span>'+fmtEUR(sum(state.income,'amount'))+'</span></div>');
