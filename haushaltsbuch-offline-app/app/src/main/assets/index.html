@@ -651,7 +651,7 @@
           </button>
         </div>
       </div>
-      <div id="incomeExpenseBar" class="income-expense-bar"></div>
+      
     </header>
 
     <nav class="tabs">
@@ -1817,7 +1817,7 @@ var nativeStorage = {
     var expenseShare = barTotal > 0 ? (expenseTotal/barTotal*100) : 50;
     var incomeLabel = incomeShare >= 20 ? '<span class="income-expense-bar-label">'+fmtEUR(incomeTotal)+'</span>' : '';
     var expenseLabel = expenseShare >= 20 ? '<span class="income-expense-bar-label">'+fmtEUR(expenseTotal)+'</span>' : '';
-    document.getElementById('incomeExpenseBar').innerHTML =
+    (document.getElementById('incomeExpenseBar') || {innerHTML:''}).innerHTML =
       '<div class="income-expense-bar-income" style="width:'+incomeShare.toFixed(1)+'%;">'+incomeLabel+'</div>'+
       '<div class="income-expense-bar-expense" style="width:'+expenseShare.toFixed(1)+'%;">'+expenseLabel+'</div>';
   }
@@ -2472,14 +2472,21 @@ var nativeStorage = {
   function renderInvoices(){
     document.getElementById('invDueDate').value = todayISO();
     var open = state.openInvoices.filter(function(i){ return !i.paid; });
-    var openTotal = sum(open, 'amount');
+    var now = new Date();
+    var monthKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    var nextMonthDate = new Date(now.getFullYear(), now.getMonth()+1, 1);
+    var nextMonthKey = nextMonthDate.getFullYear()+'-'+String(nextMonthDate.getMonth()+1).padStart(2,'0');
+    var thisMonthOpen = open.filter(function(i){ return i.dueDate && i.dueDate.slice(0,7) === monthKey; });
+    var nextMonthOpen = open.filter(function(i){ return i.dueDate && i.dueDate.slice(0,7) === nextMonthKey; });
+    var monthTotal = sum(thisMonthOpen, 'amount');
+    var nextMonthTotal = sum(nextMonthOpen, 'amount');
     var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
     document.getElementById('invoiceSummary').innerHTML =
-      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Offene Rechnungen gesamt</div>'+
-      '<div class="hero-card-value">'+fmtEUR(openTotal)+'</div>'+
+      '<div class="hero-card-label" style="color:var(--hero-blue-text);">Offene Rechnungen diesen Monat</div>'+
+      '<div class="hero-card-value">'+fmtEUR(monthTotal)+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Rechnungen</div><div class="hero-card-sub-value">'+open.length+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Folgemonat</div><div class="hero-card-sub-value">'+fmtEUR(nextMonthTotal)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('invoiceSummary');
 
