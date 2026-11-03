@@ -3568,6 +3568,32 @@ var nativeStorage = {
     renderFuelTracker();
     renderBeta();
     applyCardCleanHeroLayout();
+    watchCardCleanHeroes();
+  }
+
+  /* Hero-Karten werden auch durch einzelne Render-Funktionen neu aufgebaut.
+     Die Darstellung daher nach jeder Aktualisierung erneut anwenden. */
+  function watchCardCleanHeroes(){
+    var ids=['invoiceSummary','fixedSummary','vcSummary','potSummary','loanSummary','tilgungSummary','fuelSummary'];
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el || el.dataset.ccWatching) return;
+      el.dataset.ccWatching='1';
+      var pending=false;
+      var observer=new MutationObserver(function(){
+        if(pending) return;
+        pending=true;
+        Promise.resolve().then(function(){
+          pending=false;
+          if(el.querySelector('.hero-card-label') && !el.querySelector('.cc-hero-heading') && id!=='fixedSummary'){
+            applyCardCleanHeroLayout();
+          }else if(id==='fixedSummary' && el.querySelector('.combined-bookings-hero > div:not(:has(.cc-hero-icon))')){
+            applyCardCleanHeroLayout();
+          }
+        });
+      });
+      observer.observe(el,{childList:true,subtree:true});
+    });
   }
 
   /* ---------- Events ---------- */
