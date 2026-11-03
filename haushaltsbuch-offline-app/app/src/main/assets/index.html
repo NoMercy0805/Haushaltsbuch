@@ -366,6 +366,22 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
+  /* Card Clean layout: use actual preview geometry, not old hero spacing. */
+  .hero-card{padding:14px!important;border-radius:19px!important;}
+  .hero-card .cc-hero-heading{margin-bottom:12px;}
+  .hero-card .cc-hero-heading .hero-card-label{font-size:13px;font-weight:650;line-height:1.35;max-height:none;}
+  .hero-card .cc-hero-heading .hero-card-value{font-size:clamp(25px,6.6vw,34px);line-height:1.2;margin:4px 0 0;}
+  .hero-card .hero-card-sub-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));max-height:none;}
+  .hero-card .hero-card-sub-row>div{padding:11px 12px;border-radius:12px;}
+  .hero-card .hero-card-sub-label{font-size:11px;line-height:1.4;}
+  .hero-card .hero-card-sub-value{font-weight:750;font-size:17px;}
+  #fixedSummary .combined-bookings-hero{gap:9px;align-items:stretch;}
+  #fixedSummary .combined-bookings-hero>div{padding:12px 10px!important;border-radius:14px;min-height:165px;box-sizing:border-box;}
+  #fixedSummary .combined-bookings-hero .hero-card-label{font-size:12px;line-height:1.25;min-height:30px;margin-bottom:5px;}
+  #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(18px,4.5vw,30px);font-weight:800;letter-spacing:-.035em;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini{margin-top:auto;padding:9px 8px;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-value{font-size:clamp(14px,3.6vw,19px);}
+  @media(max-width:350px){#fixedSummary .combined-bookings-hero{gap:6px;}#fixedSummary .combined-bookings-hero>div{padding:10px 7px!important;}#fixedSummary .combined-bookings-hero .hero-card-value{font-size:17px;}}
   /* Original Card-Clean-Vorschau: Symbol links, Hauptwert rechts, Details als Kacheln. */
   .cc-hero-heading{display:flex;align-items:center;gap:13px;min-width:0;}
   .cc-hero-icon{width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:14px;color:var(--cc-icon,#427ed4);background:var(--cc-icon-bg,rgba(70,137,235,.14));}
@@ -3587,7 +3603,7 @@ var nativeStorage = {
           pending=false;
           if(el.querySelector('.hero-card-label') && !el.querySelector('.cc-hero-heading') && id!=='fixedSummary'){
             applyCardCleanHeroLayout();
-          }else if(id==='fixedSummary' && el.querySelector('.combined-bookings-hero > div:not(:has(.cc-hero-icon))')){
+          }else if(id==='fixedSummary' && Array.prototype.some.call(el.querySelectorAll('.combined-bookings-hero > div'),function(col){return !col.querySelector('.cc-hero-icon');})){
             applyCardCleanHeroLayout();
           }
         });
