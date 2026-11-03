@@ -796,6 +796,20 @@
     #fixedSummary .combined-bookings-hero>div{padding:9px 7px!important;column-gap:5px!important;}
     #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(17px,4.7vw,22px)!important;}
   }
+  /* Detail icon artwork is inserted beside real metrics without changing their values. */
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div::before{display:none!important;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div{display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:10px!important;row-gap:1px!important;}
+  .hero-card:not(#fixedSummary) .cc-detail-icon{grid-column:1!important;grid-row:1/3!important;display:flex;align-items:center;justify-content:center;color:var(--cc-detail-icon,#b873e8)!important;}
+  .hero-card:not(#fixedSummary) .cc-detail-icon svg{width:26px;height:26px;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div .hero-card-sub-label{grid-column:2!important;grid-row:1!important;flex:none!important;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div .hero-card-sub-value{grid-column:2!important;grid-row:2!important;margin:0!important;}
+  #invoiceSummary{--cc-detail-icon:#b36de7;}
+  #vcSummary{--cc-detail-icon:#e6577d;}
+  #potSummary{--cc-detail-icon:#32b983;}
+  #loanSummary,#tilgungSummary{--cc-detail-icon:#69a5ee;}
+  #fuelSummary{--cc-detail-icon:#e9a04c;}
+  html[data-theme="dark"] #invoiceSummary{--cc-detail-icon:#dc9dff;}
+  html[data-theme="dark"] #vcSummary{--cc-detail-icon:#ff91ae;}
   /* Card Clean visual reference: saturated circular icons, corner splash and illustrated detail tiles. */
   .hero-card{isolation:isolate;}
   .hero-card::before{content:""!important;position:absolute!important;z-index:0!important;pointer-events:none!important;top:-88px!important;right:-66px!important;width:215px!important;height:185px!important;border-radius:38% 0 48% 62%!important;transform:rotate(-24deg)!important;background:var(--cc-splash,linear-gradient(135deg,rgba(255,255,255,.05),rgba(126,170,255,.3)))!important;}
@@ -3676,6 +3690,23 @@ var nativeStorage = {
       heading.appendChild(text);
       text.appendChild(label);
       text.appendChild(value);
+    });
+    var detailPaths=[
+      '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
+      '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      '<path d="M3 7h18v12H3zM3 11h18M7 15h4"/>'
+    ];
+    Object.keys(icons).forEach(function(id){
+      var card=document.getElementById(id);
+      if(!card) return;
+      var tiles=card.querySelectorAll('.hero-card-sub-row > div');
+      Array.prototype.forEach.call(tiles,function(tile,i){
+        if(tile.querySelector('.cc-detail-icon')) return;
+        var icon=document.createElement('span');
+        icon.className='cc-detail-icon';
+        icon.innerHTML=svg(detailPaths[id==='invoiceSummary' && i===1 ? 1 : id==='potSummary' ? 2 : i%2]);
+        tile.insertBefore(icon,tile.firstChild);
+      });
     });
     var fixed=document.getElementById('fixedSummary');
     if(fixed){
