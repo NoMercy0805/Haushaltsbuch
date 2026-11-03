@@ -710,6 +710,50 @@
     outline:2px solid var(--primary);
     outline-offset:2px;
   }
+
+  /* Card Clean preview fidelity: compact two-column tiles, icons inline with titles. */
+  #fixedSummary.hero-card{padding:12px!important;border-radius:20px!important;background:var(--cc-bg)!important;}
+  #fixedSummary .combined-bookings-hero{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;align-items:stretch!important;}
+  #fixedSummary .combined-bookings-hero>div{
+    display:grid!important;grid-template-columns:30px minmax(0,1fr)!important;
+    grid-template-rows:36px auto auto!important;align-content:start!important;
+    column-gap:7px!important;row-gap:8px!important;
+    padding:11px 9px!important;min-height:0!important;
+    border-radius:15px!important;box-shadow:none!important;
+  }
+  #fixedSummary .combined-bookings-hero .cc-hero-icon{
+    grid-column:1!important;grid-row:1!important;
+    width:30px!important;height:30px!important;margin:0!important;border-radius:10px!important;
+  }
+  #fixedSummary .combined-bookings-hero .cc-hero-icon svg{width:19px!important;height:19px!important;}
+  #fixedSummary .combined-bookings-hero .hero-card-label{
+    grid-column:2!important;grid-row:1!important;
+    align-self:center!important;font-size:clamp(10px,2.7vw,13px)!important;
+    font-weight:650!important;line-height:1.2!important;
+    min-height:0!important;max-height:none!important;margin:0!important;overflow:visible!important;
+  }
+  #fixedSummary .combined-bookings-hero .hero-card-value{
+    grid-column:1/-1!important;grid-row:2!important;
+    font-size:clamp(19px,4.6vw,29px)!important;line-height:1.18!important;
+    font-weight:800!important;letter-spacing:-.04em!important;
+    margin:0!important;white-space:nowrap!important;overflow-wrap:normal!important;
+  }
+  #fixedSummary .combined-bookings-hero .cc-hero-mini{
+    grid-column:1/-1!important;grid-row:3!important;
+    margin:0!important;padding:9px 10px!important;
+    border-radius:11px!important;min-width:0!important;
+  }
+  #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-label{
+    font-size:clamp(10px,2.5vw,12px)!important;margin:0 0 3px!important;line-height:1.25!important;
+  }
+  #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-value{
+    font-size:clamp(14px,3.6vw,19px)!important;line-height:1.2!important;font-weight:750!important;
+  }
+  @media(max-width:360px){
+    #fixedSummary .combined-bookings-hero{gap:6px!important;}
+    #fixedSummary .combined-bookings-hero>div{padding:9px 7px!important;column-gap:5px!important;}
+    #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(17px,4.7vw,22px)!important;}
+  }
 </style>
 </head>
 <body>
