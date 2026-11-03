@@ -366,6 +366,29 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
+  /* Card Clean hero styling, light and dark. */
+  .hero-card{position:relative;overflow:hidden;border:1px solid var(--cc-edge,rgba(75,118,184,.17));background:var(--cc-bg,linear-gradient(145deg,#f3f8ff,#e4efff));box-shadow:0 5px 18px rgba(21,40,78,.09);}
+  .hero-card .hero-card-label,.hero-card .hero-card-sub-label{color:var(--cc-label,#45638a)!important;}
+  .hero-card .hero-card-sub-row{gap:9px;max-height:80px;}
+  .hero-card .hero-card-sub-row>div{min-width:0;padding:9px;border-radius:12px;border:1px solid var(--cc-edge,rgba(75,118,184,.17));background:var(--cc-tile,rgba(255,255,255,.40));}
+  #invoiceSummary{--cc-bg:linear-gradient(145deg,#faf4ff,#efe2ff);--cc-edge:rgba(151,99,211,.22);--cc-label:#76519d;}
+  #fixedSummary{--cc-bg:linear-gradient(145deg,#f1fcf6,#e8f2ff);}
+  #vcSummary{--cc-bg:linear-gradient(145deg,#fff5f7,#ffe5ec);--cc-label:#a24c64;}
+  #potSummary{--cc-bg:linear-gradient(145deg,#f0fbf6,#dff7ed);--cc-label:#287b5b;}
+  #loanSummary,#tilgungSummary,#tilgungPerLoanSummary{--cc-bg:linear-gradient(145deg,#f2f7ff,#e2ecff);}
+  #fuelSummary{--cc-bg:linear-gradient(145deg,#fff8ed,#ffedd3);--cc-label:#946222;}
+  #fixedSummary .combined-bookings-hero>div{min-width:0;padding:11px 8px;border-radius:13px;background:rgba(53,189,131,.13);}
+  #fixedSummary .combined-bookings-hero>div+div{background:rgba(58,138,238,.13);}
+  #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(18px,4.4vw,31px);}
+  html[data-theme="dark"] .hero-card{--cc-bg:linear-gradient(145deg,#1c2a3d,#172339);--cc-edge:rgba(129,165,218,.20);--cc-tile:rgba(75,110,163,.16);--cc-label:#b5c9e8;box-shadow:0 6px 20px rgba(0,0,0,.17);}
+  html[data-theme="dark"] #invoiceSummary{--cc-bg:linear-gradient(145deg,#38254f,#2a2043);--cc-label:#dbc1fa;}
+  html[data-theme="dark"] #fixedSummary{--cc-bg:linear-gradient(145deg,#172b32,#162947);}
+  html[data-theme="dark"] #vcSummary{--cc-bg:linear-gradient(145deg,#4a2536,#351f31);--cc-label:#ffc3d2;}
+  html[data-theme="dark"] #potSummary{--cc-bg:linear-gradient(145deg,#163c32,#142d2c);--cc-label:#a6ebc8;}
+  html[data-theme="dark"] #loanSummary,html[data-theme="dark"] #tilgungSummary,html[data-theme="dark"] #tilgungPerLoanSummary{--cc-bg:linear-gradient(145deg,#1b2f50,#17233d);}
+  html[data-theme="dark"] #fuelSummary{--cc-bg:linear-gradient(145deg,#45311f,#302820);--cc-label:#ffd39c;}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div{background:rgba(0,145,93,.24);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div+div{background:rgba(18,111,217,.25);}
   .combined-bookings-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;}
   .combined-bookings-hero .hero-card-value{font-size:clamp(19px,5vw,38px);white-space:nowrap;letter-spacing:-.035em;}
   .combined-bookings-hero .hero-card-label{font-size:13px;margin-bottom:8px;}
