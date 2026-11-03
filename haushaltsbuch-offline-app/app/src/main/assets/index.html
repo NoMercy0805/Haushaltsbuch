@@ -366,6 +366,33 @@
   .ledger-row:last-child{border-bottom:none;}
   .row-desc{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1;}
   .row-icon{width:30px;height:30px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;}
+  /* Original Card-Clean-Vorschau: Symbol links, Hauptwert rechts, Details als Kacheln. */
+  .cc-hero-heading{display:flex;align-items:center;gap:13px;min-width:0;}
+  .cc-hero-icon{width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:14px;color:var(--cc-icon,#427ed4);background:var(--cc-icon-bg,rgba(70,137,235,.14));}
+  .cc-hero-title{min-width:0;flex:1;}
+  .cc-hero-title .hero-card-value{margin-bottom:12px;font-size:clamp(24px,6.8vw,34px);overflow-wrap:anywhere;}
+  .cc-hero-mini{border-radius:11px;padding:8px 9px;background:var(--cc-tile,rgba(255,255,255,.45));border:1px solid var(--cc-edge,rgba(75,118,184,.16));margin-top:10px;}
+  .cc-hero-mini .hero-card-sub-label{margin:0 0 3px!important;}
+  .cc-hero-mini .hero-card-sub-value{font-size:clamp(13px,3.6vw,18px);}
+  #fixedSummary .combined-bookings-hero>div{display:flex;flex-direction:column;align-items:flex-start;}
+  #fixedSummary .combined-bookings-hero .cc-hero-icon{width:37px;height:37px;border-radius:11px;margin-bottom:8px;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini{width:100%;box-sizing:border-box;margin-top:auto;}
+  #fixedSummary .combined-bookings-hero .hero-card-value{white-space:normal;overflow-wrap:anywhere;}
+  #fixedSummary .combined-bookings-hero .hero-card-label{min-height:30px;}
+  #fixedSummary .combined-bookings-hero .hero-card-value{margin-bottom:10px;}
+  #fixedSummary .combined-bookings-hero>div:first-child{--cc-icon:#16895f;--cc-icon-bg:rgba(40,190,125,.17);}
+  #fixedSummary .combined-bookings-hero>div:last-child{--cc-icon:#287bd4;--cc-icon-bg:rgba(58,138,238,.16);}
+  #invoiceSummary{--cc-icon:#9551d1;--cc-icon-bg:rgba(171,94,237,.17);}
+  #vcSummary{--cc-icon:#d84f78;--cc-icon-bg:rgba(232,77,116,.15);}
+  #potSummary{--cc-icon:#19885f;--cc-icon-bg:rgba(44,189,126,.17);}
+  #fuelSummary{--cc-icon:#ad731d;--cc-icon-bg:rgba(235,165,66,.18);}
+  html[data-theme="dark"] .cc-hero-icon{color:var(--cc-icon,#9ac3ff);background:var(--cc-icon-bg,rgba(80,143,233,.25));}
+  html[data-theme="dark"] #invoiceSummary{--cc-icon:#d5a4ff;--cc-icon-bg:rgba(171,94,237,.24);}
+  html[data-theme="dark"] #vcSummary{--cc-icon:#ff9fbc;--cc-icon-bg:rgba(232,77,116,.23);}
+  html[data-theme="dark"] #potSummary{--cc-icon:#8be7b7;--cc-icon-bg:rgba(44,189,126,.23);}
+  html[data-theme="dark"] #fuelSummary{--cc-icon:#ffd08a;--cc-icon-bg:rgba(235,165,66,.23);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div:first-child{--cc-icon:#70e8b2;--cc-icon-bg:rgba(40,190,125,.22);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div:last-child{--cc-icon:#9ac9ff;--cc-icon-bg:rgba(58,138,238,.24);}
   /* Card Clean hero styling, light and dark. */
   .hero-card{position:relative;overflow:hidden;border:1px solid var(--cc-edge,rgba(75,118,184,.17));background:var(--cc-bg,linear-gradient(145deg,#f3f8ff,#e4efff));box-shadow:0 5px 18px rgba(21,40,78,.09);}
   .hero-card .hero-card-label,.hero-card .hero-card-sub-label{color:var(--cc-label,#45638a)!important;}
@@ -3470,6 +3497,67 @@ var nativeStorage = {
     return html;
   }
 
+  /* Card Clean: einheitliche Symbol-/Kachelstruktur fuer bestehende Hero-Karten. */
+  function applyCardCleanHeroLayout(){
+    var icons = {
+      invoiceSummary:'<path d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5M9 14l2 2 4-4"/>',
+      vcSummary:'<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M16 15h2"/>',
+      potSummary:'<path d="M5 10a7 7 0 0 1 13-2l3 1v7l-3 1-2 3h-3l-1-2h-3l-1 2H5l-1-4a6 6 0 0 1 1-6z"/><circle cx="15" cy="11" r="1"/>',
+      loanSummary:'<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>',
+      tilgungSummary:'<path d="M3 17l6-6 4 4 8-9M15 6h6v6"/>',
+      fuelSummary:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M3 21h14M6 7h8v6H6zM16 10h2l3 3v5a2 2 0 0 1-4 0v-3"/>'
+    };
+    function svg(paths){
+      return '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
+    }
+    Object.keys(icons).forEach(function(id){
+      var card=document.getElementById(id);
+      if(!card || card.querySelector('.cc-hero-heading')) return;
+      var label=card.querySelector('.hero-card-label');
+      var value=card.querySelector('.hero-card-value');
+      if(!label || !value) return;
+      var heading=document.createElement('div');
+      heading.className='cc-hero-heading';
+      var icon=document.createElement('span');
+      icon.className='cc-hero-icon';
+      icon.innerHTML=svg(icons[id]);
+      var text=document.createElement('div');
+      text.className='cc-hero-title';
+      label.parentNode.insertBefore(heading,label);
+      heading.appendChild(icon);
+      heading.appendChild(text);
+      text.appendChild(label);
+      text.appendChild(value);
+    });
+    var fixed=document.getElementById('fixedSummary');
+    if(fixed){
+      var columns=fixed.querySelectorAll('.combined-bookings-hero > div');
+      var fixedIcons=[
+        '<path d="M12 20V4M6 10l6-6 6 6"/>',
+        '<path d="M17 3.6l4 4-4 4M3 12.6v-1a4 4 0 0 1 4-4h14M7 20.4l-4-4-4-4M21 11.4v1a4 4 0 0 1-4 4H3"/>'
+      ];
+      Array.prototype.forEach.call(columns,function(col,i){
+        if(col.querySelector('.cc-hero-icon')) return;
+        var label=col.querySelector('.hero-card-label');
+        if(label){
+          var icon=document.createElement('span');
+          icon.className='cc-hero-icon';
+          icon.innerHTML=svg(fixedIcons[i] || fixedIcons[1]);
+          label.parentNode.insertBefore(icon,label);
+        }
+        var sub=col.querySelector('.hero-card-sub-label');
+        var val=col.querySelector('.hero-card-sub-value');
+        if(sub && val){
+          var tile=document.createElement('div');
+          tile.className='cc-hero-mini';
+          sub.parentNode.insertBefore(tile,sub);
+          tile.appendChild(sub);
+          tile.appendChild(val);
+        }
+      });
+    }
+  }
+
   function renderAll(){
     renderUebersicht();
     renderVariabel();
@@ -3479,6 +3567,7 @@ var nativeStorage = {
     renderDiagramme();
     renderFuelTracker();
     renderBeta();
+    applyCardCleanHeroLayout();
   }
 
   /* ---------- Events ---------- */
