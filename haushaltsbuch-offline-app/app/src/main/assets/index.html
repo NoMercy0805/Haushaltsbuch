@@ -899,6 +899,71 @@
     -webkit-mask-image:linear-gradient(140deg,#000 0%,#000 45%,transparent 100%)!important;
     mask-image:linear-gradient(140deg,#000 0%,#000 45%,transparent 100%)!important;
   }
+
+  /* Kontostand redesign, approved light/dark preview. Scope to the existing beta ledger only. */
+  #betaList{padding:8px 10px 115px!important;}
+  #betaList .beta-day-group{
+    margin:0 0 12px!important;border-radius:17px!important;overflow:hidden!important;
+    background:#fff!important;border:1px solid #d9dfe9!important;
+    box-shadow:0 3px 11px rgba(24,35,55,.13)!important;
+  }
+  #betaList .beta-day-header{
+    background:#fff!important;padding:13px 14px!important;gap:12px!important;
+    min-height:65px!important;color:#171c27!important;
+  }
+  #betaList .beta-day-box{
+    width:46px!important;height:46px!important;border:2px solid #aeb8c9!important;
+    border-radius:11px!important;color:#1b2330!important;font-size:24px!important;
+    font-weight:800!important;background:transparent!important;
+  }
+  #betaList .beta-day-title{
+    text-transform:none!important;letter-spacing:0!important;font-size:19px!important;
+    line-height:1.18!important;font-weight:800!important;color:#161b24!important;
+  }
+  #betaList .beta-day-sub{font-size:13px!important;color:#4f5969!important;margin-top:2px!important;}
+  #betaList .beta-day-total{font-size:21px!important;font-weight:800!important;white-space:nowrap!important;}
+  #betaList .beta-entry-row{
+    min-height:54px!important;padding:12px 14px!important;gap:12px!important;
+    background:#fff!important;border-top:1px solid #dbe1ea!important;
+  }
+  #betaList .beta-entry-icon{width:29px!important;height:29px!important;border:2px solid #9da9ba!important;}
+  #betaList .beta-entry-icon.reconciled{background:#2589ef!important;border-color:#2589ef!important;}
+  #betaList .beta-entry-name{font-size:16px!important;font-weight:750!important;color:#161b24!important;}
+  #betaList .beta-entry-sub{font-size:12px!important;color:#586576!important;}
+  #betaList .beta-entry-amount{font-size:18px!important;font-weight:800!important;}
+  #betaFilterRow{gap:8px!important;}
+  #betaFilterRow .beta-filter-chip{border-radius:24px!important;min-height:44px!important;font-size:13px!important;}
+  #betaFilterRow .beta-filter-chip.active{background:#216bd3!important;color:white!important;box-shadow:none!important;}
+  #betaBalanceBar{
+    left:8px!important;right:8px!important;width:auto!important;border-radius:12px!important;
+    padding:13px 16px!important;min-height:59px!important;
+    background:#ef343d!important;border:1px solid rgba(255,255,255,.22)!important;
+  }
+  #betaBalanceBar.positive{background:var(--savings)!important;}
+  #betaBalanceBar .beta-balance-label{font-size:12px!important;}
+  #betaBalanceBar .beta-balance-value{font-size:23px!important;white-space:nowrap!important;}
+  #betaBalanceBar .beta-balance-range{font-size:11px!important;line-height:1.3!important;}
+  html[data-theme="dark"] #betaList .beta-day-group{
+    background:#262d36!important;border-color:#667280!important;
+    box-shadow:0 3px 12px rgba(0,0,0,.22)!important;
+  }
+  html[data-theme="dark"] #betaList .beta-day-header,
+  html[data-theme="dark"] #betaList .beta-entry-row{background:#262d36!important;color:#f5f7fa!important;}
+  html[data-theme="dark"] #betaList .beta-entry-row{border-top-color:#48525e!important;}
+  html[data-theme="dark"] #betaList .beta-day-box{border-color:#a5bdd6!important;color:#f5f7fa!important;}
+  html[data-theme="dark"] #betaList .beta-day-title,
+  html[data-theme="dark"] #betaList .beta-entry-name{color:#f7f8fa!important;}
+  html[data-theme="dark"] #betaList .beta-day-sub,
+  html[data-theme="dark"] #betaList .beta-entry-sub{color:#c4ccd7!important;}
+  html[data-theme="dark"] #betaFilterRow .beta-filter-chip.active{
+    background:#13375c!important;color:#bce7ff!important;border:2px solid #64c6ff!important;
+  }
+  @media(max-width:370px){
+    #betaList .beta-day-title{font-size:17px!important;}
+    #betaList .beta-day-total{font-size:18px!important;}
+    #betaList .beta-entry-name{font-size:15px!important;}
+    #betaList .beta-entry-amount{font-size:16px!important;}
+  }
 </style>
 </head>
 <body>
@@ -6436,8 +6501,8 @@ var nativeStorage = {
                   '<div class="beta-day-header">'+
                     '<span class="beta-day-box">'+String(d.getDate()).padStart(2,'0')+'</span>'+
                     '<span class="beta-day-text">'+
-                      '<div class="beta-day-title">Tagessaldo</div>'+
-                      '<div class="beta-day-sub">'+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear()+' ('+WEEKDAY_NAMES[d.getDay()]+')</div>'+
+                      '<div class="beta-day-title">'+WEEKDAY_NAMES[d.getDay()]+'</div>'+
+                      '<div class="beta-day-sub">'+MONTH_NAMES[d.getMonth()]+' '+d.getFullYear()</div>'+
                     '</span>'+
                     '<span class="beta-day-total" style="color:'+(dayTotal>=0?'var(--savings)':'var(--expense)')+';">'+(dayTotal>=0?'+':'')+fmtEUR(dayTotal)+'</span>'+
                   '</div>';
