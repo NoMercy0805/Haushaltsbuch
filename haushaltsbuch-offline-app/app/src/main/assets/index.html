@@ -796,6 +796,52 @@
     #fixedSummary .combined-bookings-hero>div{padding:9px 7px!important;column-gap:5px!important;}
     #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(17px,4.7vw,22px)!important;}
   }
+  /* Card Clean visual reference: saturated circular icons, corner splash and illustrated detail tiles. */
+  .hero-card{isolation:isolate;}
+  .hero-card::before{content:""!important;position:absolute!important;z-index:0!important;pointer-events:none!important;top:-88px!important;right:-66px!important;width:215px!important;height:185px!important;border-radius:38% 0 48% 62%!important;transform:rotate(-24deg)!important;background:var(--cc-splash,linear-gradient(135deg,rgba(255,255,255,.05),rgba(126,170,255,.3)))!important;}
+  .hero-card::after{content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(115deg,rgba(255,255,255,.075),transparent 65%)!important;}
+  .hero-card>*{position:relative;z-index:1;}
+  .hero-card:not(#fixedSummary) .cc-hero-icon{
+    width:60px!important;height:60px!important;border-radius:22px!important;
+    background:var(--cc-icon-gradient,linear-gradient(145deg,#7ac0ff,#386dd6))!important;
+    color:#fff!important;box-shadow:0 6px 14px rgba(0,0,0,.13)!important;
+  }
+  .hero-card:not(#fixedSummary) .cc-hero-icon svg{width:30px!important;height:30px!important;stroke-width:2.1!important;}
+  .hero-card:not(#fixedSummary) .cc-hero-heading{grid-template-columns:60px minmax(0,1fr)!important;column-gap:15px!important;margin-bottom:17px!important;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div{display:flex!important;align-items:center!important;gap:10px!important;padding:13px 11px!important;background:var(--cc-detail,rgba(255,255,255,.16))!important;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div::before{content:"";display:block;flex:0 0 28px;width:28px;height:28px;background:var(--cc-detail-icon,#c48cf5);mask:var(--cc-detail-mask,none) center/contain no-repeat;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div:has(.hero-card-sub-label){flex-wrap:wrap;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div .hero-card-sub-label{flex:1 1 calc(100% - 40px);margin:0!important;}
+  .hero-card:not(#fixedSummary) .hero-card-sub-row>div .hero-card-sub-value{margin-left:38px;}
+  #invoiceSummary{--cc-bg:linear-gradient(120deg,#f5e6ff,#eed9fc)!important;--cc-splash:linear-gradient(140deg,#e6c1ff,#c88af4);--cc-icon-gradient:linear-gradient(135deg,#ce90f9,#9144d8);--cc-detail:rgba(218,174,247,.25);--cc-detail-icon:#a65adf;}
+  #vcSummary{--cc-bg:linear-gradient(120deg,#fff0f3,#ffdbe5)!important;--cc-splash:linear-gradient(140deg,#ffb5ca,#ff7799);--cc-icon-gradient:linear-gradient(135deg,#ff8eaa,#f03661);--cc-detail:rgba(250,154,183,.20);--cc-detail-icon:#e54f78;}
+  #potSummary{--cc-bg:linear-gradient(120deg,#e9fff5,#d6f7e6)!important;--cc-splash:linear-gradient(140deg,#b6f5d9,#71dba8);--cc-icon-gradient:linear-gradient(135deg,#83e6ba,#12a86b);--cc-detail:rgba(102,205,157,.17);}
+  #loanSummary,#tilgungSummary{--cc-bg:linear-gradient(120deg,#edf4ff,#dbeaff)!important;--cc-splash:linear-gradient(140deg,#c3ddff,#82b7ff);--cc-icon-gradient:linear-gradient(135deg,#8bc7ff,#3175d6);--cc-detail:rgba(122,170,236,.17);}
+  #fuelSummary{--cc-bg:linear-gradient(120deg,#fff8e9,#ffe8c5)!important;--cc-splash:linear-gradient(140deg,#ffe2aa,#f5b34e);--cc-icon-gradient:linear-gradient(135deg,#ffd178,#e58b23);--cc-detail:rgba(238,171,87,.18);}
+  #fixedSummary{--cc-bg:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;}
+  #fixedSummary::before,#fixedSummary::after{display:none!important;}
+  #fixedSummary .combined-bookings-hero>div{position:relative!important;overflow:hidden!important;isolation:isolate!important;min-height:0!important;border-radius:20px!important;padding:14px 11px!important;box-shadow:0 5px 16px rgba(0,0,0,.13)!important;}
+  #fixedSummary .combined-bookings-hero>div::before{content:"";position:absolute;z-index:-1;top:-58px;right:-55px;width:150px;height:140px;border-radius:40% 0 55% 60%;transform:rotate(-25deg);background:var(--cc-splash)!important;}
+  #fixedSummary .combined-bookings-hero>div:first-child{background:linear-gradient(130deg,#e5fff2,#d4f8e6)!important;--cc-splash:linear-gradient(140deg,#c3f9dd,#8ee9bd);--cc-icon-gradient:linear-gradient(135deg,#85e5b9,#10ae72);}
+  #fixedSummary .combined-bookings-hero>div:last-child{background:linear-gradient(130deg,#e8f5ff,#d5eaff)!important;--cc-splash:linear-gradient(140deg,#bce2ff,#7dbff5);--cc-icon-gradient:linear-gradient(135deg,#89d0ff,#2079d3);}
+  #fixedSummary .combined-bookings-hero .cc-hero-icon{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--cc-icon-gradient)!important;color:#fff!important;box-shadow:0 4px 11px rgba(0,0,0,.12)!important;}
+  #fixedSummary .combined-bookings-hero .cc-hero-icon svg{width:25px!important;height:25px!important;}
+  #fixedSummary .combined-bookings-hero>div{grid-template-columns:44px minmax(0,1fr)!important;grid-template-rows:44px auto auto!important;}
+  #fixedSummary .combined-bookings-hero .hero-card-label{font-size:clamp(11px,2.8vw,14px)!important;color:#132d3e!important;}
+  #fixedSummary .combined-bookings-hero .hero-card-value{font-size:clamp(19px,4.5vw,30px)!important;color:#101b2b!important;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini{background:rgba(255,255,255,.34)!important;border:1px solid rgba(255,255,255,.27)!important;min-height:52px!important;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-label{color:#35546c!important;}
+  #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-value{color:#152e42!important;}
+  html[data-theme="dark"] #invoiceSummary{--cc-bg:linear-gradient(120deg,#392255,#281a43)!important;--cc-splash:linear-gradient(140deg,#9046ce,#55267f);--cc-detail:rgba(161,96,213,.18);}
+  html[data-theme="dark"] #vcSummary{--cc-bg:linear-gradient(120deg,#532539,#361e32)!important;--cc-splash:linear-gradient(140deg,#e74470,#902a4f);--cc-detail:rgba(226,81,121,.17);}
+  html[data-theme="dark"] #potSummary{--cc-bg:linear-gradient(120deg,#104b38,#123329)!important;--cc-splash:linear-gradient(140deg,#1ebf77,#126a50);--cc-detail:rgba(36,169,105,.19);}
+  html[data-theme="dark"] #loanSummary,html[data-theme="dark"] #tilgungSummary{--cc-bg:linear-gradient(120deg,#173c69,#15243d)!important;--cc-splash:linear-gradient(140deg,#2178d6,#194c8e);--cc-detail:rgba(53,124,209,.20);}
+  html[data-theme="dark"] #fuelSummary{--cc-bg:linear-gradient(120deg,#53351f,#34251c)!important;--cc-splash:linear-gradient(140deg,#bd7825,#744318);--cc-detail:rgba(206,133,51,.19);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div:first-child{background:linear-gradient(130deg,#075039,#07352d)!important;--cc-splash:linear-gradient(140deg,#139c63,#0a6949);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero>div:last-child{background:linear-gradient(130deg,#134e8b,#0d2c59)!important;--cc-splash:linear-gradient(140deg,#2075cb,#125196);}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero .hero-card-label,html[data-theme="dark"] #fixedSummary .combined-bookings-hero .hero-card-value,html[data-theme="dark"] #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-value{color:#fff!important;}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero .cc-hero-mini .hero-card-sub-label{color:#d5e6f4!important;}
+  html[data-theme="dark"] #fixedSummary .combined-bookings-hero .cc-hero-mini{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.07)!important;}
 </style>
 </head>
 <body>
@@ -3603,7 +3649,7 @@ var nativeStorage = {
   function applyCardCleanHeroLayout(){
     var icons = {
       invoiceSummary:'<path d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5M9 14l2 2 4-4"/>',
-      vcSummary:'<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M16 15h2"/>',
+      vcSummary:'<circle cx="9" cy="20" r="1"/><circle cx="19" cy="20" r="1"/><path d="M2 3h2l3.4 12.4a2 2 0 0 0 2 1.6h9.4a2 2 0 0 0 2-1.6L23 7H6"/>',
       potSummary:'<path d="M5 10a7 7 0 0 1 13-2l3 1v7l-3 1-2 3h-3l-1-2h-3l-1 2H5l-1-4a6 6 0 0 1 1-6z"/><circle cx="15" cy="11" r="1"/>',
       loanSummary:'<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>',
       tilgungSummary:'<path d="M3 17l6-6 4 4 8-9M15 6h6v6"/>',
