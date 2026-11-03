@@ -964,6 +964,23 @@
     #betaList .beta-entry-name{font-size:15px!important;}
     #betaList .beta-entry-amount{font-size:15px!important;}
   }
+
+  /* Kontostand: kompakte Saldo-Leiste mit halb ueberlappendem Plus. */
+  #betaBalanceBar{
+    box-sizing:border-box!important;
+    min-height:62px!important;
+    padding:9px 82px 9px 14px!important;
+    gap:9px!important;
+    border-radius:12px!important;
+  }
+  #betaBalanceBar .beta-balance-label{font-size:12px!important;white-space:nowrap!important;}
+  #betaBalanceBar .beta-balance-value{font-size:clamp(19px,5.2vw,24px)!important;min-width:0!important;}
+  #betaBalanceBar .beta-balance-range{font-size:10px!important;flex-shrink:0!important;white-space:nowrap!important;}
+  @media(max-width:380px){
+    #betaBalanceBar{padding-right:70px!important;padding-left:10px!important;gap:6px!important;}
+    #betaBalanceBar .beta-balance-label{font-size:11px!important;}
+    #betaBalanceBar .beta-balance-range{font-size:9px!important;}
+  }
 </style>
 </head>
 <body>
@@ -4243,9 +4260,18 @@ var nativeStorage = {
     var speedDial = document.getElementById('fabSpeedDial');
     if(bar && navEl){
       bar.style.bottom = navEl.offsetHeight + 'px';
-      var extra = bar.offsetHeight + 'px';
-      if(fab) fab.style.setProperty('--beta-bar-extra', extra);
-      if(speedDial) speedDial.style.setProperty('--beta-bar-extra', extra);
+      // Kontostand: FAB-Mittelpunkt auf die obere Kante der Saldo-Leiste setzen.
+      // So ragt genau die untere Haelfte des Plus-Kreises in die Leiste.
+      var fabSize = fab ? fab.offsetHeight : 60;
+      var fabBottom = navEl.offsetHeight + bar.offsetHeight - fabSize / 2;
+      if(fab){
+        fab.style.bottom = fabBottom + 'px';
+        fab.style.removeProperty('--beta-bar-extra');
+      }
+      if(speedDial){
+        speedDial.style.bottom = (fabBottom + fabSize + 16) + 'px';
+        speedDial.style.removeProperty('--beta-bar-extra');
+      }
     }
   }
 
@@ -4295,8 +4321,8 @@ var nativeStorage = {
     } else {
       var fabEl = document.getElementById('addEntryFab');
       var dialEl = document.getElementById('fabSpeedDial');
-      if(fabEl) fabEl.style.removeProperty('--beta-bar-extra');
-      if(dialEl) dialEl.style.removeProperty('--beta-bar-extra');
+      if(fabEl){ fabEl.style.removeProperty('--beta-bar-extra'); fabEl.style.removeProperty('bottom'); }
+      if(dialEl){ dialEl.style.removeProperty('--beta-bar-extra'); dialEl.style.removeProperty('bottom'); }
     }
     var effectiveTabName = tabName;
     if(tabName === 'kredite') effectiveTabName = activeKreditSubView;
