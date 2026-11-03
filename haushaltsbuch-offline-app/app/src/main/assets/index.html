@@ -4329,6 +4329,15 @@ var nativeStorage = {
     else if(tabName === 'buchungen') effectiveTabName = activeBuchungenSubView;
     else if(tabName === 'variabel') effectiveTabName = activeVariabelSubView;
     updateFabVisibilityForTab(effectiveTabName);
+    // Nur die drei normalen Haupttabs beim Wechsel an den Seitenanfang setzen.
+    // Kontostand behaelt sein bestehendes automatisches Scrollen zum Buchungstag.
+    if(tabName === 'buchungen' || tabName === 'variabel' || tabName === 'kredite'){
+      window.scrollTo({top:0, behavior:'instant'});
+      requestAnimationFrame(function(){
+        var active = document.getElementById('tab-'+tabName);
+        if(active && active.classList.contains('active')) window.scrollTo({top:0, behavior:'instant'});
+      });
+    }
   }
 
   function switchKreditSubView(view){
