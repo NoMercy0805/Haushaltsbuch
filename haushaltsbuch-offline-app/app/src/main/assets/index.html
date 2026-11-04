@@ -981,6 +981,16 @@
     #betaBalanceBar .beta-balance-label{font-size:11px!important;}
     #betaBalanceBar .beta-balance-range{font-size:9px!important;}
   }
+
+  /* Beispiel 1: Plus direkt im Kontostand-Balken statt als schwebender Kreis. */
+  #betaBalanceBar{padding:9px 12px 9px 14px!important;gap:8px!important;}
+  #betaBalanceBar .beta-balance-value{flex:1!important;}
+  #betaBalanceBar .beta-balance-range{margin-left:auto!important;}
+  #betaBalanceAdd{width:48px;height:46px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;align-self:stretch;border:0;border-left:1px solid rgba(255,255,255,.55);border-radius:0;background:transparent;color:white;cursor:pointer;margin-left:4px;padding-left:10px;}
+  #betaBalanceAdd svg{width:27px;height:27px;transition:transform .25s var(--ios-ease);}
+  #betaBalanceAdd.is-open svg{transform:rotate(45deg);}
+  #addEntryFab.beta-integrated-hidden{display:none!important;}
+  @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceAdd{width:38px;flex-basis:38px;margin-left:2px;padding-left:7px;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
 </style>
 </head>
 <body>
@@ -1206,6 +1216,7 @@
       <span class="beta-balance-label">Kontostand</span>
       <span class="beta-balance-value" id="betaBalanceValue"></span>
       <span class="beta-balance-range" id="betaBalanceRange"></span>
+      <button type="button" id="betaBalanceAdd" aria-label="Buchung hinzufügen"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M4 12h16"/></svg></button>
     </div>
 
 
@@ -4239,7 +4250,10 @@ var nativeStorage = {
     var fab = document.getElementById('addEntryFab');
     var speedDial = document.getElementById('fabSpeedDial');
     var hideFab = FAB_HIDDEN_TABS.indexOf(effectiveTabName) !== -1;
-    if(fab) fab.classList.toggle('fab-tab-hidden', hideFab);
+    if(fab){
+      fab.classList.toggle('fab-tab-hidden', hideFab);
+      fab.classList.toggle('beta-integrated-hidden', effectiveTabName === 'beta');
+    }
     if(speedDial) speedDial.classList.toggle('fab-tab-hidden', hideFab);
   }
 
@@ -4260,16 +4274,10 @@ var nativeStorage = {
     var speedDial = document.getElementById('fabSpeedDial');
     if(bar && navEl){
       bar.style.bottom = navEl.offsetHeight + 'px';
-      // Kontostand: FAB-Mittelpunkt auf die obere Kante der Saldo-Leiste setzen.
-      // So ragt genau die untere Haelfte des Plus-Kreises in die Leiste.
-      var fabSize = fab ? fab.offsetHeight : 60;
-      var fabBottom = navEl.offsetHeight + bar.offsetHeight - fabSize / 2;
-      if(fab){
-        fab.style.bottom = fabBottom + 'px';
-        fab.style.removeProperty('--beta-bar-extra');
-      }
+      // Das Plus ist im Kontostand direkt in die Saldo-Leiste integriert.
+      if(fab){ fab.style.removeProperty('bottom'); fab.style.removeProperty('--beta-bar-extra'); }
       if(speedDial){
-        speedDial.style.bottom = (fabBottom + fabSize + 16) + 'px';
+        speedDial.style.bottom = (navEl.offsetHeight + bar.offsetHeight + 12) + 'px';
         speedDial.style.removeProperty('--beta-bar-extra');
       }
     }
@@ -4540,6 +4548,12 @@ var nativeStorage = {
       }
     }
 
+    var integratedAdd = document.getElementById('betaBalanceAdd');
+    if(integratedAdd){
+      integratedAdd.addEventListener('click', function(){ fab.click(); });
+      new MutationObserver(function(){ integratedAdd.classList.toggle('is-open', fab.classList.contains('fab-open')); })
+        .observe(fab,{attributes:true,attributeFilter:['class']});
+    }
     fab.addEventListener('click', function(){
       var tab = getActiveTab();
       var directFormId = tab ? singleOptionFormByTab[tab] : null;
