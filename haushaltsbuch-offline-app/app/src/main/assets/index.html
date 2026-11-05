@@ -987,6 +987,23 @@
   #betaBalanceAdd{width:48px;height:46px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;align-self:stretch;border:0;border-left:1px solid rgba(255,255,255,.55);border-radius:0;background:transparent;color:white;cursor:pointer;margin-left:4px;padding-left:10px;}
   #betaBalanceAdd svg{width:27px;height:27px;transition:transform .25s var(--ios-ease);}
   #betaBalanceAdd.is-open svg{transform:rotate(45deg);}
+  /* Dezentes Tipp-Feedback fuer das Plus im Kontostand-Balken. */
+  #betaBalanceAdd{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease;}
+  #betaBalanceAdd:active{background:rgba(255,255,255,.16);}
+  #betaBalanceAdd.tap-feedback{animation:betaBalanceAddTap .3s ease-out;}
+  #betaBalanceAdd.tap-feedback svg{animation:betaBalancePlusTap .3s ease-out;}
+  @keyframes betaBalanceAddTap{
+    0%{background:rgba(255,255,255,.26);}
+    100%{background:transparent;}
+  }
+  @keyframes betaBalancePlusTap{
+    0%{scale:.8;}
+    55%{scale:1.12;}
+    100%{scale:1;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    #betaBalanceAdd.tap-feedback,#betaBalanceAdd.tap-feedback svg{animation:none;}
+  }
   #addEntryFab.beta-integrated-hidden{display:none!important;}
   @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceAdd{width:38px;flex-basis:38px;margin-left:2px;padding-left:7px;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
 </style>
@@ -4548,7 +4565,15 @@ var nativeStorage = {
 
     var integratedAdd = document.getElementById('betaBalanceAdd');
     if(integratedAdd){
-      integratedAdd.addEventListener('click', function(){ fab.click(); });
+      integratedAdd.addEventListener('click', function(){
+        integratedAdd.classList.remove('tap-feedback');
+        void integratedAdd.offsetWidth; // Animation auch bei schnellen aufeinanderfolgenden Tipps neu starten
+        integratedAdd.classList.add('tap-feedback');
+        fab.click();
+      });
+      integratedAdd.addEventListener('animationend', function(event){
+        if(event.animationName === 'betaBalanceAddTap') integratedAdd.classList.remove('tap-feedback');
+      });
       new MutationObserver(function(){ integratedAdd.classList.toggle('is-open', fab.classList.contains('fab-open')); })
         .observe(fab,{attributes:true,attributeFilter:['class']});
     }
