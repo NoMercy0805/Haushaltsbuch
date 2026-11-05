@@ -1006,6 +1006,13 @@
   }
   #addEntryFab.beta-integrated-hidden{display:none!important;}
   @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceAdd{width:38px;flex-basis:38px;margin-left:2px;padding-left:7px;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
+  /* Zwei Kontostaende mit dem unveraenderten Plus mittig. */
+  #betaBalanceBar{display:flex;align-items:center;justify-content:space-between;gap:3px!important;padding:9px 10px!important;}
+  #betaBalanceBar .beta-balance-side{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;}
+  #betaBalanceBar .beta-balance-side .beta-balance-value{font-size:clamp(14px,3.8vw,22px)!important;line-height:1.15;white-space:nowrap!important;letter-spacing:-.035em;flex:none!important;}
+  #betaBalanceBar .beta-balance-side .beta-balance-label{font-size:clamp(10px,2.7vw,12px)!important;white-space:normal!important;line-height:1.15;opacity:.95;}
+  #betaBalanceAdd{order:0;flex:0 0 48px;width:48px;height:48px;align-self:center;margin:0;padding:0;border:0;border-left:1px solid rgba(255,255,255,.45);border-right:1px solid rgba(255,255,255,.45);}
+  @media(max-width:380px){#betaBalanceBar{padding:9px 6px!important;}#betaBalanceAdd{flex-basis:42px;width:42px;height:46px;}}
 </style>
 </head>
 <body>
@@ -1228,10 +1235,15 @@
 
 
     <div id="betaBalanceBar" style="display:none;">
-      <span class="beta-balance-label">Kontostand</span>
-      <span class="beta-balance-value" id="betaBalanceValue"></span>
-      <span class="beta-balance-range" id="betaBalanceRange"></span>
+      <div class="beta-balance-side">
+        <span class="beta-balance-value" id="betaBalanceValue"></span>
+        <span class="beta-balance-label">Mit offenen Buchungen</span>
+      </div>
       <button type="button" id="betaBalanceAdd" aria-label="Buchung hinzufügen"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M4 12h16"/></svg></button>
+      <div class="beta-balance-side">
+        <span class="beta-balance-value" id="betaClearedBalanceValue"></span>
+        <span class="beta-balance-label">Abgeglichen</span>
+      </div>
     </div>
 
 
@@ -6518,8 +6530,24 @@ var nativeStorage = {
 
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
 
+  function reconcilePreviousBetaMonths(){
+    // Vergangene Kalendermonate werden beim Anzeigen automatisch abgeschlossen.
+    // Eintraege bleiben vollstaendig erhalten; nur das Abgleich-Flag wird gesetzt.
+    var today = new Date();
+    var currentMonthStart = String(today.getFullYear())+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
+    var changed = false;
+    state.betaEntries.forEach(function(entry){
+      if(entry.date && entry.date < currentMonthStart && !entry.reconciled){
+        entry.reconciled = true;
+        changed = true;
+      }
+    });
+    if(changed) saveState();
+  }
+
   function renderBeta(){
     generateBetaRecurringOccurrences();
+    reconcilePreviousBetaMonths();
     renderBetaTemplatesList();
     renderBetaTitleSuggestionsSettings();
     document.getElementById('betaMonthLabel').textContent = MONTH_NAMES[betaViewMonth];
@@ -6602,6 +6630,11 @@ var nativeStorage = {
     var barEl = document.getElementById('betaBalanceBar');
     barEl.classList.toggle('positive', balance >= 0);
     document.getElementById('betaBalanceValue').textContent = fmtEUR(balance);
+    // Abgeglichener Kontostand ohne noch offene Buchungen.
+    var clearedBalance = state.betaEntries.filter(function(e){
+      return e.reconciled && parseISO(e.date) <= cutoff;
+    }).reduce(function(sum,e){ return sum + betaTypeSign(e.type)*e.amount; }, 0);
+    document.getElementById('betaClearedBalanceValue').textContent = fmtEUR(clearedBalance);
     if(window.AndroidBridge && typeof window.AndroidBridge.updateBetaWidgetBalance === 'function'){
       var todayForWidget = new Date();
       var widgetCutoff = new Date(todayForWidget.getFullYear(), todayForWidget.getMonth()+1, 0, 23, 59, 59);
@@ -6609,11 +6642,6 @@ var nativeStorage = {
         .reduce(function(s,e){ return s + betaTypeSign(e.type)*e.amount; }, 0);
       try{ window.AndroidBridge.updateBetaWidgetBalance((widgetBalance>=0?'':'-')+fmtEUR(Math.abs(widgetBalance)), widgetBalance>=0); }catch(e){}
     }
-    var firstOfMonth = new Date(betaViewYear, betaViewMonth, 1);
-    var lastOfMonth = new Date(betaViewYear, betaViewMonth+1, 0);
-    function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); }
-    document.getElementById('betaBalanceRange').innerHTML = fmtShort(firstOfMonth)+'<br>- '+fmtShort(lastOfMonth);
-
     // Bekannte Titel merken (einmalig je Titel, neuester zuerst) - werden
     // beim Tippen im Titel-Feld gefiltert und als eigene Liste angezeigt.
     // Ausgeblendete Titel (state.betaHiddenTitles) werden dabei uebersprungen.
