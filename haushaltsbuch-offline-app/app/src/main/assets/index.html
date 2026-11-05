@@ -284,9 +284,7 @@
   .summary-card{background:var(--surface);border:none;border-radius:var(--radius);padding:20px 20px;margin-bottom:20px;box-shadow:none;}
   .hero-card{border-radius:16px;padding:22px 20px;margin-bottom:14px;background:var(--hero-blue-grad);}
   .hero-sticky-wrap{
-    position:sticky;
-    top:var(--ledger-header-height, calc(env(safe-area-inset-top, 0px) + 100px));
-    z-index:90;
+    position:relative;
     transition:opacity .2s ease, transform .2s ease;
   }
   .hero-sticky-wrap.keyboard-hidden, #heroCard.keyboard-hidden{
