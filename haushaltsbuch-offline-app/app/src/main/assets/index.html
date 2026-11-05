@@ -1015,6 +1015,64 @@
   @media(max-width:380px){#betaBalanceBar{padding:9px 6px!important;}#betaBalanceAdd{flex-basis:42px;width:42px;height:46px;}}
   /* Nur die rote Flaeche kompakter: Groessen von Plus, Linien und Text bleiben unveraendert. */
   #betaBalanceBar{min-height:0!important;padding-top:0!important;padding-bottom:0!important;}
+
+  /* Gemeinsame Liquid-Glass-Oberflaechen fuer die Navigation und das schwebende Plus.
+     Nur Hintergruende/Schattierungen: bestehende Breiten, Hoehen, Icon- und Textgroessen bleiben erhalten. */
+  .fab-add{
+    background:linear-gradient(145deg,rgba(91,156,255,.42),rgba(91,156,255,.18))!important;
+    border:1px solid rgba(190,219,255,.52)!important;
+    backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);
+    box-shadow:0 7px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.32),inset 0 -1px 0 rgba(42,110,211,.24)!important;
+  }
+  html[data-theme="dark"] .fab-add{
+    background:linear-gradient(145deg,rgba(75,140,239,.49),rgba(29,64,129,.48))!important;
+    border-color:rgba(154,200,255,.42)!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.24)!important;
+  }
+  #buchungenSubNav,#variabelSubNav,#kreditSubNav{
+    background:rgba(255,255,255,.19)!important;
+    border:1px solid rgba(255,255,255,.44)!important;
+    backdrop-filter:blur(16px) saturate(135%)!important;-webkit-backdrop-filter:blur(16px) saturate(135%)!important;
+    box-shadow:0 6px 18px rgba(0,0,0,.09),inset 0 1px 0 rgba(255,255,255,.28);
+  }
+  html[data-theme="dark"] #buchungenSubNav,
+  html[data-theme="dark"] #variabelSubNav,
+  html[data-theme="dark"] #kreditSubNav{
+    background:rgba(38,43,53,.47)!important;
+    border-color:rgba(255,255,255,.17)!important;
+    box-shadow:0 7px 20px rgba(0,0,0,.19),inset 0 1px 0 rgba(255,255,255,.11);
+  }
+  #buchungenSubNav .sub-nav-btn.active,
+  #variabelSubNav .sub-nav-btn.active,
+  #kreditSubNav .sub-nav-btn.active{
+    background:linear-gradient(145deg,rgba(105,165,255,.29),rgba(82,138,233,.12))!important;
+    box-shadow:inset 0 0 0 2px var(--selection-ring),inset 0 1px 0 rgba(255,255,255,.27)!important;
+  }
+  html[data-theme="dark"] #buchungenSubNav .sub-nav-btn.active,
+  html[data-theme="dark"] #variabelSubNav .sub-nav-btn.active,
+  html[data-theme="dark"] #kreditSubNav .sub-nav-btn.active{
+    background:linear-gradient(145deg,rgba(62,109,186,.28),rgba(27,50,92,.39))!important;
+  }
+  /* Monatsnavigation flacher, aber Typografie und Pfeilkreise bleiben unveraendert. */
+  .beta-month-nav{padding-top:5px!important;padding-bottom:5px!important;}
+  /* Auch die bereits gewuenschte Saldo-Leiste auf Glasoptik umstellen.
+     Die zwei Zahlen werden getrennt nach ihrem Vorzeichen eingefaerbt. */
+  #betaBalanceBar,#betaBalanceBar.positive{
+    background:rgba(255,255,255,.18)!important;
+    border:1px solid rgba(255,255,255,.42)!important;
+    backdrop-filter:blur(16px) saturate(140%)!important;-webkit-backdrop-filter:blur(16px) saturate(140%)!important;
+    box-shadow:0 7px 22px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.28)!important;
+  }
+  html[data-theme="dark"] #betaBalanceBar,
+  html[data-theme="dark"] #betaBalanceBar.positive{
+    background:rgba(63,69,80,.52)!important;
+    border-color:rgba(255,255,255,.19)!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.12)!important;
+  }
+  #betaBalanceBar .beta-balance-label{color:var(--ink)!important;}
+  #betaBalanceAdd{color:var(--ink)!important;border-left-color:rgba(145,153,169,.46)!important;border-right-color:rgba(145,153,169,.46)!important;}
+  #betaBalanceBar .beta-balance-value.balance-negative{color:var(--expense)!important;}
+  #betaBalanceBar .beta-balance-value.balance-positive{color:var(--savings)!important;}
 </style>
 </head>
 <body>
@@ -6637,6 +6695,11 @@ var nativeStorage = {
       return e.reconciled && parseISO(e.date) <= cutoff;
     }).reduce(function(sum,e){ return sum + betaTypeSign(e.type)*e.amount; }, 0);
     document.getElementById('betaClearedBalanceValue').textContent = fmtEUR(clearedBalance);
+    [['betaBalanceValue',balance],['betaClearedBalanceValue',clearedBalance]].forEach(function(pair){
+      var valueEl = document.getElementById(pair[0]);
+      valueEl.classList.toggle('balance-negative',pair[1] < 0);
+      valueEl.classList.toggle('balance-positive',pair[1] >= 0);
+    });
     if(window.AndroidBridge && typeof window.AndroidBridge.updateBetaWidgetBalance === 'function'){
       var todayForWidget = new Date();
       var widgetCutoff = new Date(todayForWidget.getFullYear(), todayForWidget.getMonth()+1, 0, 23, 59, 59);
