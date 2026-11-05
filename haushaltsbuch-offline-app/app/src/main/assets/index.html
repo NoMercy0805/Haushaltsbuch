@@ -1004,6 +1004,24 @@
   @media(prefers-reduced-motion:reduce){
     #betaBalanceAdd.tap-feedback,#betaBalanceAdd.tap-feedback svg{animation:none;}
   }
+  /* Einheitliches Feedback fuer alle interaktiven App-Bedienelemente.
+     Groessen/Positionen/Bestandsanimationen bleiben unveraendert. */
+  .app-tap-feedback{animation:appTapLight .36s ease-out!important;}
+  html[data-theme="dark"] .app-tap-feedback{animation-name:appTapDark!important;}
+  @keyframes appTapLight{
+    0%{filter:brightness(.79);box-shadow:inset 0 0 0 999px rgba(35,65,104,.18);}
+    55%{filter:brightness(.91);box-shadow:inset 0 0 0 999px rgba(35,65,104,.08);}
+    100%{filter:brightness(1);box-shadow:inset 0 0 0 999px transparent;}
+  }
+  @keyframes appTapDark{
+    0%{filter:brightness(1.28);box-shadow:inset 0 0 0 999px rgba(255,255,255,.11);}
+    55%{filter:brightness(1.12);box-shadow:inset 0 0 0 999px rgba(255,255,255,.05);}
+    100%{filter:brightness(1);box-shadow:inset 0 0 0 999px transparent;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .app-tap-feedback,html[data-theme="dark"] .app-tap-feedback{animation:none!important;}
+  }
+
   #addEntryFab.beta-integrated-hidden{display:none!important;}
   @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceAdd{width:38px;flex-basis:38px;margin-left:2px;padding-left:7px;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
   /* Zwei Kontostaende mit dem unveraenderten Plus mittig. */
@@ -7759,11 +7777,35 @@ var nativeStorage = {
     });
   }
 
+  function setupGlobalTapFeedback(){
+    var selector = 'button, a[href], [role="button"], .settings-nav-row, .vc-card, .loan-card, .compact-list-row, .set-item, [data-action]';
+    function animateTap(target){
+      var el = target && target.closest ? target.closest(selector) : null;
+      if(!el || el.id === 'betaBalanceAdd' || el.disabled || el.matches('[aria-disabled="true"]')) return;
+      el.classList.remove('app-tap-feedback');
+      void el.offsetWidth;
+      el.classList.add('app-tap-feedback');
+    }
+    document.addEventListener('pointerdown',function(event){
+      if(event.pointerType === 'mouse' && event.button !== 0) return;
+      animateTap(event.target);
+    },{passive:true});
+    document.addEventListener('click',function(event){
+      if(event.detail === 0) animateTap(event.target);
+    },true);
+    document.addEventListener('animationend',function(event){
+      if(event.animationName === 'appTapLight' || event.animationName === 'appTapDark'){
+        event.target.classList.remove('app-tap-feedback');
+      }
+    },true);
+  }
+
   async function init(){
     state = await loadState();
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('mainUI').style.display = 'block';
     setupTabs();
+    setupGlobalTapFeedback();
     setupIncomeExpenseBarCollapse();
     setupSwipe();
     setupUebersichtForms();
