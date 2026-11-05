@@ -1042,6 +1042,13 @@
     box-shadow:inset 0 0 0 1px var(--selection-ring),inset 0 1px 0 rgba(255,255,255,.27)!important;
   }
 
+  /* Dieselbe einzeilige Hoehe wie Kredite / Tilgungsplan:
+     die lange Filterbeschriftung darf den Button nicht auf zwei Zeilen aufblaehen. */
+  #betaFilterRow .sub-nav-btn{
+    white-space:nowrap;
+    min-width:0;
+  }
+
   /* Neutrales Glas statt blauem Schimmer im runden FAB.
      Entsaettigter Blur verhindert Farbuebernahme vom Inhalt dahinter. */
   #addEntryFab.fab-add{
