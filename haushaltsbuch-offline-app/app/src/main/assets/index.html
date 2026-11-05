@@ -1103,13 +1103,15 @@
   }
   #buchungenSubNav .sub-nav-btn.active,
   #variabelSubNav .sub-nav-btn.active,
-  #kreditSubNav .sub-nav-btn.active{
+  #kreditSubNav .sub-nav-btn.active,
+  #betaFilterRow .sub-nav-btn.active{
     background:linear-gradient(145deg,rgba(105,165,255,.29),rgba(82,138,233,.12))!important;
     box-shadow:inset 0 0 0 2px var(--selection-ring),inset 0 1px 0 rgba(255,255,255,.27)!important;
   }
   html[data-theme="dark"] #buchungenSubNav .sub-nav-btn.active,
   html[data-theme="dark"] #variabelSubNav .sub-nav-btn.active,
-  html[data-theme="dark"] #kreditSubNav .sub-nav-btn.active{
+  html[data-theme="dark"] #kreditSubNav .sub-nav-btn.active,
+  html[data-theme="dark"] #betaFilterRow .sub-nav-btn.active{
     background:linear-gradient(145deg,rgba(62,109,186,.28),rgba(27,50,92,.39))!important;
   }
   /* Kontostand-Filter Alle / Nicht abgeglichen im gleichen Glasstil wie Unterreiter. */
@@ -6732,8 +6734,8 @@ var nativeStorage = {
     }
 
     document.getElementById('betaFilterRow').innerHTML =
-      '<button type="button" class="beta-filter-chip'+(betaFilterMode==='all'?' active':'')+'" data-filter="all"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Alle</button>'+
-      '<button type="button" class="beta-filter-chip'+(betaFilterMode==='unreconciled'?' active':'')+'" data-filter="unreconciled"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg>Nicht abgeglichen ('+unreconciledInMonth+')</button>';
+      '<button type="button" class="sub-nav-btn'+(betaFilterMode==='all'?' active':'')+'" data-filter="all"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Alle</button>'+
+      '<button type="button" class="sub-nav-btn'+(betaFilterMode==='unreconciled'?' active':'')+'" data-filter="unreconciled"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg>Nicht abgeglichen ('+unreconciledInMonth+')</button>';
 
     var dayGroups = {};
     var dayOrder = [];
