@@ -14,12 +14,12 @@
     css.textContent=[
       'select.app-glass-native{display:none!important}',
       '.app-glass-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;',
-      'width:100%;min-width:0;min-height:48px;padding:12px 14px;border-radius:15px;',
+      'width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:48px;padding:12px 14px;border-radius:15px;',
       'border:1px solid rgba(255,255,255,.6);background:rgba(246,248,252,.83);',
       'color:var(--ink);font:600 15px var(--sans);text-align:left;cursor:pointer;',
       'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);',
       'box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 13px rgba(0,0,0,.07)}',
-      '.app-glass-trigger.full{grid-column:1/-1}',
+      '.app-glass-trigger.full,.entry-form>.app-glass-trigger,.edit-row>.app-glass-trigger{grid-column:1/-1}',
       '.app-glass-trigger .app-glass-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.app-glass-trigger .app-glass-arrow{width:18px;height:18px;flex:none;color:var(--ink-soft)}',
       '.app-glass-trigger:disabled{opacity:.55;cursor:default}',
@@ -108,7 +108,7 @@
        select.closest('.app-glass-overlay')||select.multiple||select.size>1)return;
     var trigger=document.createElement('button');
     trigger.type='button';
-    trigger.className='app-glass-trigger'+(select.classList.contains('full')?' full':'');
+    trigger.className='app-glass-trigger'+(select.classList.contains('full')||select.closest('.entry-form,.edit-row')?' full':'');
     trigger.setAttribute('aria-haspopup','listbox');
     trigger.setAttribute('aria-expanded','false');
     trigger.setAttribute('aria-label',select.getAttribute('aria-label')||labelFor(select)||'Auswahl öffnen');
@@ -160,7 +160,7 @@
       button.appendChild(title);button.appendChild(check);optionsList.appendChild(button);
     });
     sheet.querySelector('.app-glass-picker').style.width=
-      Math.max(200,Math.min(trigger.getBoundingClientRect().width,window.innerWidth-24))+'px';
+      Math.min(trigger.getBoundingClientRect().width,window.innerWidth-24)+'px';
     sheet.classList.add('open');sheet.setAttribute('aria-hidden','false');
     trigger.setAttribute('aria-expanded','true');
     var selected=optionsList.querySelector('.selected');
