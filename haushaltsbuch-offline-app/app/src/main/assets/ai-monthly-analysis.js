@@ -380,13 +380,13 @@
       largest:base.largest,merchants:base.merchants,regular:base.regular};
   }
   function refreshReport(){
-    var m=compute(activeKey),cached=reports()[activeKey];
-    renderReport(cached||null);
-    if(cached&&cached.hash!==m.hash)showFeedback('Seit diesem Bericht wurden Buchungen geändert. Bitte eine neue Auswertung erstellen.',false);
-    else showFeedback(cached?'Gespeicherter Bericht vom '+new Date(cached.generatedAt).toLocaleDateString('de-DE')+'.':'',false);
+    // Die aktuelle Auswertung wird direkt aus dem Kontostand erstellt – kein veralteter Cache.
+    var m=compute(activeKey);
+    renderReport(reportFrom(m));
+    showFeedback(m.entries.length?'Aktuelle Daten aus dem Kontostand.':'Für diesen Monat sind noch keine Buchungen erfasst.',false);
   }
   function open(){
-    var options=monthOptions(),wanted=prevKey(currentMonthKey());
+    var options=monthOptions(),wanted=currentMonthKey();
     activeKey=options.indexOf(wanted)>-1?wanted:(options[0]||currentMonthKey());
     var sel=document.getElementById('aiMonthSelect');sel.innerHTML='';
     options.forEach(function(k){var el=document.createElement('option');el.value=k;el.textContent=keyLabel(k);sel.appendChild(el);});
@@ -399,10 +399,9 @@
   }
   function generateBase(){
     var m=compute(activeKey);
-    if(!m.entries.length){showFeedback('Für '+keyLabel(activeKey)+' sind keine Kontostand-Einträge vorhanden.',true);return;}
     var report=reportFrom(m);
     saveReport(report);renderReport(report);
-    showFeedback('Auswertung auf diesem Gerät erstellt und gespeichert.',false);
+    showFeedback('Aktuelle Auswertung auf diesem Gerät gespeichert.',false);
   }
   function init(){
     var settings=document.getElementById('settingsIconBtn');if(!settings)return;
@@ -432,13 +431,39 @@
       '.ai-section h3{margin:0 0 8px;font-size:14px}.ai-section p{white-space:pre-wrap;font-size:13px;line-height:1.65;margin:8px 0}'+
       '.ai-cat{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:12px}.ai-cat:last-child{border:0}'+
       '.ai-disclaimer{font-size:11px;line-height:1.5;color:var(--ink-soft)}'+
-      '.ai-progress{height:5px;background:var(--rule);border-radius:5px;margin:0 0 10px;overflow:hidden}.ai-progress span{display:block;height:100%;border-radius:5px;background:var(--primary)}';
+      '.ai-progress{height:7px;background:var(--rule);border-radius:999px;margin:7px 0 12px;overflow:hidden}.ai-progress span{display:block;height:100%;border-radius:999px;background:var(--primary)}'+
+      '.ai-dashboard-section{border-radius:17px;background:var(--surface);border:1px solid var(--rule-strong);padding:14px;margin:10px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.13)}'+
+      '.ai-dashboard-section h3{font-size:15px;margin:0 0 13px;font-weight:800;color:var(--ink)}'+
+      '.ai-metrics{margin-bottom:4px}.ai-metric{background:var(--surface-2);border:1px solid var(--rule-strong);border-radius:14px;padding:13px 11px;min-height:68px;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}'+
+      '.ai-metric .ai-metric-name{font-size:11px;font-weight:600}.ai-metric strong{font-size:clamp(15px,4vw,19px);letter-spacing:-.03em}'+
+      '.ai-pair{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--rule);font-size:12.5px;line-height:1.4}'+
+      '.ai-pair:last-child{border-bottom:0}.ai-pair span{color:var(--ink-soft);flex:1;min-width:0}.ai-pair strong{color:var(--ink);font-size:13px;text-align:right;flex-shrink:0}'+
+      '.ai-pair strong.positive{color:var(--savings)}.ai-pair strong.negative{color:var(--expense)}'+
+      '.ai-progress-row{margin-bottom:8px}.ai-progress-row .ai-pair{border:0;padding:2px 0}.ai-progress .ai-color-0{background:var(--savings)}'+
+      '.ai-progress .ai-color-1{background:var(--expense)}.ai-progress .ai-color-2{background:var(--primary)}'+
+      '.ai-progress .ai-color-3{background:var(--gold)}.ai-progress .ai-color-4{background:#a38bd8}'+
+      '.ai-periods{display:flex;gap:6px;margin:12px 0 8px}.ai-period{flex:1;border:1px solid var(--rule-strong);border-radius:11px;padding:8px 3px;background:var(--surface-2);color:var(--ink-soft);font-size:12px;font-weight:700;cursor:pointer}'+
+      '.ai-period.active{background:var(--selection-bg);color:var(--selection-text);box-shadow:inset 0 0 0 1px var(--selection-ring)}'+
+      '.ai-chart{height:155px;display:flex;gap:6px;align-items:stretch;justify-content:space-between;padding:12px 2px 2px;border-bottom:1px solid var(--rule-strong)}'+
+      '.ai-chart-column{flex:1;min-width:0;display:flex;align-items:center;flex-direction:column;justify-content:flex-end;gap:6px}'+
+      '.ai-chart-bars{width:100%;height:124px;display:flex;gap:3px;justify-content:center;align-items:flex-end}'+
+      '.ai-chart-bars span{display:block;width:34%;max-width:22px;min-height:1px;border-radius:4px 4px 0 0}'+
+      '.ai-income-bar{background:var(--savings)}.ai-expense-bar{background:var(--expense)}.ai-chart-label{font-size:10px;color:var(--ink-soft);white-space:nowrap}'+
+      '.ai-chart-legend{display:flex;justify-content:center;gap:18px;font-size:11px;margin:9px 0;color:var(--ink-soft)}'+
+      '.ai-chart-legend span:first-child{color:var(--savings)}.ai-chart-legend span:last-child{color:var(--expense)}'+
+      '.ai-details{background:var(--surface-2);border:1px solid var(--rule);border-radius:13px;margin:8px 0;overflow:hidden}'+
+      '.ai-details summary{cursor:pointer;padding:12px;font-weight:700;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:8px;list-style:none}'+
+      '.ai-details summary::-webkit-details-marker{display:none}.ai-details[open] summary span{transform:rotate(180deg)}'+
+      '.ai-details-body{padding:0 12px 12px}.ai-entry-line{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule);font-size:12px}'+
+      '.ai-entry-line:last-child{border-bottom:0}.ai-entry-line span{flex:1;min-width:0;overflow-wrap:anywhere}.ai-entry-line small{color:var(--ink-soft)}'+
+      '.ai-entry-line strong{white-space:nowrap;font-size:12px}.ai-insight{padding:9px 11px;border-radius:9px;background:var(--surface);font-size:12.5px;line-height:1.5}'+
+      '.ai-insight.good{border-left:3px solid var(--savings)}.ai-insight.notice{border-left:3px solid var(--expense)}.ai-insight.tip{border-left:3px solid var(--primary)}';
     document.head.appendChild(css);
     var root=document.createElement('div');root.id='aiMonthlyOverlay';root.className='ai-overlay';
     root.innerHTML='<div class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle"><div class="ai-head"><h2 id="aiTitle">✦ Monatsauswertung</h2><button type="button" class="ai-close" id="aiClose" aria-label="Schließen">×</button></div>'+
       '<div class="ai-body"><label for="aiMonthSelect" style="font-weight:700;font-size:14px">Monat auswählen</label><select id="aiMonthSelect"></select>'+
-      '<div class="ai-intro">Dein persönlicher Monatsrückblick – mit Einnahmen, Ausgaben, Kontostand, auffälligen Buchungen, häufigen Titeln und Vergleich zum Vormonat. Alles lokal, ohne KI-Modell.</div>'+
-      '<button type="button" id="aiBaseGenerate" class="ai-action">Monat auswerten</button>'+
+      '<div class="ai-intro">Dein persönliches Finanz-Dashboard: Monatsbilanz, Kontostand, Entwicklung, Kategorien, regelmäßige Ausgaben, Ausblick und konkrete Erkenntnisse. Vollständig offline.</div>'+
+      '<button type="button" id="aiBaseGenerate" class="ai-action">Bericht speichern / aktualisieren</button>'+
       '<div id="aiFeedback" role="status" aria-live="polite"></div><div id="aiReport" style="display:none"></div></div></div>';
     document.body.appendChild(root);
     ai.addEventListener('click',open);
