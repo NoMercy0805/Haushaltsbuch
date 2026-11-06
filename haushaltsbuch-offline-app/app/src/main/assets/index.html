@@ -392,6 +392,54 @@
   html[data-theme="dark"] #betaEntryForm .beta-category-example{
     background:rgba(57,60,68,.48);border-color:rgba(255,255,255,.13);
   }
+  /* Eigenes Glas-Kategorie-Overlay analog zur Monatsauswahl. Der native Select
+     bleibt nur als unsichtbarer Formularwert erhalten. */
+  #betaEntryForm #betaCategoryInput{display:none!important;}
+  #betaEntryForm .beta-category-trigger{
+    width:100%;min-height:50px;display:flex;align-items:center;justify-content:space-between;
+    gap:10px;text-align:left;padding:12px 15px;border-radius:15px;
+    border:1px solid rgba(255,255,255,.62);
+    background:rgba(246,248,252,.83);color:var(--ink);
+    font:650 15px var(--sans);cursor:pointer;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 4px 13px rgba(0,0,0,.08);
+  }
+  #betaEntryForm .beta-category-trigger .beta-category-chevron{position:static;transform:none;flex-shrink:0;}
+  #betaEntryForm .beta-category-trigger:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+  html[data-theme="dark"] #betaEntryForm .beta-category-trigger{
+    background:rgba(52,57,68,.91);border-color:rgba(255,255,255,.20);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 4px 13px rgba(0,0,0,.18);
+  }
+  .beta-category-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-end;
+    background:rgba(10,13,20,.48);padding:0;box-sizing:border-box;}
+  .beta-category-overlay.open{display:flex;}
+  .beta-category-picker{width:100%;max-height:min(75dvh,680px);display:flex;flex-direction:column;
+    overflow:hidden;padding:13px 14px calc(16px + env(safe-area-inset-bottom,0px));
+    border-radius:24px 24px 0 0;
+    background:rgba(246,247,250,.97);border-top:1px solid rgba(255,255,255,.75);
+    backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+    box-shadow:0 -12px 42px rgba(0,0,0,.22);color:var(--ink);}
+  html[data-theme="dark"] .beta-category-picker{
+    background:rgba(43,47,55,.98);border-top-color:rgba(255,255,255,.22);
+    box-shadow:0 -12px 42px rgba(0,0,0,.38);
+  }
+  .beta-category-picker-head{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:4px 4px 13px;font-size:17px;}
+  .beta-category-picker-close{width:34px;height:34px;border:0;border-radius:50%;
+    background:var(--surface-2);color:var(--ink);font-size:24px;cursor:pointer;}
+  .beta-category-options{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;
+    -webkit-overflow-scrolling:touch;padding:2px 0 6px;}
+  .beta-category-option{width:100%;min-height:48px;display:flex;align-items:center;gap:11px;
+    text-align:left;padding:11px 14px;border-radius:13px;
+    border:1px solid rgba(255,255,255,.46);background:var(--surface);
+    color:var(--ink);font:650 14px var(--sans);cursor:pointer;}
+  html[data-theme="dark"] .beta-category-option{border-color:rgba(255,255,255,.12);}
+  .beta-category-option.selected{background:var(--selection-bg);color:var(--selection-text);
+    border:1px solid var(--selection-ring);}
+  .beta-category-option-icon{font-size:20px;line-height:1;flex-shrink:0;}
+  .beta-category-option-name{flex:1;min-width:0;}
+  .beta-category-option-check{font-size:18px;font-weight:800;min-width:18px;text-align:center;}
+
 
   .entry-form button[type="submit"]{grid-column:1 / -1;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;}
   .entry-form button[type="submit"]:hover{background:#0F56D6;}
@@ -1659,6 +1707,17 @@
     </div>
   </div>
 
+  <!-- Eigenes Kategorie-Menue: kein Android-Select, passend zur Monatsauswertung. -->
+  <div id="betaCategoryOverlay" class="beta-category-overlay" aria-hidden="true">
+    <div class="beta-category-picker" role="dialog" aria-modal="true" aria-labelledby="betaCategoryPickerTitle">
+      <div class="beta-category-picker-head">
+        <strong id="betaCategoryPickerTitle">Kategorie auswählen</strong>
+        <button type="button" id="betaCategoryPickerClose" class="beta-category-picker-close" aria-label="Schließen">×</button>
+      </div>
+      <div id="betaCategoryOptions" class="beta-category-options" role="listbox" aria-label="Kategorien"></div>
+    </div>
+  </div>
+
   <div id="addBetaOverlay" class="settings-overlay">
     <div class="settings-panel">
       <div class="settings-panel-head">
@@ -1678,10 +1737,13 @@
         <input type="date" id="betaDateInput" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
         <div class="full beta-category-group">
-          <label for="betaCategoryInput" class="beta-category-label">Kategorie auswählen</label>
+          <label for="betaCategoryTrigger" class="beta-category-label">Kategorie auswählen</label>
           <div class="beta-category-select-wrap">
-            <select id="betaCategoryInput" aria-label="Kategorie auswählen" required></select>
-            <svg class="beta-category-chevron" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <select id="betaCategoryInput" tabindex="-1" aria-hidden="true"></select>
+            <button type="button" id="betaCategoryTrigger" class="beta-category-trigger" aria-haspopup="listbox" aria-controls="betaCategoryOptions" aria-expanded="false">
+              <span id="betaCategoryTriggerText"></span>
+              <svg class="beta-category-chevron" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
           </div>
           <div class="beta-category-example" aria-live="polite">
             <span class="beta-category-example-label">Typische Buchungen</span>
@@ -6825,6 +6887,64 @@ var nativeStorage = {
     'Geschenk':['🎁','Geldgeschenke'],
     'Sonstige Einnahmen':['💶','Weitere Geldeingänge']
   };
+  function betaSyncCategoryTrigger(){
+    var select=document.getElementById('betaCategoryInput');
+    var text=document.getElementById('betaCategoryTriggerText');
+    if(!select||!text)return;
+    var info=betaCategoryDisplay[select.value]||['📦',''];
+    text.textContent=info[0]+'  '+select.value;
+  }
+  function betaCloseCategoryPicker(){
+    var overlay=document.getElementById('betaCategoryOverlay');
+    if(!overlay)return;
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden','true');
+    document.getElementById('betaCategoryTrigger').setAttribute('aria-expanded','false');
+  }
+  function betaOpenCategoryPicker(){
+    var select=document.getElementById('betaCategoryInput');
+    var list=document.getElementById('betaCategoryOptions');
+    var overlay=document.getElementById('betaCategoryOverlay');
+    if(!select||!list||!overlay)return;
+    list.innerHTML='';
+    Array.prototype.forEach.call(select.options,function(option){
+      var chosen=option.value===select.value;
+      var button=document.createElement('button');
+      button.type='button';button.className='beta-category-option'+(chosen?' selected':'');
+      button.dataset.category=option.value;
+      button.setAttribute('role','option');button.setAttribute('aria-selected',chosen?'true':'false');
+      var icon=document.createElement('span');icon.className='beta-category-option-icon';
+      icon.textContent=(betaCategoryDisplay[option.value]||['📦'])[0];
+      var name=document.createElement('span');name.className='beta-category-option-name';name.textContent=option.value;
+      var check=document.createElement('span');check.className='beta-category-option-check';check.textContent=chosen?'✓':'';
+      button.appendChild(icon);button.appendChild(name);button.appendChild(check);
+      list.appendChild(button);
+    });
+    overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
+    document.getElementById('betaCategoryTrigger').setAttribute('aria-expanded','true');
+    var selected=list.querySelector('.selected');
+    if(selected)selected.scrollIntoView({block:'nearest'});
+  }
+  function setupBetaCategoryPicker(){
+    var overlay=document.getElementById('betaCategoryOverlay');
+    document.getElementById('betaCategoryTrigger').addEventListener('click',betaOpenCategoryPicker);
+    document.getElementById('betaCategoryPickerClose').addEventListener('click',betaCloseCategoryPicker);
+    overlay.addEventListener('click',function(event){
+      if(event.target===overlay)betaCloseCategoryPicker();
+      var chosen=event.target.closest('[data-category]');
+      if(!chosen)return;
+      var select=document.getElementById('betaCategoryInput');
+      select.value=chosen.dataset.category;
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+      betaCloseCategoryPicker();
+      document.getElementById('betaCategoryTrigger').focus();
+    });
+    document.addEventListener('keydown',function(event){
+      if(event.key==='Escape'&&overlay.classList.contains('open')){
+        event.preventDefault();event.stopImmediatePropagation();betaCloseCategoryPicker();
+      }
+    },true);
+  }
   function betaUpdateCategoryExample(){
     var select=document.getElementById('betaCategoryInput');
     var target=document.getElementById('betaCategoryExampleText');
@@ -6843,6 +6963,7 @@ var nativeStorage = {
     });
     select.value=betaCategoryValid(type,preferred)?preferred:betaSuggestedCategory(document.getElementById('betaTitleInput').value,type);
     betaUpdateCategoryExample();
+    betaSyncCategoryTrigger();
   }
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
 
@@ -7420,6 +7541,7 @@ var nativeStorage = {
     document.getElementById('betaCategoryInput').addEventListener('change',function(){
       this.dataset.manual='1';
       betaUpdateCategoryExample();
+      betaSyncCategoryTrigger();
     });
 
     var betaAmountInputEl = document.getElementById('betaAmountInput');
@@ -8042,6 +8164,7 @@ var nativeStorage = {
     setupThemeToggle();
     setupFuelTracker();
     setupBeta();
+    setupBetaCategoryPicker();
     betaRefreshCategorySelect();
     setupCardExpandToggle();
     setupCentInputs();
