@@ -1629,7 +1629,7 @@
         <input type="text" id="vcName" placeholder="Bezeichnung" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="vcMonthly" placeholder="Monatlich (€)" step="0.01" required>
         <input type="text" inputmode="decimal" data-cent-input id="vcActual" placeholder="Rechnung (€, optional)" step="0.01">
-        <select id="vcInterval">
+        <select id="vcInterval" class="full">
           <option value="monatlich">Monatlich fällig</option>
           <option value="vierteljaehrlich">Vierteljährlich fällig</option>
           <option value="halbjaehrlich">Halbjährlich fällig</option>
@@ -3367,7 +3367,7 @@ var nativeStorage = {
                     '<input type="text" class="edit-name full" value="'+escapeHtml(item.name)+'" placeholder="Bezeichnung">'+
                     '<div><label class="edit-field-label">Monatlich zurücklegen</label><input type="text" inputmode="decimal" data-cent-input class="edit-monthly" value="'+formatCentsToStr(Math.round(item.monthlyAmount*100))+'" placeholder="Monatlich (€)"></div>'+
                     '<div><label class="edit-field-label">Letzte Rechnung</label><input type="text" inputmode="decimal" data-cent-input class="edit-actual" value="'+formatCentsToStr(Math.round((item.actualAmount||0)*100))+'" placeholder="Rechnung (€)"></div>'+
-                    '<select class="edit-interval">'+
+                    '<select class="edit-interval full">'+
                       Object.keys(INTERVAL_LABELS).map(function(k){ return '<option value="'+k+'"'+(item.interval===k?' selected':'')+'>'+INTERVAL_LABELS[k]+' fällig</option>'; }).join('')+
                     '</select>'+
                     '<select class="edit-duemonth full">'+monthOptions(item.dueMonth)+'</select>'+
