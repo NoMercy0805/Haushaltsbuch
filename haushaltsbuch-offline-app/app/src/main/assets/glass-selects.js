@@ -9,6 +9,23 @@
   var skipIds={betaCategoryInput:true};
   var activeSelect=null,activeTrigger=null;
   var sheet,optionsList;
+  /* Verankert eine Glas-Auswahl DIREKT am Feld. Passt sich an den
+     verfuegbaren Platz an und klappt bei wenig Platz nach oben. */
+  window.householdPositionDropdown=function(trigger,popup,maxRowsHeight){
+    var r=trigger.getBoundingClientRect(),gap=6,margin=8;
+    var vw=window.innerWidth,vh=window.innerHeight;
+    var below=Math.max(0,vh-r.bottom-gap-margin);
+    var above=Math.max(0,r.top-gap-margin);
+    var down=below>=Math.min(maxRowsHeight||320,180)||below>=above;
+    var room=down?below:above;
+    var height=Math.max(70,Math.min(maxRowsHeight||320,room));
+    popup.style.width=Math.max(0,Math.min(r.width,vw-2*margin))+'px';
+    popup.style.left=Math.max(margin,Math.min(r.left,vw-margin-Math.min(r.width,vw-2*margin)))+'px';
+    popup.style.maxHeight=height+'px';
+    popup.style.top=down?(r.bottom+gap)+'px':'auto';
+    popup.style.bottom=down?'auto':(vh-r.top+gap)+'px';
+    return height;
+  };
   function init(){
     var css=document.createElement('style');
     css.textContent=[
@@ -26,23 +43,17 @@
       'html[data-theme="dark"] .app-glass-trigger{background:rgba(52,57,68,.91);',
       'border-color:rgba(255,255,255,.20);',
       'box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 4px 13px rgba(0,0,0,.18)}',
-      '.app-glass-overlay{position:fixed;inset:0;z-index:22000;display:none;',
-      'align-items:flex-end;justify-content:center;padding:0 12px 12px;',
-      'box-sizing:border-box;background:rgba(10,13,20,.48)}',
-      '.app-glass-overlay.open{display:flex}',
-      '.app-glass-picker{display:flex;flex-direction:column;min-width:0;',
-      'width:min(100%,400px);max-height:min(75dvh,680px);overflow:hidden;',
-      'padding:13px 14px calc(14px + env(safe-area-inset-bottom,0px));',
-      'border-radius:22px;background:rgba(246,247,250,.97);',
-      'border:1px solid rgba(255,255,255,.65);',
-      'backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);',
-      'box-shadow:0 -12px 42px rgba(0,0,0,.22);color:var(--ink)}',
+      '.app-glass-overlay{position:fixed;inset:0;z-index:22000;display:none;pointer-events:none}',
+      '.app-glass-overlay.open{display:block}',
+      '.app-glass-picker{position:fixed;display:flex;flex-direction:column;min-width:0;box-sizing:border-box;',
+      'overflow:hidden;padding:7px;border-radius:15px;background:rgba(246,247,250,.97);',
+      'border:1px solid rgba(255,255,255,.65);pointer-events:auto;',
+      'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);',
+      'box-shadow:0 10px 28px rgba(0,0,0,.19);color:var(--ink)}',
       'html[data-theme="dark"] .app-glass-picker{background:rgba(43,47,55,.98);',
-      'border-color:rgba(255,255,255,.18);box-shadow:0 -12px 42px rgba(0,0,0,.38)}',
-      '.app-glass-head{display:flex;align-items:center;justify-content:space-between;',
-      'gap:10px;padding:4px 4px 13px;font-size:16px;font-weight:800}',
-      '.app-glass-close{flex:none;width:34px;height:34px;border:0;border-radius:50%;',
-      'background:var(--surface-2);color:var(--ink);font-size:24px;cursor:pointer}',
+      'border-color:rgba(255,255,255,.18);box-shadow:0 10px 28px rgba(0,0,0,.38)}',
+      '.app-glass-head{display:none}',
+      '.app-glass-close{display:none}',
       '.app-glass-options{display:flex;flex-direction:column;gap:6px;overflow-y:auto;',
       'overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 0 6px}',
       '.app-glass-option{display:flex;align-items:center;justify-content:space-between;',
@@ -68,6 +79,10 @@
     optionsList=sheet.querySelector('.app-glass-options');
     sheet.querySelector('.app-glass-close').addEventListener('click',close);
     sheet.addEventListener('click',function(e){if(e.target===sheet)close();});
+    document.addEventListener('pointerdown',function(e){
+      if(sheet.classList.contains('open')&&!e.target.closest('.app-glass-picker')&&
+         !(activeTrigger&&activeTrigger.contains(e.target)))close();
+    },true);
     optionsList.addEventListener('click',function(e){
       var choice=e.target.closest('[data-glass-index]');
       if(!choice||!activeSelect)return;
@@ -159,8 +174,9 @@
       check.textContent=index===select.selectedIndex?'✓':'';
       button.appendChild(title);button.appendChild(check);optionsList.appendChild(button);
     });
-    sheet.querySelector('.app-glass-picker').style.width=
-      Math.min(trigger.getBoundingClientRect().width,window.innerWidth-24)+'px';
+    var picker=sheet.querySelector('.app-glass-picker');
+    var preferred=Math.min(370,optionsList.childElementCount*54+14);
+    window.householdPositionDropdown(trigger,picker,preferred);
     sheet.classList.add('open');sheet.setAttribute('aria-hidden','false');
     trigger.setAttribute('aria-expanded','true');
     var selected=optionsList.querySelector('.selected');
