@@ -1630,7 +1630,7 @@
         <div class="full" id="betaDateLabelWrap" style="font-size:12px;color:var(--ink-soft);margin:2px 0 -8px;">Datum</div>
         <input type="date" id="betaDateInput" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
-        <input type="text" id="betaCategoryInput" placeholder="Kategorie (optional)" class="full">
+        <select id="betaCategoryInput" class="full" aria-label="Kategorie" required></select>
         <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-top:2px;"><input type="checkbox" id="betaRecurringInput" style="width:18px;height:18px;">Dauerauftrag</label>
 
         <div class="full" id="betaRecurringFields" style="display:none;background:var(--paper);border-radius:14px;padding:12px 14px;margin:-4px 0 4px;">
@@ -6695,6 +6695,68 @@ var nativeStorage = {
   var betaAmountWasAutofilled = false;
   var editingBetaScope = 'this'; // 'this' oder 'following'
 
+  /* Einheitliche feste Kategorien fuer Kontostand und Monatsauswertung.
+     Gespeichert werden lesbare Namen, damit CSV-Exporte und Alt-Daten kompatibel bleiben. */
+  var betaExpenseCategories = [
+    'Wohnen & Nebenkosten','Lebensmittel & Drogerie','Auto & Mobilität',
+    'Versicherungen','Internet & Mobilfunk','Abos & Streaming',
+    'Freizeit & Hobbys','Restaurant & Lieferdienst','Shopping & Kleidung',
+    'Gesundheit & Pflege','Familie & Kinder','Haustiere',
+    'Kredite & Finanzierung','Sparen & Rücklagen','Sonstiges'
+  ];
+  var betaIncomeCategories = ['Gehalt','Kindergeld','Erstattung','Geschenk','Sonstige Einnahmen'];
+  function betaCategoryList(type){
+    return type === 'einnahme' ? betaIncomeCategories : betaExpenseCategories;
+  }
+  function betaCategoryDefault(type){return type==='einnahme'?'Sonstige Einnahmen':'Sonstiges';}
+  function betaCategoryValid(type,cat){return betaCategoryList(type).indexOf(cat)!==-1;}
+  function betaGuessCategory(title,type){
+    var t=String(title||'').toLocaleLowerCase('de-DE');
+    if(type==='einnahme'){
+      if(/gehalt|lohn|besoldung|arbeitgeber/.test(t))return 'Gehalt';
+      if(/kindergeld/.test(t))return 'Kindergeld';
+      if(/erstattung|rückerstattung|rueckerstattung|gutschrift|retoure|refund/.test(t))return 'Erstattung';
+      if(/geschenk|geburtstagsgeld/.test(t))return 'Geschenk';
+      return 'Sonstige Einnahmen';
+    }
+    if(/rewe|edeka|lidl|aldi|kaufland|netto|penny|tegut|norma|globus|supermarkt|lebensmittel|rossmann|drogerie|dm markt/.test(t))return 'Lebensmittel & Drogerie';
+    if(/tankstelle|aral|shell|esso|diesel|benzin|tanken|werkstatt|reifen|parkhaus|parken|tüv|hauptuntersuchung|bahn|fahrkarte/.test(t))return 'Auto & Mobilität';
+    if(/miete|nebenkosten|strom|gasabschlag|heizung|wasser|grundsteuer|hausgeld/.test(t))return 'Wohnen & Nebenkosten';
+    if(/haftpflicht|hausrat|rechtsschutz|lebensversicherung|versicherung/.test(t))return 'Versicherungen';
+    if(/mobilfunk|handyvertrag|telefon|internet|dsl|vodafone|telekom|o2 tarif/.test(t))return 'Internet & Mobilfunk';
+    if(/netflix|spotify|disney|prime video|youtube premium|dazn|abo|streaming/.test(t))return 'Abos & Streaming';
+    if(/restaurant|lieferando|pizza|döner|imbiss|mcdonald|burger king|café|bäckerei/.test(t))return 'Restaurant & Lieferdienst';
+    if(/arzt|apotheke|zahnarzt|medikament|klinik|physio/.test(t))return 'Gesundheit & Pflege';
+    if(/tierarzt|hundefutter|katzenfutter|zooplus|fressnapf|haustier/.test(t))return 'Haustiere';
+    if(/kindergarten|kita|schulbedarf|spielzeug|klassenfahrt/.test(t))return 'Familie & Kinder';
+    if(/kreditrate|darlehen|finanzierung|tilgung/.test(t))return 'Kredite & Finanzierung';
+    if(/sparkonto|rücklage|ruecklage|sparplan|sparen/.test(t))return 'Sparen & Rücklagen';
+    if(/kleidung|schuhe|amazon|zalando|elektronik|shopping/.test(t))return 'Shopping & Kleidung';
+    if(/kino|konzert|freizeit|steam|playstation|xbox|hobby|ausflug/.test(t))return 'Freizeit & Hobbys';
+    return 'Sonstiges';
+  }
+  function betaSuggestedCategory(title,type){
+    var normalized=String(title||'').trim().toLocaleLowerCase('de-DE');
+    if(normalized && state && state.betaEntries){
+      var recent=state.betaEntries.filter(function(e){
+        return e.type===type && String(e.title||'').trim().toLocaleLowerCase('de-DE')===normalized &&
+          betaCategoryValid(type,e.category);
+      }).sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+      if(recent.length)return recent[0].category;
+    }
+    return betaGuessCategory(title,type);
+  }
+  function betaRefreshCategorySelect(preferred){
+    var typeRadio=document.querySelector('input[name="betaType"]:checked');
+    var type=typeRadio?typeRadio.value:'ausgabe';
+    var select=document.getElementById('betaCategoryInput');
+    if(!select)return;
+    select.innerHTML='';
+    betaCategoryList(type).forEach(function(cat){
+      var opt=document.createElement('option');opt.value=cat;opt.textContent=cat;select.appendChild(opt);
+    });
+    select.value=betaCategoryValid(type,preferred)?preferred:betaSuggestedCategory(document.getElementById('betaTitleInput').value,type);
+  }
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
 
   function reconcilePreviousBetaMonths(){
@@ -6919,7 +6981,8 @@ var nativeStorage = {
     document.getElementById('betaTitleInput').value = entry.title;
     document.getElementById('betaDateInput').value = entry.date;
     document.getElementById('betaAmountInput').value = formatCentsToStr(Math.round(entry.amount*100));
-    document.getElementById('betaCategoryInput').value = entry.category || '';
+    betaRefreshCategorySelect(entry.category);
+    document.getElementById('betaCategoryInput').dataset.manual='1';
     document.getElementById('betaRecurringInput').checked = !!entry.recurring;
     document.getElementById('betaReconciledInput').checked = !!entry.reconciled;
     var showRecurrenceFields = entry.isRecurringTemplate || scope === 'following';
@@ -7222,6 +7285,9 @@ var nativeStorage = {
         betaAmountWasAutofilled = true;
         var typeRadio = document.querySelector('input[name="betaType"][value="'+matches[0].type+'"]');
         if(typeRadio) typeRadio.checked = true;
+        betaRefreshCategorySelect(matches[0].category);
+      } else {
+        betaRefreshCategorySelect();
       }
     }
 
@@ -7255,6 +7321,18 @@ var nativeStorage = {
     });
     betaTitleInputEl.addEventListener('change', function(){
       betaAutofillFromTitle(this.value.trim());
+      if(!editingBetaId && !document.getElementById('betaCategoryInput').dataset.manual){
+        betaRefreshCategorySelect();
+      }
+    });
+    document.querySelectorAll('input[name="betaType"]').forEach(function(radio){
+      radio.addEventListener('change',function(){
+        document.getElementById('betaCategoryInput').dataset.manual='';
+        betaRefreshCategorySelect();
+      });
+    });
+    document.getElementById('betaCategoryInput').addEventListener('change',function(){
+      this.dataset.manual='1';
     });
 
     var betaAmountInputEl = document.getElementById('betaAmountInput');
@@ -7274,7 +7352,8 @@ var nativeStorage = {
       var title = document.getElementById('betaTitleInput').value.trim();
       var date = document.getElementById('betaDateInput').value;
       var amount = parseAmount(document.getElementById('betaAmountInput').value);
-      var category = document.getElementById('betaCategoryInput').value.trim();
+      var category = document.getElementById('betaCategoryInput').value;
+      if(!betaCategoryValid(type,category)) category=betaCategoryDefault(type);
       var recurring = document.getElementById('betaRecurringInput').checked;
       var reconciled = document.getElementById('betaReconciledInput').checked;
       var period = document.getElementById('betaPeriodInput').value;
@@ -7349,6 +7428,8 @@ var nativeStorage = {
     document.getElementById('addBetaTitle').textContent = 'Neuer Eintrag';
     document.getElementById('betaDeleteBtn').style.display = 'none';
     document.getElementById('betaEntryForm').reset();
+    document.getElementById('betaCategoryInput').dataset.manual='';
+    betaRefreshCategorySelect();
     document.getElementById('betaDateInput').value = todayISO();
     document.getElementById('betaEndDateInput').style.display = 'none';
     updateBetaRecurringFieldsVisibility(true);
@@ -7874,6 +7955,7 @@ var nativeStorage = {
     setupThemeToggle();
     setupFuelTracker();
     setupBeta();
+    betaRefreshCategorySelect();
     setupCardExpandToggle();
     setupCentInputs();
     setupHeroCardToggle();
