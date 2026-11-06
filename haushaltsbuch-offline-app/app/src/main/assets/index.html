@@ -966,6 +966,15 @@
   #betaList .beta-entry-name{font-size:15.5px!important;font-weight:750!important;color:#161b24!important;}
   #betaList .beta-entry-sub{font-size:12px!important;color:#586576!important;}
   #betaList .beta-entry-amount{font-size:16.5px!important;font-weight:800!important;}
+  /* Kategorie klein RECHTS NEBEN dem Titel statt in einer zweiten Zeile.
+     Der Betrag bleibt rechts, lange Titel/Kategorien werden platzsparend gekuerzt. */
+  #betaList .beta-entry-name-wrap{display:block;min-width:0;flex:1 1 0;overflow:hidden;}
+  #betaList .beta-entry-name{display:flex;align-items:baseline;gap:6px;min-width:0;width:100%;overflow:hidden;white-space:nowrap;}
+  #betaList .beta-entry-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;}
+  #betaList .beta-entry-name>svg{flex:0 0 12px;align-self:center;}
+  #betaList .beta-entry-sub{display:inline;flex:0 1 auto;min-width:0;max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px!important;font-weight:500;line-height:1.2;color:var(--ink-soft);}
+  #betaList .beta-entry-amount{white-space:nowrap;}
+
   #betaFilterRow{gap:8px!important;}
   #betaFilterRow .beta-filter-chip{border-radius:24px!important;min-height:44px!important;font-size:13px!important;}
   #betaFilterRow .beta-filter-chip.active{background:#216bd3!important;color:white!important;box-shadow:none!important;}
@@ -6917,8 +6926,7 @@ var nativeStorage = {
           html += '<div class="beta-entry-row" data-id="'+e.id+'">'+
                     '<button type="button" class="beta-entry-icon'+(e.reconciled?' reconciled':'')+'" data-action="toggle-reconciled" data-id="'+e.id+'" aria-label="Abgleichen">'+(e.reconciled?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>'+
                     '<span class="beta-entry-name-wrap">'+
-                      '<span class="beta-entry-name">'+escapeHtml(e.title)+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+'</span>'+
-                      (e.category ? '<span class="beta-entry-sub">'+escapeHtml(e.category)+'</span>' : '')+
+                      '<span class="beta-entry-name"><span class="beta-entry-title">'+escapeHtml(e.title)+'</span>'+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+(e.category ? '<span class="beta-entry-sub" title="'+escapeHtml(e.category)+'">'+escapeHtml(e.category)+'</span>' : '')+'</span>'+
                     '</span>'+
                     '<span class="beta-entry-amount" style="color:'+(sign>=0?'var(--savings)':'var(--expense)')+';">'+(sign>=0?'+':'-')+fmtEUR(e.amount)+'</span>'+
                   '</div>';
