@@ -42,26 +42,59 @@
     getEntries().forEach(function(e){if(e.date.slice(0,7)<=current)keys[e.date.slice(0,7)]=1;});
     return Object.keys(keys).filter(function(k){return k<=current;}).sort().reverse();
   }
+  var expenseCategories=[
+    'Wohnen & Nebenkosten','Lebensmittel & Drogerie','Auto & Mobilität',
+    'Versicherungen','Internet & Mobilfunk','Abos & Streaming',
+    'Freizeit & Hobbys','Restaurant & Lieferdienst','Shopping & Kleidung',
+    'Gesundheit & Pflege','Familie & Kinder','Haustiere',
+    'Kredite & Finanzierung','Sparen & Rücklagen','Sonstiges'
+  ];
   function categoryFor(e){
     var explicit=String(e.category||'').trim();
-    if(explicit&&explicit.toLowerCase()!=='sonstiges'&&explicit.toLowerCase()!=='keine')return explicit;
-    var t=String(e.title||'').toLowerCase();
-    if(/\b(rewe|edeka|lidl|aldi|kaufland|netto|penny|tegut|norma|globus|lebensmittel|supermarkt|dm|rossmann)\b/.test(t))return 'Lebensmittel & Drogerie';
-    if(/\b(aral|shell|esso|jet tank|tanken|tankstelle|diesel|benzin|kfz|auto|peugeot|werkstatt|reifen|tüv|hu au|versicherung kfz|parken|parkhaus|bahn|db ticket)\b/.test(t))return 'Mobilität & Auto';
-    if(/\b(netflix|spotify|disney|prime video|youtube premium|dazn|apple music|abo|abonnement)\b/.test(t))return 'Abos & Medien';
-    if(/\b(mcdonald|burger king|restaurant|pizza|döner|lieferando|subway|café|cafe|bäcker|bäckerei)\b/.test(t))return 'Essen außer Haus';
-    if(/\b(miete|nebenkosten|strom|gasabschlag|heizung|wasser|internet|telefon|mobilfunk|rundfunk|gez)\b/.test(t))return 'Wohnen & Verträge';
-    if(/\b(apotheke|arzt|zahnarzt|medizin|rezept|krankenhaus)\b/.test(t))return 'Gesundheit';
-    if(/\b(kino|konzert|ausflug|freizeit|spiel|steam|playstation|xbox)\b/.test(t))return 'Freizeit';
-    return 'Nicht eindeutig';
+    // Fest gewaehlte Kategorien gehen immer vor – auch "Sonstiges".
+    if(expenseCategories.indexOf(explicit)!==-1)return explicit;
+    var legacy={
+      'Wohnen & Verträge':'Wohnen & Nebenkosten',
+      'Mobilität & Auto':'Auto & Mobilität',
+      'Abos & Medien':'Abos & Streaming',
+      'Essen außer Haus':'Restaurant & Lieferdienst',
+      'Freizeit':'Freizeit & Hobbys',
+      'Gesundheit':'Gesundheit & Pflege'
+    };
+    if(legacy[explicit])return legacy[explicit];
+    // Kategorien aus aelteren CSV-Imports werden nicht verworfen.
+    if(explicit && explicit!=='Keine' && explicit!=='Nicht zugeordnet' && explicit!=='Nicht eindeutig')return explicit;
+    var t=String(e.title||'').toLocaleLowerCase('de-DE');
+    if(/rewe|edeka|lidl|aldi|kaufland|netto|penny|tegut|norma|globus|supermarkt|lebensmittel|rossmann|drogerie|dm markt/.test(t))return 'Lebensmittel & Drogerie';
+    if(/tankstelle|aral|shell|esso|diesel|benzin|tanken|werkstatt|reifen|parkhaus|parken|tüv|bahn|fahrkarte/.test(t))return 'Auto & Mobilität';
+    if(/miete|nebenkosten|strom|gasabschlag|heizung|wasser|grundsteuer|hausgeld/.test(t))return 'Wohnen & Nebenkosten';
+    if(/haftpflicht|hausrat|rechtsschutz|lebensversicherung|versicherung/.test(t))return 'Versicherungen';
+    if(/mobilfunk|handyvertrag|telefon|internet|dsl|vodafone|telekom/.test(t))return 'Internet & Mobilfunk';
+    if(/netflix|spotify|disney|prime video|youtube premium|dazn|abo|streaming/.test(t))return 'Abos & Streaming';
+    if(/restaurant|lieferando|pizza|döner|imbiss|mcdonald|burger king|café|bäckerei/.test(t))return 'Restaurant & Lieferdienst';
+    if(/arzt|apotheke|zahnarzt|medikament|klinik|physio/.test(t))return 'Gesundheit & Pflege';
+    if(/tierarzt|hundefutter|katzenfutter|zooplus|fressnapf|haustier/.test(t))return 'Haustiere';
+    if(/kindergarten|kita|schulbedarf|spielzeug|klassenfahrt/.test(t))return 'Familie & Kinder';
+    if(/kreditrate|darlehen|finanzierung|tilgung/.test(t))return 'Kredite & Finanzierung';
+    if(/sparkonto|rücklage|ruecklage|sparplan|sparen/.test(t))return 'Sparen & Rücklagen';
+    if(/kleidung|schuhe|amazon|zalando|elektronik|shopping/.test(t))return 'Shopping & Kleidung';
+    if(/kino|konzert|freizeit|steam|playstation|xbox|hobby|ausflug/.test(t))return 'Freizeit & Hobbys';
+    return 'Sonstiges';
   }
+  function isSavingsTransfer(e){return e.type!=='einnahme'&&categoryFor(e)==='Sparen & Rücklagen';}
   function sumEntries(entries){
-    return entries.reduce(function(acc,e){var val=Number(e.amount)||0;if(e.type==='einnahme')acc.income+=val;else acc.expense+=val;return acc;},{income:0,expense:0});
+    return entries.reduce(function(acc,e){
+      var val=Number(e.amount)||0;
+      if(e.type==='einnahme')acc.income+=val;
+      else if(isSavingsTransfer(e))acc.transfers+=val;
+      else acc.expense+=val;
+      return acc;
+    },{income:0,expense:0,transfers:0});
   }
   function groupsFor(entries){
     var groups={};
     entries.forEach(function(e){
-      if(e.type==='einnahme')return;
+      if(e.type==='einnahme'||isSavingsTransfer(e))return;
       var cat=categoryFor(e);
       if(!groups[cat])groups[cat]={name:cat,amount:0,count:0,titles:[]};
       groups[cat].amount+=Number(e.amount)||0;groups[cat].count++;
@@ -82,7 +115,7 @@
     var balance=all.filter(function(e){return e.date.slice(0,7)<=k;}).reduce(function(acc,e){return acc+(e.type==='einnahme'?1:-1)*Number(e.amount);},0);
     var categories=groupsFor(cur),prevCategories=groupsFor(prev);
     return {key:k,entries:cur,previousEntries:prev,history:history,
-      hash:hashEntries(history),income:sums.income,expense:sums.expense,
+      hash:hashEntries(history),income:sums.income,expense:sums.expense,transfers:sums.transfers,
       remaining:sums.income-sums.expense,balance:balance,
       previousIncome:older.income,previousExpense:older.expense,
       expenseDelta:sums.expense-older.expense,incomeDelta:sums.income-older.income,
@@ -91,7 +124,7 @@
   function byTitle(entries){
     var groups={};
     entries.forEach(function(e){
-      if(e.type==='einnahme')return;
+      if(e.type==='einnahme'||isSavingsTransfer(e))return;
       var title=String(e.title||'Ohne Titel').replace(/\s+/g,' ').trim();
       var key=title.toLocaleLowerCase('de-DE');
       if(!groups[key])groups[key]={title:title,amount:0,count:0};
@@ -122,7 +155,7 @@
   }
   function baseAnalysis(m){
     var good=[],notice=[],tips=[],prev=m.previousCount>0,ongoing=m.key===currentMonthKey();
-    var largest=m.entries.filter(function(e){return e.type!=='einnahme';})
+    var largest=m.entries.filter(function(e){return e.type!=='einnahme'&&!isSavingsTransfer(e);})
       .slice().sort(function(a,b){return Number(b.amount)-Number(a.amount);}).slice(0,5)
       .map(function(e){return {title:String(e.title||'Ohne Titel'),amount:Number(e.amount),date:e.date};});
     var merchants=byTitle(m.entries).slice(0,6);
@@ -186,6 +219,7 @@
     [['Einnahmen',euros(report.income),'positive'],['Ausgaben',euros(report.expense),'negative'],
      ['Monatlicher Rest',euros(report.remaining),report.remaining>=0?'positive':'negative'],
      ['Kontostand Monatsende',euros(report.balance),report.balance>=0?'positive':'negative']]
+      .concat(report.transfers>0?[['Sparen & Rücklagen',euros(report.transfers),'positive']]:[])
       .forEach(function(m){
         var card=document.createElement('div');card.className='ai-metric';
         var name=document.createElement('span');name.textContent=m[0];
@@ -236,13 +270,13 @@
     entrySection('Häufige Ausgabetitel',report.merchants,function(e){return [e.title+' · '+e.count+'×',euros(e.amount)];});
     entrySection('Über mehrere Monate wiederkehrend',report.regular,function(e){return [e.title+' · '+e.monthCount+' von 3 Monaten',euros(e.amount)+' aktuell'];});
     var note=document.createElement('p');note.className='ai-disclaimer';
-    note.textContent='Die Auswertung erfolgt vollständig offline und ohne Sprachmodell. Bekannte Händler werden anhand von Titel-Regeln grob zugeordnet, eigene Kategorien übernommen. Unbekannte Titel bleiben ungeklärt; die App kann nicht erkennen, ob ein Kauf notwendig war.';
+    note.textContent='Die Auswertung erfolgt vollständig offline und ohne Sprachmodell. Die im Kontostand gewählte Kategorie hat Vorrang. Ohne Auswahl wird der Buchungstitel anhand fester Regeln eingeordnet. Sparen & Rücklagen wird separat von normalen Ausgaben ausgewiesen; der Kontostand berücksichtigt weiterhin alle Geldbewegungen.';
     target.appendChild(note);
   }
   function reportFrom(m){
     var base=baseAnalysis(m);
     return {key:m.key,hash:m.hash,generatedAt:new Date().toISOString(),
-      entryCount:m.entries.length,income:m.income,expense:m.expense,
+      entryCount:m.entries.length,income:m.income,expense:m.expense,transfers:m.transfers,
       remaining:m.remaining,balance:m.balance,categories:m.categories,
       good:base.good,notice:base.notice,tips:base.tips,
       largest:base.largest,merchants:base.merchants,regular:base.regular};
