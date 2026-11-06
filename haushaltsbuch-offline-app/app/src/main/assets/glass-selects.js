@@ -119,6 +119,8 @@
     select.insertAdjacentElement('afterend',trigger);
     select._glassTrigger=trigger;
     trigger.addEventListener('click',function(){open(select,trigger);});
+    // Optionen werden beispielsweise bei Bezahlmonat/Auto erst spaeter befuellt.
+    new MutationObserver(function(){sync(select);}).observe(select,{childList:true,subtree:true,characterData:true});
     sync(select);
   }
   function labelFor(select){
