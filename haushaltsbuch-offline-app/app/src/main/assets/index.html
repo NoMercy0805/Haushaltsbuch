@@ -356,6 +356,43 @@
   .entry-form input, .entry-form select{font-family:var(--sans);font-size:16px;padding:14px 16px;border:1.5px solid #B0B2B8;border-radius:16px;background:var(--paper);color:var(--ink);width:100%;}
   html[data-theme="dark"] .entry-form input, html[data-theme="dark"] .entry-form select{border:1.5px solid #4A4C52;}
   .entry-form .full{grid-column:1 / -1;}
+  /* Kontostand-Kategorie wie in der Vorschau: beschriftetes Glas-Dropdown mit Beispiel. */
+  #betaEntryForm .beta-category-group{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  #betaEntryForm .beta-category-label{font-size:14px;font-weight:700;color:var(--ink);padding-left:2px;}
+  #betaEntryForm .beta-category-select-wrap{position:relative;min-width:0;}
+  #betaEntryForm #betaCategoryInput{
+    appearance:none;-webkit-appearance:none;
+    display:block;width:100%;min-width:0;min-height:50px;
+    padding:13px 44px 13px 15px;
+    border:1px solid rgba(255,255,255,.62);border-radius:15px;
+    background:rgba(255,255,255,.29);color:var(--ink);
+    font-size:15px;font-weight:650;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 5px 16px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  #betaEntryForm .beta-category-chevron{
+    position:absolute;right:15px;top:50%;transform:translateY(-50%);
+    color:var(--ink-soft);pointer-events:none;
+  }
+  #betaEntryForm #betaCategoryInput:focus-visible{
+    border-color:var(--primary);outline:2px solid var(--primary);outline-offset:1px;
+  }
+  #betaEntryForm .beta-category-example{
+    display:flex;flex-direction:column;gap:4px;
+    padding:11px 13px;border-radius:13px;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.31);
+    color:var(--ink);font-size:13px;line-height:1.4;
+  }
+  #betaEntryForm .beta-category-example-label{font-size:11px;color:var(--ink-soft);font-weight:650;}
+  html[data-theme="dark"] #betaEntryForm #betaCategoryInput{
+    border-color:rgba(255,255,255,.22);background:rgba(57,60,68,.65);
+    box-shadow:0 6px 18px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  html[data-theme="dark"] #betaEntryForm .beta-category-example{
+    background:rgba(57,60,68,.48);border-color:rgba(255,255,255,.13);
+  }
+
   .entry-form button[type="submit"]{grid-column:1 / -1;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;}
   .entry-form button[type="submit"]:hover{background:#0F56D6;}
   #fuelLogModalForm button[type="submit"], #carModalForm button[type="submit"]{background:var(--exhaust);}
@@ -1630,7 +1667,17 @@
         <div class="full" id="betaDateLabelWrap" style="font-size:12px;color:var(--ink-soft);margin:2px 0 -8px;">Datum</div>
         <input type="date" id="betaDateInput" class="full" required>
         <input type="text" inputmode="decimal" data-cent-input id="betaAmountInput" placeholder="Betrag (€)" class="full" required>
-        <select id="betaCategoryInput" class="full" aria-label="Kategorie" required></select>
+        <div class="full beta-category-group">
+          <label for="betaCategoryInput" class="beta-category-label">Kategorie auswählen</label>
+          <div class="beta-category-select-wrap">
+            <select id="betaCategoryInput" aria-label="Kategorie auswählen" required></select>
+            <svg class="beta-category-chevron" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          <div class="beta-category-example" aria-live="polite">
+            <span class="beta-category-example-label">Typische Buchungen</span>
+            <span id="betaCategoryExampleText"></span>
+          </div>
+        </div>
         <label class="full" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-top:2px;"><input type="checkbox" id="betaRecurringInput" style="width:18px;height:18px;">Dauerauftrag</label>
 
         <div class="full" id="betaRecurringFields" style="display:none;background:var(--paper);border-radius:14px;padding:12px 14px;margin:-4px 0 4px;">
@@ -6746,6 +6793,33 @@ var nativeStorage = {
     }
     return betaGuessCategory(title,type);
   }
+  var betaCategoryDisplay={
+    'Wohnen & Nebenkosten':['🏠','Miete, Strom, Gas, Wasser'],
+    'Lebensmittel & Drogerie':['🛒','REWE, Lidl, Aldi, dm'],
+    'Auto & Mobilität':['🚗','Tanken, Werkstatt, Parken'],
+    'Versicherungen':['🛡️','Haftpflicht, Hausrat, Rechtsschutz'],
+    'Internet & Mobilfunk':['📱','Mobilfunk, DSL, Telefon'],
+    'Abos & Streaming':['📺','Netflix, Spotify, Disney+'],
+    'Freizeit & Hobbys':['🎮','Gaming, Kino, Ausflüge'],
+    'Restaurant & Lieferdienst':['🍕','Restaurant, Imbiss, Lieferando'],
+    'Shopping & Kleidung':['🛍️','Kleidung, Elektronik, Onlinekäufe'],
+    'Gesundheit & Pflege':['💊','Apotheke, Medikamente, Arzt'],
+    'Familie & Kinder':['👨‍👩‍👧','Schule, Spielzeug, Kinderbedarf'],
+    'Haustiere':['🐾','Tierfutter, Tierarzt, Zubehör'],
+    'Kredite & Finanzierung':['💳','Kreditraten, Finanzierungen'],
+    'Sparen & Rücklagen':['💰','Sparkonto, Rücklagen, Sparplan'],
+    'Sonstiges':['📦','Weitere Ausgaben'],
+    'Gehalt':['💼','Lohn, Gehalt, Arbeitgeber'],
+    'Kindergeld':['👨‍👩‍👧','Kindergeld'],
+    'Erstattung':['↩️','Rückzahlung, Retoure, Gutschrift'],
+    'Geschenk':['🎁','Geldgeschenke'],
+    'Sonstige Einnahmen':['💶','Weitere Geldeingänge']
+  };
+  function betaUpdateCategoryExample(){
+    var select=document.getElementById('betaCategoryInput');
+    var target=document.getElementById('betaCategoryExampleText');
+    if(target&&select)target.textContent=(betaCategoryDisplay[select.value]||['','Sonstige Buchungen'])[1];
+  }
   function betaRefreshCategorySelect(preferred){
     var typeRadio=document.querySelector('input[name="betaType"]:checked');
     var type=typeRadio?typeRadio.value:'ausgabe';
@@ -6753,9 +6827,12 @@ var nativeStorage = {
     if(!select)return;
     select.innerHTML='';
     betaCategoryList(type).forEach(function(cat){
-      var opt=document.createElement('option');opt.value=cat;opt.textContent=cat;select.appendChild(opt);
+      var opt=document.createElement('option');opt.value=cat;
+      opt.textContent=(betaCategoryDisplay[cat]?betaCategoryDisplay[cat][0]+'  ':'')+cat;
+      select.appendChild(opt);
     });
     select.value=betaCategoryValid(type,preferred)?preferred:betaSuggestedCategory(document.getElementById('betaTitleInput').value,type);
+    betaUpdateCategoryExample();
   }
   function betaTypeSign(type){ return type === 'einnahme' ? 1 : -1; }
 
@@ -7333,6 +7410,7 @@ var nativeStorage = {
     });
     document.getElementById('betaCategoryInput').addEventListener('change',function(){
       this.dataset.manual='1';
+      betaUpdateCategoryExample();
     });
 
     var betaAmountInputEl = document.getElementById('betaAmountInput');
