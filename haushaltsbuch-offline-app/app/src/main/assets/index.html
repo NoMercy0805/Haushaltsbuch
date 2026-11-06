@@ -439,6 +439,15 @@
   .beta-category-option-icon{font-size:20px;line-height:1;flex-shrink:0;}
   .beta-category-option-name{flex:1;min-width:0;}
   .beta-category-option-check{font-size:18px;font-weight:800;min-width:18px;text-align:center;}
+  /* Kategorien direkt als gläsernes Dropdown unter/über dem Eingabefeld. */
+  .beta-category-overlay{background:transparent!important;pointer-events:none!important;padding:0!important;display:none!important;}
+  .beta-category-overlay.open{display:block!important;}
+  .beta-category-picker{position:fixed!important;box-sizing:border-box!important;pointer-events:auto;
+    width:auto;max-height:none;padding:7px!important;border-radius:15px!important;
+    border:1px solid rgba(255,255,255,.65);box-shadow:0 10px 28px rgba(0,0,0,.19)!important;}
+  html[data-theme="dark"] .beta-category-picker{border-color:rgba(255,255,255,.18);box-shadow:0 10px 28px rgba(0,0,0,.38)!important;}
+  .beta-category-picker-head{display:none!important;}
+
 
 
   .entry-form button[type="submit"]{grid-column:1 / -1;background:var(--primary);color:#fff;border:none;border-radius:999px;padding:16px;font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:0;cursor:pointer;}
@@ -6920,11 +6929,11 @@ var nativeStorage = {
       button.appendChild(icon);button.appendChild(name);button.appendChild(check);
       list.appendChild(button);
     });
-    // Breite an das sichtbare Kategorie-Eingabefeld anpassen, statt die gesamte Displaybreite zu nutzen.
+    // Popover direkt ans Feld binden, bei wenig Platz nach oben oeffnen.
     var trigger=document.getElementById('betaCategoryTrigger');
     var picker=overlay.querySelector('.beta-category-picker');
-    if(trigger && picker){
-      picker.style.width=Math.min(trigger.getBoundingClientRect().width,window.innerWidth-24)+'px';
+    if(window.householdPositionDropdown){
+      window.householdPositionDropdown(trigger,picker,Math.min(370,list.children.length*56+16));
     }
     overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
     trigger.setAttribute('aria-expanded','true');
@@ -6933,8 +6942,14 @@ var nativeStorage = {
   }
   function setupBetaCategoryPicker(){
     var overlay=document.getElementById('betaCategoryOverlay');
-    document.getElementById('betaCategoryTrigger').addEventListener('click',betaOpenCategoryPicker);
+    document.getElementById('betaCategoryTrigger').addEventListener('click',function(){
+      if(overlay.classList.contains('open'))betaCloseCategoryPicker();else betaOpenCategoryPicker();
+    });
     document.getElementById('betaCategoryPickerClose').addEventListener('click',betaCloseCategoryPicker);
+    document.addEventListener('pointerdown',function(event){
+      if(overlay.classList.contains('open')&&!event.target.closest('.beta-category-picker')&&
+         !document.getElementById('betaCategoryTrigger').contains(event.target))betaCloseCategoryPicker();
+    },true);
     overlay.addEventListener('click',function(event){
       if(event.target===overlay)betaCloseCategoryPicker();
       var chosen=event.target.closest('[data-category]');
