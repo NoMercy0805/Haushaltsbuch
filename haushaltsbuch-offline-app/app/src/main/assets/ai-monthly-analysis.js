@@ -7,6 +7,7 @@
   var DATA_KEY='household-data-v8';
   var monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   var activeKey='';
+  var trendPeriod=6;
 
   function storageGet(key){
     try{if(window.AndroidBridge&&window.AndroidBridge.nativeGetItem)return window.AndroidBridge.nativeGetItem(key);}
@@ -117,6 +118,9 @@
     return {key:k,entries:cur,previousEntries:prev,history:history,
       hash:hashEntries(history),income:sums.income,expense:sums.expense,transfers:sums.transfers,
       remaining:sums.income-sums.expense,balance:balance,
+      clearedBalance:all.filter(function(e){return e.reconciled&&e.date.slice(0,7)<=k;}).reduce(function(acc,e){return acc+(e.type==='einnahme'?1:-1)*Number(e.amount);},0),
+      pendingIncome:cur.filter(function(e){return !e.reconciled&&e.type==='einnahme';}).reduce(function(a,e){return a+Number(e.amount);},0),
+      pendingExpense:cur.filter(function(e){return !e.reconciled&&e.type!=='einnahme';}).reduce(function(a,e){return a+Number(e.amount);},0),
       previousIncome:older.income,previousExpense:older.expense,
       expenseDelta:sums.expense-older.expense,incomeDelta:sums.income-older.income,
       categories:categories,previousCategories:prevCategories,previousCount:prev.length};
@@ -210,74 +214,168 @@
     el.textContent=msg||'';
     el.style.color=isError?'var(--expense)':'var(--ink-soft)';
   }
+  function formatSigned(n){return (n>0?'+':'')+euros(n);}
+  function monthShift(k,steps){
+    var d=new Date(Number(k.slice(0,4)),Number(k.slice(5,7))-1+steps,1);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+  function metric(label,value,tone,icon){
+    return '<div class="ai-metric"><span class="ai-metric-name">'+icon+' '+escapeHtml(label)+'</span>'+
+      '<strong class="'+(tone||'')+'">'+escapeHtml(value)+'</strong></div>';
+  }
+  function dashboardSection(title,body,extra){
+    return '<section class="ai-dashboard-section"><h3>'+escapeHtml(title)+'</h3>'+(extra||'')+body+'</section>';
+  }
+  function pair(label,value,tone){
+    return '<div class="ai-pair"><span>'+escapeHtml(label)+'</span><strong class="'+(tone||'')+'">'+escapeHtml(value)+'</strong></div>';
+  }
+  function progressRow(name,amount,total,index){
+    var pct=total>0?Math.min(100,amount/total*100):0;
+    return '<div class="ai-progress-row"><div class="ai-pair"><span>'+escapeHtml(name)+'</span><strong>'+escapeHtml(euros(amount))+'</strong></div>'+
+      '<div class="ai-progress"><span class="ai-color-'+(index%5)+'" style="width:'+pct.toFixed(2)+'%"></span></div></div>';
+  }
+  function trendData(k,count){
+    var all=getEntries(),data=[];
+    for(var i=count-1;i>=0;i--){
+      var key=monthShift(k,-i),vals=sumEntries(all.filter(function(e){return e.date.slice(0,7)===key;}));
+      data.push({key:key,label:monthNames[Number(key.slice(5,7))-1].slice(0,3),income:vals.income,expense:vals.expense});
+    }
+    return data;
+  }
+  function trendBars(k,count){
+    var data=trendData(k,count),max=1;
+    data.forEach(function(d){max=Math.max(max,d.income,d.expense);});
+    var html='<div class="ai-chart" role="img" aria-label="Monatliche Einnahmen und Ausgaben">';
+    data.forEach(function(d){
+      html+='<div class="ai-chart-column" title="'+escapeHtml(keyLabel(d.key))+' – Einnahmen '+escapeHtml(euros(d.income))+'; Ausgaben '+escapeHtml(euros(d.expense))+'">'+
+        '<div class="ai-chart-bars"><span class="ai-income-bar" style="height:'+(d.income/max*100).toFixed(1)+'%"></span>'+
+        '<span class="ai-expense-bar" style="height:'+(d.expense/max*100).toFixed(1)+'%"></span></div>'+
+        '<span class="ai-chart-label">'+d.label+'</span></div>';
+    });
+    return html+'</div><div class="ai-chart-legend"><span>● Einnahmen</span><span>● Ausgaben</span></div>';
+  }
+  function details(title,body,open){
+    return '<details class="ai-details"'+(open?' open':'')+'><summary>'+escapeHtml(title)+
+      '<span aria-hidden="true">⌄</span></summary><div class="ai-details-body">'+body+'</div></details>';
+  }
+  function entryRows(entries,empty){
+    if(!entries||!entries.length)return '<p class="ai-small">'+escapeHtml(empty||'Keine Buchungen vorhanden.')+'</p>';
+    return entries.map(function(e){
+      return '<div class="ai-entry-line"><span>'+escapeHtml(e.title||'Ohne Titel')+
+      (e.date?' <small>· '+escapeHtml(shortDate(e.date))+'</small>':'')+
+      '</span><strong>'+escapeHtml(euros(Number(e.amount)||0))+'</strong></div>';
+    }).join('');
+  }
+  function forecastFor(key){
+    var next=monthShift(key,1),all=getEntries(),future=all.filter(function(e){return e.date.slice(0,7)===next;});
+    var expected=sumEntries(future), recurring=future.filter(function(e){return e.recurring||e.recurringGroupId||e.isRecurringTemplate;});
+    var rows=future.slice().sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,8);
+    return {key:next,expected:expected,recurring:recurring,rows:rows,count:future.length};
+  }
   function renderReport(report){
     var target=document.getElementById('aiReport');
     target.innerHTML='';
     if(!report){target.style.display='none';return;}
     target.style.display='block';
-    var metrics=document.createElement('div');metrics.className='ai-metrics';
-    [['Einnahmen',euros(report.income),'positive'],['Ausgaben',euros(report.expense),'negative'],
-     ['Monatlicher Rest',euros(report.remaining),report.remaining>=0?'positive':'negative'],
-     ['Kontostand Monatsende',euros(report.balance),report.balance>=0?'positive':'negative']]
-      .concat(report.transfers>0?[['Sparen & Rücklagen',euros(report.transfers),'positive']]:[])
-      .forEach(function(m){
-        var card=document.createElement('div');card.className='ai-metric';
-        var name=document.createElement('span');name.textContent=m[0];
-        var value=document.createElement('strong');value.className=m[2];value.textContent=m[1];
-        card.appendChild(name);card.appendChild(value);metrics.appendChild(card);
+    var m=compute(report.key),all=getEntries(),cur=m.entries,now=currentMonthKey();
+    var ongoing=report.key===now,complete=report.key<now;
+    var historical=report.key>now;
+    var rate=m.income>0?m.remaining/m.income*100:null;
+    var pct=rate===null?'–':rate.toLocaleString('de-DE',{maximumFractionDigits:1})+' %';
+    var meta='<p class="ai-report-label">'+escapeHtml(keyLabel(report.key))+' · '+cur.length+' Buchungen · '+
+      (complete?'Abgeschlossener Monat':ongoing?'Laufender Monat':'Zukünftiger Monat')+'</p>';
+    var html=meta+'<div class="ai-metrics">'+
+      metric('Einnahmen',euros(m.income),'positive','↙')+
+      metric('Ausgaben',euros(m.expense),'negative','↗')+
+      metric('Monatsüberschuss',formatSigned(m.remaining),m.remaining>=0?'positive':'negative','◉')+
+      metric('Überschussquote',pct,m.remaining>=0?'positive':'negative','◷')+
+      '</div>';
+    if(ongoing)html+='<p class="ai-small">Dieser Monat läuft noch. Vergleiche mit abgeschlossenen Monaten sind vorläufig.</p>';
+    html+=dashboardSection('Monatsbilanz',
+      progressRow('Einnahmen',m.income,Math.max(m.income,m.expense),0)+
+      progressRow('Ausgaben',m.expense,Math.max(m.income,m.expense),1)+
+      pair('Überschuss vor Sparüberträgen',formatSigned(m.remaining),m.remaining>=0?'positive':'negative')+
+      (m.transfers?pair('Sparen & Rücklagen (separat)',euros(m.transfers),''):'')+
+      '<p class="ai-small">Der Überschuss ergibt sich aus erfassten Einnahmen minus normalen Ausgaben. Sparüberträge werden separat ausgewiesen.</p>');
+    html+=dashboardSection('Kontostand & offene Buchungen',
+      pair('Abgeglichener Kontostand',euros(m.clearedBalance),m.clearedBalance>=0?'positive':'negative')+
+      pair('Offene Einnahmen',formatSigned(m.pendingIncome),'positive')+
+      pair('Offene Ausgaben',m.pendingExpense?'-'+euros(m.pendingExpense):euros(0),'negative')+
+      pair('Endsaldo inkl. offener Buchungen',euros(m.balance),m.balance>=0?'positive':'negative')+
+      '<p class="ai-small">Kontostände bis einschließlich '+escapeHtml(keyLabel(m.key))+'. Offen bedeutet: noch nicht abgeglichen. Die Anzeige basiert ausschließlich auf den erfassten Kontostand-Buchungen.</p>');
+    var prev=trendData(m.key,2)[0];
+    var prevAvailable=all.some(function(e){return e.date.slice(0,7)===prev.key;});
+    var diff=m.expense-prev.expense;
+    var comparison=prevAvailable?
+      pair('Ausgaben zum Vormonat',formatSigned(diff),diff<=0?'positive':'negative')+
+      pair('Einnahmen zum Vormonat',formatSigned(m.income-prev.income),m.income>=prev.income?'positive':'negative'):
+      '<p class="ai-small">Keine erfassten Buchungen im Vormonat für einen belastbaren Vergleich.</p>';
+    var switches='<div class="ai-periods" role="group" aria-label="Zeitraum">'+[3,6,12].map(function(n){
+      return '<button type="button" class="ai-period'+(trendPeriod===n?' active':'')+'" data-ai-period="'+n+'">'+n+' Monate</button>';
+    }).join('')+'</div>';
+    html+=dashboardSection('Entwicklung',comparison+switches+trendBars(m.key,trendPeriod));
+    var catRows=m.categories.map(function(c,i){
+      var book=cur.filter(function(e){return e.type!=='einnahme'&&!isSavingsTransfer(e)&&categoryFor(e)===c.name;});
+      var lines=entryRows(book,'Keine Buchungen.');
+      return details(c.name+' · '+euros(c.amount)+' · '+c.count+' Buchungen',
+        progressRow('Anteil an Ausgaben',c.amount,m.expense,i)+lines,false);
+    }).join('');
+    html+=dashboardSection('Ausgaben nach Kategorien',
+      m.categories.length?catRows:'<p class="ai-small">Keine Ausgaben in diesem Monat.</p>'+
+      '<p class="ai-small">Die im Kontostand ausgewählten Kategorien werden verwendet.</p>');
+    var recurring=recurringTitles(m);
+    var recurringKeys={};
+    recurring.forEach(function(r){recurringKeys[r.title.trim().toLocaleLowerCase('de-DE')]=true;});
+    var expenses=cur.filter(function(e){return e.type!=='einnahme'&&!isSavingsTransfer(e);});
+    var fixed=expenses.filter(function(e){return e.recurring||e.isRecurringTemplate||e.recurringGroupId||recurringKeys[String(e.title||'').trim().toLocaleLowerCase('de-DE')];});
+    var variable=expenses.filter(function(e){return fixed.indexOf(e)===-1;});
+    var fixedTotal=fixed.reduce(function(a,e){return a+Number(e.amount);},0);
+    var variableTotal=variable.reduce(function(a,e){return a+Number(e.amount);},0);
+    html+=dashboardSection('Regelmäßige & variable Kosten',
+      pair('Regelmäßige Buchungen',euros(fixedTotal),'')+
+      pair('Übrige Buchungen',euros(variableTotal),'')+
+      '<p class="ai-small">Regelmäßig = Dauerauftrag oder gleicher Titel in mindestens zwei der letzten drei Monate. Das ist eine Näherung, keine zusätzliche Abbuchung.</p>'+
+      details('Regelmäßige Buchungen ('+fixed.length+')',entryRows(fixed),false)+
+      details('Übrige Buchungen ('+variable.length+')',entryRows(variable),false));
+    var largest=expenses.slice().sort(function(a,b){return Number(b.amount)-Number(a.amount);}).slice(0,5);
+    var grouped=byTitle(cur).slice(0,6);
+    var merchantRows=grouped.map(function(e){
+      return '<div class="ai-entry-line"><span>'+escapeHtml(e.title)+' <small>· '+e.count+'×</small></span><strong>'+escapeHtml(euros(e.amount))+'</strong></div>';
+    }).join('');
+    html+=dashboardSection('Auffällige Buchungen',
+      details('Fünf größte Ausgaben',entryRows(largest),true)+
+      details('Häufige Ausgabetitel',merchantRows||'<p class="ai-small">Keine Daten.</p>',false));
+    var fc=forecastFor(m.key);
+    var forecastBody=fc.count?
+      pair('Bereits erfasste Einnahmen',euros(fc.expected.income),'positive')+
+      pair('Bereits erfasste Ausgaben',euros(fc.expected.expense),'negative')+
+      pair('Erfasste Sparüberträge',euros(fc.expected.transfers),'')+
+      details('Bekannte Buchungen ('+fc.count+')',entryRows(fc.rows),false):
+      '<p class="ai-small">Für diesen Monat sind noch keine Buchungen eingetragen. Eine verlässliche Prognose ist nicht möglich.</p>';
+    html+=dashboardSection('Ausblick: '+keyLabel(fc.key),forecastBody+
+      '<p class="ai-small">Nur bereits gespeicherte Buchungen einschließlich Daueraufträgen. Fehlende Einnahmen oder Zahlungen werden nicht geschätzt; keine Garantie für den künftigen Kontostand.</p>');
+    var analysis=baseAnalysis(m);
+    var insights=analysis.good.map(function(x){return '<p class="ai-insight good">✓ '+escapeHtml(x)+'</p>';}).join('')+
+      analysis.notice.map(function(x){return '<p class="ai-insight notice">• '+escapeHtml(x)+'</p>';}).join('')+
+      analysis.tips.map(function(x){return '<p class="ai-insight tip">✦ '+escapeHtml(x)+'</p>';}).join('');
+    html+=dashboardSection('Deine Erkenntnisse',details('Hinweise und Empfehlungen ('+
+      (analysis.good.length+analysis.notice.length+analysis.tips.length)+')',
+      insights||'<p class="ai-small">Keine Auffälligkeiten.</p>',true));
+    html+='<p class="ai-disclaimer">Alle Berechnungen erfolgen offline und nur auf Basis der im Kontostand erfassten Buchungen. Kategorien sind manuell festgelegt oder anhand des Titels geschätzt. Buchungen aus Kredite, Buchungen und Variable Kosten werden nicht zusätzlich in die Summen eingerechnet. Sparüberträge sind getrennt ausgewiesen.</p>';
+    target.innerHTML=html;
+    target.querySelectorAll('[data-ai-period]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        trendPeriod=Number(btn.getAttribute('data-ai-period'));
+        renderReport(report);
       });
-    target.appendChild(metrics);
-    var meta=document.createElement('p');meta.className='ai-report-label';
-    meta.textContent='Monatsbericht · '+keyLabel(report.key)+' · '+report.entryCount+' Buchungen';
-    target.appendChild(meta);
-    function section(title,items,kind){
-      if(!items||!items.length)return;
-      var block=document.createElement('section');block.className='ai-section '+(kind||'');
-      var h=document.createElement('h3');h.textContent=title;block.appendChild(h);
-      items.forEach(function(str){var p=document.createElement('p');p.textContent=str;block.appendChild(p);});
-      target.appendChild(block);
-    }
-    section('Das lief gut',report.good,'good');
-    section('Das ist aufgefallen',report.notice,'notice');
-    section('Worauf du achten könntest',report.tips,'tip');
-    if(report.categories&&report.categories.length){
-      var cat=document.createElement('section');cat.className='ai-section';
-      var h=document.createElement('h3');h.textContent='Wofür wurde Geld ausgegeben?';cat.appendChild(h);
-      report.categories.forEach(function(c){
-        var row=document.createElement('div');row.className='ai-cat ai-category-line';
-        var name=document.createElement('span');name.textContent=c.name+' · '+c.count+'×';
-        var right=document.createElement('strong');right.textContent=euros(c.amount);
-        row.appendChild(name);row.appendChild(right);cat.appendChild(row);
-        var progress=document.createElement('div');progress.className='ai-progress';
-        var bar=document.createElement('span');bar.style.width=(report.expense>0?Math.min(100,c.amount/report.expense*100):0)+'%';
-        progress.appendChild(bar);cat.appendChild(progress);
-      });
-      target.appendChild(cat);
-    }
-    function entrySection(title,rows,mapper){
-      if(!rows||!rows.length)return;
-      var block=document.createElement('section');block.className='ai-section';
-      var h=document.createElement('h3');h.textContent=title;block.appendChild(h);
-      rows.forEach(function(item){
-        var pair=mapper(item),row=document.createElement('div');row.className='ai-cat';
-        var name=document.createElement('span');name.textContent=pair[0];
-        var amount=document.createElement('strong');amount.textContent=pair[1];
-        row.appendChild(name);row.appendChild(amount);block.appendChild(row);
-      });
-      target.appendChild(block);
-    }
-    entrySection('Größte Einzelbuchungen',report.largest,function(e){return [e.title+' · '+shortDate(e.date),euros(e.amount)];});
-    entrySection('Häufige Ausgabetitel',report.merchants,function(e){return [e.title+' · '+e.count+'×',euros(e.amount)];});
-    entrySection('Über mehrere Monate wiederkehrend',report.regular,function(e){return [e.title+' · '+e.monthCount+' von 3 Monaten',euros(e.amount)+' aktuell'];});
-    var note=document.createElement('p');note.className='ai-disclaimer';
-    note.textContent='Die Auswertung erfolgt vollständig offline und ohne Sprachmodell. Die im Kontostand gewählte Kategorie hat Vorrang. Ohne Auswahl wird der Buchungstitel anhand fester Regeln eingeordnet. Sparen & Rücklagen wird separat von normalen Ausgaben ausgewiesen; der Kontostand berücksichtigt weiterhin alle Geldbewegungen.';
-    target.appendChild(note);
+    });
   }
   function reportFrom(m){
     var base=baseAnalysis(m);
     return {key:m.key,hash:m.hash,generatedAt:new Date().toISOString(),
       entryCount:m.entries.length,income:m.income,expense:m.expense,transfers:m.transfers,
-      remaining:m.remaining,balance:m.balance,categories:m.categories,
+      remaining:m.remaining,balance:m.balance,clearedBalance:m.clearedBalance,
+      pendingIncome:m.pendingIncome,pendingExpense:m.pendingExpense,categories:m.categories,
       good:base.good,notice:base.notice,tips:base.tips,
       largest:base.largest,merchants:base.merchants,regular:base.regular};
   }
