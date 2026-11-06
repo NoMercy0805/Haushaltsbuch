@@ -410,12 +410,12 @@
     background:rgba(52,57,68,.91);border-color:rgba(255,255,255,.20);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 4px 13px rgba(0,0,0,.18);
   }
-  .beta-category-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-end;
-    background:rgba(10,13,20,.48);padding:0;box-sizing:border-box;}
+  .beta-category-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:flex-end;justify-content:center;
+    background:rgba(10,13,20,.48);padding:0 12px 12px;box-sizing:border-box;}
   .beta-category-overlay.open{display:flex;}
-  .beta-category-picker{width:100%;max-height:min(75dvh,680px);display:flex;flex-direction:column;
+  .beta-category-picker{width:min(100%,356px);max-height:min(75dvh,680px);display:flex;flex-direction:column;
     overflow:hidden;padding:13px 14px calc(16px + env(safe-area-inset-bottom,0px));
-    border-radius:24px 24px 0 0;
+    border-radius:22px;
     background:rgba(246,247,250,.97);border-top:1px solid rgba(255,255,255,.75);
     backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
     box-shadow:0 -12px 42px rgba(0,0,0,.22);color:var(--ink);}
@@ -6920,8 +6920,14 @@ var nativeStorage = {
       button.appendChild(icon);button.appendChild(name);button.appendChild(check);
       list.appendChild(button);
     });
+    // Breite an das sichtbare Kategorie-Eingabefeld anpassen, statt die gesamte Displaybreite zu nutzen.
+    var trigger=document.getElementById('betaCategoryTrigger');
+    var picker=overlay.querySelector('.beta-category-picker');
+    if(trigger && picker){
+      picker.style.width=Math.min(trigger.getBoundingClientRect().width,window.innerWidth-24)+'px';
+    }
     overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
-    document.getElementById('betaCategoryTrigger').setAttribute('aria-expanded','true');
+    trigger.setAttribute('aria-expanded','true');
     var selected=list.querySelector('.selected');
     if(selected)selected.scrollIntoView({block:'nearest'});
   }
