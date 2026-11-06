@@ -1198,16 +1198,17 @@
   /* Auch die bereits gewuenschte Saldo-Leiste auf Glasoptik umstellen.
      Die zwei Zahlen werden getrennt nach ihrem Vorzeichen eingefaerbt. */
   #betaBalanceBar,#betaBalanceBar.positive{
-    background:rgba(255,255,255,.18)!important;
-    border:1px solid rgba(255,255,255,.42)!important;
-    backdrop-filter:blur(16px) saturate(140%)!important;-webkit-backdrop-filter:blur(16px) saturate(140%)!important;
-    box-shadow:0 7px 22px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.28)!important;
+    /* Helles Glas nahezu blickdicht: Buchungszeilen scheinen nicht mehr durch. */
+    background:rgba(246,247,250,.94)!important;
+    border:1px solid rgba(255,255,255,.70)!important;
+    backdrop-filter:blur(16px) saturate(110%)!important;-webkit-backdrop-filter:blur(16px) saturate(110%)!important;
+    box-shadow:0 7px 22px rgba(0,0,0,.17),inset 0 1px 0 rgba(255,255,255,.72)!important;
   }
   html[data-theme="dark"] #betaBalanceBar,
   html[data-theme="dark"] #betaBalanceBar.positive{
-    background:rgba(63,69,80,.52)!important;
-    border-color:rgba(255,255,255,.19)!important;
-    box-shadow:0 8px 24px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.12)!important;
+    background:rgba(43,47,55,.94)!important;
+    border-color:rgba(255,255,255,.22)!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.29),inset 0 1px 0 rgba(255,255,255,.13)!important;
   }
   #betaBalanceBar .beta-balance-label{color:var(--ink)!important;}
   #betaBalanceAdd{color:var(--ink)!important;border-left-color:rgba(145,153,169,.46)!important;border-right-color:rgba(145,153,169,.46)!important;}
