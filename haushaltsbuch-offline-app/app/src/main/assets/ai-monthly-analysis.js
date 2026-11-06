@@ -446,6 +446,11 @@
       '.ai-month-option{width:100%;display:flex;justify-content:space-between;align-items:center;min-height:47px;gap:8px;border-radius:12px;padding:11px 14px;text-align:left;font-size:14px;font-weight:650;color:var(--ink);border:1px solid rgba(255,255,255,.45);background:var(--surface);cursor:pointer}'+
       '.ai-month-option.selected{background:var(--selection-bg);color:var(--selection-text);border-color:var(--selection-ring)}'+
       '.ai-month-check{font-size:18px;min-width:22px;text-align:center}'+
+      '.ai-month-sheet{background:transparent!important;pointer-events:none;overflow:visible!important;border-radius:0!important}'+
+      '.ai-month-sheet.open{display:block!important}'+
+      '.ai-month-picker{position:absolute;box-sizing:border-box;pointer-events:auto;min-width:0;overflow:hidden;width:auto;max-height:none;padding:7px!important;border-radius:15px!important;border:1px solid rgba(255,255,255,.68)!important;box-shadow:0 10px 28px rgba(0,0,0,.19)!important}'+
+      'html[data-theme="dark"] .ai-month-picker{border-color:rgba(255,255,255,.19)!important;box-shadow:0 10px 28px rgba(0,0,0,.37)!important}'+
+      '.ai-month-picker-head{display:none!important}'+
       '.ai-intro{border-radius:15px;background:var(--primary-soft);padding:13px;font-size:13px;color:var(--ink);line-height:1.55}'+
       '.ai-box{border:1px solid var(--rule);background:var(--surface);border-radius:16px;padding:14px} .ai-box h3{font-size:15px;margin:0 0 9px}'+
       '.ai-action{width:100%;border:0;border-radius:13px;background:var(--primary);color:white;padding:13px;font-size:14px;font-weight:750;cursor:pointer}'+
@@ -503,6 +508,17 @@
     var monthSheet=document.getElementById('aiMonthSheet');
     var monthTrigger=document.getElementById('aiMonthTrigger');
     monthTrigger.addEventListener('click',function(){
+      if(monthSheet.classList.contains('open')){closeMonthSheet();return;}
+      var picker=monthSheet.querySelector('.ai-month-picker');
+      var panel=monthSheet.parentElement;
+      var r=monthTrigger.getBoundingClientRect(),p=panel.getBoundingClientRect(),gap=6;
+      var below=Math.max(0,p.bottom-r.bottom-10),above=Math.max(0,r.top-p.top-10);
+      var down=below>=Math.min(310,160)||below>=above;
+      picker.style.width=r.width+'px';
+      picker.style.left=(r.left-p.left)+'px';
+      picker.style.maxHeight=Math.min(340,Math.max(65,down?below:above))+'px';
+      picker.style.top=down?(r.bottom-p.top+gap)+'px':'auto';
+      picker.style.bottom=down?'auto':(p.bottom-r.top+gap)+'px';
       monthSheet.classList.add('open');
       monthTrigger.setAttribute('aria-expanded','true');
       var selected=monthSheet.querySelector('.ai-month-option.selected');
@@ -510,6 +526,10 @@
     });
     document.getElementById('aiMonthSheetClose').addEventListener('click',closeMonthSheet);
     monthSheet.addEventListener('click',function(e){if(e.target===monthSheet)closeMonthSheet();});
+    document.addEventListener('pointerdown',function(e){
+      if(monthSheet.classList.contains('open')&&!e.target.closest('.ai-month-picker')&&
+         !monthTrigger.contains(e.target))closeMonthSheet();
+    },true);
     document.getElementById('aiMonthOptions').addEventListener('click',function(e){
       var button=e.target.closest('[data-month-key]');
       if(!button)return;
