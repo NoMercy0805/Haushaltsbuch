@@ -388,13 +388,30 @@
   function open(){
     var options=monthOptions(),wanted=currentMonthKey();
     activeKey=options.indexOf(wanted)>-1?wanted:(options[0]||currentMonthKey());
-    var sel=document.getElementById('aiMonthSelect');sel.innerHTML='';
-    options.forEach(function(k){var el=document.createElement('option');el.value=k;el.textContent=keyLabel(k);sel.appendChild(el);});
-    sel.value=activeKey;
+    var items=document.getElementById('aiMonthOptions');
+    items.innerHTML='';
+    options.forEach(function(k){
+      var btn=document.createElement('button');
+      btn.type='button';btn.className='ai-month-option'+(k===activeKey?' selected':'');
+      btn.dataset.monthKey=k;
+      btn.setAttribute('role','option');btn.setAttribute('aria-selected',k===activeKey?'true':'false');
+      btn.innerHTML='<span>'+escapeHtml(keyLabel(k))+'</span><span class="ai-month-check" aria-hidden="true">'+(k===activeKey?'✓':'')+'</span>';
+      items.appendChild(btn);
+    });
+    document.getElementById('aiMonthTriggerLabel').textContent=keyLabel(activeKey);
+    document.getElementById('aiMonthTrigger').setAttribute('aria-expanded','false');
+    document.getElementById('aiMonthSheet').classList.remove('open');
     document.getElementById('aiMonthlyOverlay').classList.add('open');
     refreshReport();
   }
+  function closeMonthSheet(){
+    var sheet=document.getElementById('aiMonthSheet');
+    if(sheet)sheet.classList.remove('open');
+    var trigger=document.getElementById('aiMonthTrigger');
+    if(trigger)trigger.setAttribute('aria-expanded','false');
+  }
   function close(){
+    closeMonthSheet();
     document.getElementById('aiMonthlyOverlay').classList.remove('open');
   }
   function generateBase(){
@@ -415,7 +432,20 @@
       '.ai-head{padding:19px 19px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--rule)}'+
       '.ai-head h2{margin:0;font-size:20px;font-weight:800}.ai-close{background:var(--surface-2);border:0;border-radius:50%;width:36px;height:36px;color:var(--ink);font-size:24px;cursor:pointer}'+
       '.ai-body{overflow:auto;overscroll-behavior:contain;padding:18px;display:flex;flex-direction:column;gap:13px}'+
-      '.ai-body select{width:100%;background:var(--surface-2);color:var(--ink);border:1px solid var(--rule-strong);border-radius:13px;padding:12px;font-size:15px;box-sizing:border-box}'+
+      '.ai-panel{position:relative}'+
+      '.ai-month-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;padding:12px 16px;border-radius:15px;border:1px solid rgba(255,255,255,.55);background:rgba(246,248,252,.83);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 4px 13px rgba(0,0,0,.07);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-size:16px;font-weight:650;cursor:pointer;text-align:left}'+
+      '.ai-month-trigger svg{width:18px;height:18px;flex:none;color:var(--ink-soft)}'+
+      'html[data-theme="dark"] .ai-month-trigger{background:rgba(52,57,68,.91);border-color:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 4px 13px rgba(0,0,0,.18)}'+
+      '.ai-month-sheet{position:absolute;inset:0;z-index:40;display:none;align-items:flex-end;background:rgba(10,13,20,.38);border-radius:22px;overflow:hidden}'+
+      '.ai-month-sheet.open{display:flex}'+
+      '.ai-month-picker{width:100%;max-height:min(68dvh,590px);display:flex;flex-direction:column;overflow:hidden;padding:12px 12px 16px;background:rgba(246,247,250,.97);border-top:1px solid rgba(255,255,255,.7);border-radius:22px 22px 0 0;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 -10px 40px rgba(0,0,0,.2)}'+
+      'html[data-theme="dark"] .ai-month-picker{background:rgba(43,47,55,.98);border-color:rgba(255,255,255,.2)}'+
+      '.ai-month-picker-head{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 12px;font-weight:800;font-size:16px;color:var(--ink)}'+
+      '.ai-month-close{border:0;background:var(--surface-2);color:var(--ink);width:32px;height:32px;border-radius:50%;font-size:22px;cursor:pointer}'+
+      '.ai-month-options{overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding:3px 2px 6px}'+
+      '.ai-month-option{width:100%;display:flex;justify-content:space-between;align-items:center;min-height:47px;gap:8px;border-radius:12px;padding:11px 14px;text-align:left;font-size:14px;font-weight:650;color:var(--ink);border:1px solid rgba(255,255,255,.45);background:var(--surface);cursor:pointer}'+
+      '.ai-month-option.selected{background:var(--selection-bg);color:var(--selection-text);border-color:var(--selection-ring)}'+
+      '.ai-month-check{font-size:18px;min-width:22px;text-align:center}'+
       '.ai-intro{border-radius:15px;background:var(--primary-soft);padding:13px;font-size:13px;color:var(--ink);line-height:1.55}'+
       '.ai-box{border:1px solid var(--rule);background:var(--surface);border-radius:16px;padding:14px} .ai-box h3{font-size:15px;margin:0 0 9px}'+
       '.ai-action{width:100%;border:0;border-radius:13px;background:var(--primary);color:white;padding:13px;font-size:14px;font-weight:750;cursor:pointer}'+
@@ -461,17 +491,43 @@
     document.head.appendChild(css);
     var root=document.createElement('div');root.id='aiMonthlyOverlay';root.className='ai-overlay';
     root.innerHTML='<div class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle"><div class="ai-head"><h2 id="aiTitle">✦ Monatsauswertung</h2><button type="button" class="ai-close" id="aiClose" aria-label="Schließen">×</button></div>'+
-      '<div class="ai-body"><label for="aiMonthSelect" style="font-weight:700;font-size:14px">Monat auswählen</label><select id="aiMonthSelect"></select>'+
+      '<div class="ai-body"><label for="aiMonthTrigger" style="font-weight:700;font-size:14px">Monat auswählen</label>'+
+      '<button type="button" class="ai-month-trigger" id="aiMonthTrigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="aiMonthOptions"><span id="aiMonthTriggerLabel"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'+
       '<div class="ai-intro">Dein persönliches Finanz-Dashboard: Monatsbilanz, Kontostand, Entwicklung, Kategorien, regelmäßige Ausgaben, Ausblick und konkrete Erkenntnisse. Vollständig offline.</div>'+
-      '<button type="button" id="aiBaseGenerate" class="ai-action">Bericht speichern / aktualisieren</button>'+
-      '<div id="aiFeedback" role="status" aria-live="polite"></div><div id="aiReport" style="display:none"></div></div></div>';
+      '<div id="aiFeedback" role="status" aria-live="polite"></div><div id="aiReport" style="display:none"></div></div>'+
+      '<div class="ai-month-sheet" id="aiMonthSheet"><div class="ai-month-picker"><div class="ai-month-picker-head"><span>Monat auswählen</span><button type="button" id="aiMonthSheetClose" class="ai-month-close" aria-label="Monatsauswahl schließen">×</button></div><div class="ai-month-options" id="aiMonthOptions" role="listbox" aria-label="Monate"></div></div></div></div>';
     document.body.appendChild(root);
     ai.addEventListener('click',open);
     document.getElementById('aiClose').addEventListener('click',close);
     root.addEventListener('click',function(e){if(e.target===root)close();});
-    document.getElementById('aiMonthSelect').addEventListener('change',function(e){activeKey=e.target.value;refreshReport();});
-    document.getElementById('aiBaseGenerate').addEventListener('click',generateBase);
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&root.classList.contains('open'))close();});
+    var monthSheet=document.getElementById('aiMonthSheet');
+    var monthTrigger=document.getElementById('aiMonthTrigger');
+    monthTrigger.addEventListener('click',function(){
+      monthSheet.classList.add('open');
+      monthTrigger.setAttribute('aria-expanded','true');
+      var selected=monthSheet.querySelector('.ai-month-option.selected');
+      if(selected)selected.scrollIntoView({block:'nearest'});
+    });
+    document.getElementById('aiMonthSheetClose').addEventListener('click',closeMonthSheet);
+    monthSheet.addEventListener('click',function(e){if(e.target===monthSheet)closeMonthSheet();});
+    document.getElementById('aiMonthOptions').addEventListener('click',function(e){
+      var button=e.target.closest('[data-month-key]');
+      if(!button)return;
+      activeKey=button.dataset.monthKey;
+      monthTrigger.querySelector('#aiMonthTriggerLabel').textContent=keyLabel(activeKey);
+      document.querySelectorAll('.ai-month-option').forEach(function(option){
+        var selected=option.dataset.monthKey===activeKey;
+        option.classList.toggle('selected',selected);
+        option.setAttribute('aria-selected',selected?'true':'false');
+        option.querySelector('.ai-month-check').textContent=selected?'✓':'';
+      });
+      closeMonthSheet();
+      refreshReport();
+    });
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape'||!root.classList.contains('open'))return;
+      if(monthSheet.classList.contains('open'))closeMonthSheet();else close();
+    });
     var oldClose=window.closeAnyOpenOverlay;
     window.closeAnyOpenOverlay=function(){if(root.classList.contains('open')){close();return true;}return typeof oldClose==='function'?oldClose():false;};
   }
