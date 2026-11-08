@@ -159,9 +159,9 @@ public abstract class BetaWidgetProvider extends AppWidgetProvider {
         boolean revealed = prefs.getBoolean(revealedKey(widgetId), false);
 
         views.setTextViewText(R.id.widget_balance, balanceText);
-        views.setTextColor(R.id.widget_balance, isPositive
-                ? context.getResources().getColor(R.color.widget_balance_pos)
-                : context.getResources().getColor(R.color.widget_balance_neg));
+        // Wie beim Endsaldo in der App: ruhige, gut lesbare Schrift statt bunter Zahlen.
+        views.setTextColor(R.id.widget_balance,
+                context.getResources().getColor(R.color.widget_text));
         views.setInt(R.id.widget_balance_pill, "setBackgroundResource",
                 isPositive ? R.drawable.widget_amount_pill_pos : R.drawable.widget_amount_pill_neg);
 
