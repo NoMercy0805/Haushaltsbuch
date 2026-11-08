@@ -12,6 +12,8 @@
     <color name="widget_toggle_bg">#1674F8</color>
     <color name="widget_toggle_soft">#D9E7FF</color>
     <color name="widget_cover_bg">@color/widget_toggle_soft</color>
-    <color name="widget_cover_dots">@color/widget_toggle_bg</color>
+    <color name="widget_cover_dots">@color/widget_label</color>
     <color name="widget_card_border">#D8DEE9</color>
+    <color name="widget_icon_bg">#F9FBFF</color>
+    <color name="widget_accent_bg">#F9E5F5</color>
 </resources>
