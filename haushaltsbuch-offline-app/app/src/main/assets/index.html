@@ -3181,13 +3181,13 @@ var nativeStorage = {
     var nextMonthOpen = open.filter(function(i){ return i.dueDate && i.dueDate.slice(0,7) === nextMonthKey; });
     var monthTotal = sum(thisMonthOpen, 'amount');
     var nextMonthTotal = sum(nextMonthOpen, 'amount');
-    var overdue = open.filter(function(i){ return i.dueDate && i.dueDate < todayISO(); }).length;
+    var allOpenTotal = sum(open, 'amount');
     document.getElementById('invoiceSummary').innerHTML =
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Offene Rechnungen diesen Monat</div>'+
       '<div class="hero-card-value">'+fmtEUR(monthTotal)+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Davon überfällig</div><div class="hero-card-sub-value">'+overdue+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Folgemonat</div><div class="hero-card-sub-value">'+fmtEUR(nextMonthTotal)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Alle offenen Rechnungen</div><div class="hero-card-sub-value">'+fmtEUR(allOpenTotal)+'</div></div>'+
       '</div>'+
       heroToggleButtonHTML('invoiceSummary');
 
