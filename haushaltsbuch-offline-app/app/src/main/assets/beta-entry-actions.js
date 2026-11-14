@@ -57,34 +57,6 @@
     });
   }
 
-  function scheduleDeleteAfterOriginalEdit(){
-    var token = String(Date.now()) + Math.random();
-    window.__betaPendingDeleteV3 = token;
-    var started = Date.now();
-
-    function check(){
-      if(window.__betaPendingDeleteV3 !== token) return;
-      var overlay = document.getElementById('addBetaOverlay');
-      var deleteButton = document.getElementById('betaDeleteBtn');
-      var overlayOpen = overlay && overlay.classList.contains('visible');
-      var deleteVisible = deleteButton && deleteButton.style.display !== 'none';
-
-      if(overlayOpen && deleteVisible){
-        window.__betaPendingDeleteV3 = null;
-        setTimeout(function(){ deleteButton.click(); }, 0);
-        return;
-      }
-
-      if(Date.now() - started < 30000){
-        setTimeout(check, 100);
-      } else if(window.__betaPendingDeleteV3 === token){
-        window.__betaPendingDeleteV3 = null;
-      }
-    }
-
-    setTimeout(check, 0);
-  }
-
   document.addEventListener('click', function(e){
     var row = e.target.closest && e.target.closest('.beta-entry-row');
     if(!row) return;
@@ -103,12 +75,15 @@
       // State und zeigt bei Dauerauftraegen die Auswahl "diesen"/"folgende".
       if(action === 'edit') return;
 
-      // Fuer Loeschen darf ebenfalls zuerst der Original-Bearbeiten-Handler
-      // laufen. So bleibt auch hier die Dauerauftrag-Auswahl erhalten. Sobald
-      // das Original-Formular geoeffnet ist, wird dessen bestehender
-      // Loeschen-Button ausgeloest und damit die vorhandene Loeschlogik genutzt.
+      // Direkt zur bestehenden Loeschlogik. Das Bearbeitungsfenster wird
+      // dabei nicht geoeffnet; die Sicherheitsabfrage erscheint sofort.
       if(action === 'delete'){
-        scheduleDeleteAfterOriginalEdit();
+        e.preventDefault();
+        e.stopPropagation();
+        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+        if(typeof window.betaDeleteEntryDirectV3 === 'function'){
+          window.betaDeleteEntryDirectV3(row.dataset.id);
+        }
         return;
       }
     }
