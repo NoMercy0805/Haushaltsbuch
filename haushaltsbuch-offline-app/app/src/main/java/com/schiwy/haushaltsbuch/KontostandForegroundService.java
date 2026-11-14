@@ -15,11 +15,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
-import android.widget.RemoteViews;
 
 /**
- * Zeigt den Kontostand als dauerhafte Benachrichtigung mit Androids
- * Standardhintergrund und einer farbigen Betragsanzeige an.
+ * Zeigt den Kontostand als dauerhafte, farbig eingefaerbte Benachrichtigung
+ * an - nach demselben bewaehrten Muster wie Arbeitszeit+'s
+ * PunchForegroundService: nur als echter Foreground Service funktioniert
+ * setColorized() zuverlaessig und werden custom RemoteViews-Layouts
+ * zuverlaessig gerendert (ein einfaches notify() ohne Service hat das nicht
+ * geschafft).
  *
  * Auf Android 14+ kann der Nutzer die Benachrichtigung trotzdem wegwischen
  * (System-Vorgabe fuer Foreground-Service-Benachrichtigungen) - sie erscheint
@@ -130,6 +133,8 @@ public class KontostandForegroundService extends Service {
             builder = new Notification.Builder(this);
         }
 
+        String accentHex = isPositive ? "#DCF5E4" : "#FBE2E2";
+
         builder
                 .setContentTitle("Haushaltsbuch+")
                 .setContentText("Kontostand")
@@ -137,24 +142,21 @@ public class KontostandForegroundService extends Service {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent)
                 .setOngoing(true)
-                .setOnlyAlertOnce(true);
+                .setOnlyAlertOnce(true)
+                .setColor(Color.parseColor(accentHex));
 
         try {
             Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
             if (logo != null) builder.setLargeIcon(logo);
         } catch (Exception ignored) {}
 
-        // Standardhintergrund des Systems beibehalten. Nur der Betrag ist
-        // farbig; die erweiterte Ansicht erlaubt eine groessere Schrift.
-        RemoteViews expanded = new RemoteViews(getPackageName(),
-                R.layout.notification_kontostand_expanded);
-        expanded.setTextViewText(R.id.notif_subtitle, "Kontostand");
-        expanded.setTextViewText(R.id.notif_amount, balanceText);
-        expanded.setTextColor(R.id.notif_amount,
-                Color.parseColor(isPositive ? "#168548" : "#D23C43"));
-        builder.setCustomBigContentView(expanded);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            builder.setStyle(new Notification.DecoratedCustomViewStyle());
+        String signLabel = isPositive ? "Im Plus" : "Im Minus";
+        builder.setStyle(new Notification.BigTextStyle()
+                .bigText(signLabel)
+                .setBigContentTitle(balanceText));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setColorized(true);
         }
 
         Intent addAusgabeIntent = new Intent(this, MainActivity.class);
