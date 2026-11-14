@@ -24,16 +24,19 @@
             android:layout_height="wrap_content"
             android:text="Kontostand"
             android:textSize="13sp"
-            android:textColor="?android:attr/textColorPrimary"
+            android:textColor="#DCE9FF"
             android:layout_marginBottom="4dp" />
 
         <TextView
             android:id="@+id/notif_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textSize="26sp"
+            android:background="@drawable/notif_amount_pill"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF" />
 
