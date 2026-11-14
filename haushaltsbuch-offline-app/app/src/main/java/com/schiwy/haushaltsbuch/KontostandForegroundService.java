@@ -15,6 +15,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 
 /**
  * Zeigt den Kontostand als dauerhafte, farbig eingefaerbte Benachrichtigung
@@ -149,9 +152,13 @@ public class KontostandForegroundService extends Service {
 
         // Androids Standardhintergrund verwenden. Keine zusaetzliche
         // Plus-/Minus-Zeile unter dem Kontostand anzeigen.
+        SpannableString coloredBalance = new SpannableString(balanceText);
+        coloredBalance.setSpan(new ForegroundColorSpan(
+                        Color.parseColor(isPositive ? "#168548" : "#D23C43")),
+                0, coloredBalance.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         builder.setStyle(new Notification.BigTextStyle()
                 .bigText("")
-                .setBigContentTitle(balanceText));
+                .setBigContentTitle(coloredBalance));
 
         Intent addAusgabeIntent = new Intent(this, MainActivity.class);
         addAusgabeIntent.setAction(Intent.ACTION_MAIN);
