@@ -133,8 +133,6 @@ public class KontostandForegroundService extends Service {
             builder = new Notification.Builder(this);
         }
 
-        String accentHex = isPositive ? "#DCF5E4" : "#FBE2E2";
-
         builder
                 .setContentTitle("Haushaltsbuch+")
                 .setContentText("Kontostand")
@@ -142,22 +140,18 @@ public class KontostandForegroundService extends Service {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent)
                 .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setColor(Color.parseColor(accentHex));
+                .setOnlyAlertOnce(true);
 
         try {
             Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
             if (logo != null) builder.setLargeIcon(logo);
         } catch (Exception ignored) {}
 
-        String signLabel = isPositive ? "Im Plus" : "Im Minus";
+        // Androids Standardhintergrund verwenden. Keine zusaetzliche
+        // Plus-/Minus-Zeile unter dem Kontostand anzeigen.
         builder.setStyle(new Notification.BigTextStyle()
-                .bigText(signLabel)
+                .bigText("")
                 .setBigContentTitle(balanceText));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setColorized(true);
-        }
 
         Intent addAusgabeIntent = new Intent(this, MainActivity.class);
         addAusgabeIntent.setAction(Intent.ACTION_MAIN);
