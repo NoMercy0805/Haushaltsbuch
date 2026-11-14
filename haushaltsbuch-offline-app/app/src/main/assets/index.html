@@ -7073,6 +7073,7 @@ var nativeStorage = {
                       '<span class="beta-entry-name"><span class="beta-entry-title">'+escapeHtml(e.title)+'</span>'+(e.recurring?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>':'')+(e.category ? '<span class="beta-entry-sub" title="'+escapeHtml(e.category)+'">'+escapeHtml(e.category)+'</span>' : '')+'</span>'+
                     '</span>'+
                     '<span class="beta-entry-amount" style="color:'+(sign>=0?'var(--savings)':'var(--expense)')+';">'+(sign>=0?'+':'-')+fmtEUR(e.amount)+'</span>'+
+                    '<button type="button" class="action-icon-btn danger" data-action="delete-beta-entry" data-id="'+e.id+'" aria-label="Eintrag löschen" title="Eintrag löschen" style="flex-shrink:0;"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg></button>'+
                   '</div>';
         });
         html += '</div>';
@@ -7439,6 +7440,18 @@ var nativeStorage = {
         }
         return;
       }
+      var deleteBtn = e.target.closest('[data-action="delete-beta-entry"]');
+      if(deleteBtn){
+        var deleteEntry = state.betaEntries.filter(function(x){ return x.id === deleteBtn.dataset.id; })[0];
+        if(!deleteEntry) return;
+        var deleteScope = 'this';
+        if(deleteEntry.isRecurringTemplate || deleteEntry.recurringGroupId){
+          deleteScope = await betaRecurringChoiceDialog();
+          if(!deleteScope) return;
+        }
+        await deleteBetaEntry(deleteEntry, deleteScope, false);
+        return;
+      }
       var row = e.target.closest('.beta-entry-row');
       if(!row) return;
       var entry = state.betaEntries.filter(function(x){ return x.id === row.dataset.id; })[0];
@@ -7453,12 +7466,9 @@ var nativeStorage = {
       openBetaEditForm(entry, scope);
     });
 
-    document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
-      if(!editingBetaId) return;
-      var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
-      if(!entry) return;
+    async function deleteBetaEntry(entry, scope, closeEditor){
       var isPartOfSeries = entry.isRecurringTemplate || entry.recurringGroupId;
-      var deleteFollowing = editingBetaScope === 'following' && isPartOfSeries;
+      var deleteFollowing = scope === 'following' && isPartOfSeries;
 
       var msg;
       if(deleteFollowing){
@@ -7495,12 +7505,20 @@ var nativeStorage = {
           }
         }
       } else {
-        state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== editingBetaId; });
+        state.betaEntries = state.betaEntries.filter(function(x){ return x.id !== entry.id; });
       }
       saveState();
-      document.getElementById('addBetaOverlay').classList.remove('open');
-      resetBetaForm();
+      if(closeEditor){
+        document.getElementById('addBetaOverlay').classList.remove('open');
+        resetBetaForm();
+      }
       renderBeta();
+    }
+
+    document.getElementById('betaDeleteBtn').addEventListener('click', async function(){
+      if(!editingBetaId) return;
+      var entry = state.betaEntries.filter(function(x){ return x.id === editingBetaId; })[0];
+      if(entry) await deleteBetaEntry(entry, editingBetaScope, true);
     });
 
     // Betrag automatisch mit dem zuletzt fuer diesen Titel verwendeten Wert
