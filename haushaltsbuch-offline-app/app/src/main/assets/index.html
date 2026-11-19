@@ -3356,11 +3356,20 @@ var nativeStorage = {
     document.getElementById('vcDueMonth').innerHTML = monthOptions(new Date().getMonth()+1);
 
     var vcContainer = document.getElementById('vcList');
+    // Jahres-Puffer: Puffer je Zahlungszyklus auf 12 Monate umrechnen.
+    // GEZ (vierteljaehrlich) zaehlt viermal, zweijaehrliche Kosten zur Haelfte.
+    var yearlyBufferCents = state.variableCosts.reduce(function(total, item){
+      var interval = intervalMonths(item.interval);
+      var cycleBufferCents = Math.round(((Number(item.monthlyAmount)||0) * interval - (Number(item.actualAmount)||0)) * 100);
+      return total + cycleBufferCents * (12 / interval);
+    }, 0);
+    var yearlyBuffer = Math.round(yearlyBufferCents) / 100;
     document.getElementById('vcSummary').innerHTML =
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Monatlicher Sparbedarf</div>'+
       '<div class="hero-card-value">'+fmtEUR(sum(state.variableCosts,'monthlyAmount'))+'</div>'+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kostenarten</div><div class="hero-card-sub-value">'+state.variableCosts.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Puffer / Jahr</div><div class="hero-card-sub-value" style="color:'+(yearlyBuffer>=0?'var(--savings)':'var(--expense)')+';">'+fmtEUR(yearlyBuffer)+'</div></div>'+
       '</div>';
     if(state.variableCosts.length === 0){
       vcContainer.innerHTML = '<div class="empty-state">Noch keine Kostenarten angelegt.</div>';
