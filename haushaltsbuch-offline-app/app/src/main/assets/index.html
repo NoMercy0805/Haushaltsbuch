@@ -3368,8 +3368,8 @@ var nativeStorage = {
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Monatlicher Sparbedarf</div>'+
       '<div class="hero-card-value">'+fmtEUR(sum(state.variableCosts,'monthlyAmount'))+'</div>'+
       '<div class="hero-card-sub-row">'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kostenarten</div><div class="hero-card-sub-value">'+state.variableCosts.length+'</div></div>'+
-        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Puffer / Jahr</div><div class="hero-card-sub-value" style="color:'+(yearlyBuffer>=0?'var(--savings)':'var(--expense)')+';">'+fmtEUR(yearlyBuffer)+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kostenarten</div><div class="hero-card-sub-value" style="flex:0 0 calc(100% - 38px);margin-left:38px;">'+state.variableCosts.length+'</div></div>'+
+        '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Puffer / Jahr</div><div class="hero-card-sub-value" style="color:var(--ink);">'+fmtEUR(yearlyBuffer)+'</div></div>'+
       '</div>';
     if(state.variableCosts.length === 0){
       vcContainer.innerHTML = '<div class="empty-state">Noch keine Kostenarten angelegt.</div>';
