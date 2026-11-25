@@ -90,6 +90,20 @@ jobs:
           APK="app/build/outputs/apk/release/Haushaltsbuch.apk"
           test -s "$APK"
           TAG="haushaltsbuch-build-${{ github.run_number }}"
-          gh release create "$TAG" "$APK#Haushaltsbuch.apk" --target "$GITHUB_SHA" \
-            --title "Haushaltsbuch Build ${{ github.run_number }}" \
-            --notes "Android-versionCode: ${{ github.run_number }}"
+          for delay in 5 15 30 0; do
+            if gh release create "$TAG" "$APK#Haushaltsbuch.apk" --target "$GITHUB_SHA" \
+                --title "Haushaltsbuch Build ${{ github.run_number }}" \
+                --notes "Android-versionCode: ${{ github.run_number }}"; then
+              exit 0
+            fi
+            # A server error can occur after the release was already published.
+            if gh release view "$TAG" --json isDraft,assets \
+                --jq 'select(.isDraft == false) | .assets[] | select(.name == "Haushaltsbuch.apk" and .size > 0) | .name' \
+                | grep -Fxq Haushaltsbuch.apk; then
+              exit 0
+            fi
+            if [ "$delay" -gt 0 ]; then
+              sleep "$delay"
+            fi
+          done
+          exit 1
