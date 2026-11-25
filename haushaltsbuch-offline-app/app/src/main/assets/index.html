@@ -2546,31 +2546,6 @@ var nativeStorage = {
   // weiterer Faelligkeitstermin ansteht - bei z.B. vierteljaehrlichen
   // Zahlungen (GEZ) reicht eine einzelne Zahlung im Jahr nicht aus, um
   // "fertig fuer dieses Jahr" zu sein, solange noch ein Termin offen ist.
-  // Prueft, ob fuer den Rest dieses Kalenderjahres nichts mehr offen ist:
-  // entweder weil die naechste Faelligkeit sowieso erst naechstes Jahr (oder
-  // spaeter) ist und dieses Jahr die Kostenart gar nicht betrifft (z.B. TUEV
-  // alle 2 Jahre, naechste Faelligkeit 2027), oder weil der letzte diesjaehrige
-  // Termin bereits bezahlt wurde (z.B. GEZ, letzte Rate im November bezahlt).
-  function nothingDueRestOfYear(item){
-    var cycle = intervalMonths(item.interval);
-    var anchor = item.dueMonth || 1;
-    var now = new Date();
-    var thisYear = now.getFullYear();
-    var anchorYear = (item.interval === 'zweijaehrlich' && item.dueYear) ? item.dueYear : thisYear;
-    var anchorMonthAbs = anchorYear*12 + (anchor-1);
-    var currentMonthAbs = thisYear*12 + now.getMonth();
-    var diff = currentMonthAbs - anchorMonthAbs;
-    var k = Math.ceil(diff / cycle);
-    var nextDueAbs = anchorMonthAbs + k*cycle;
-    var nextDueYear = Math.floor(nextDueAbs / 12);
-    if(nextDueYear > thisYear){
-      var lastDueAbs = nextDueAbs - cycle;
-      var lastDueYear = Math.floor(lastDueAbs / 12);
-      if(lastDueYear < thisYear) return true; // dieses Jahr betrifft die Kostenart gar nicht
-      return isPaidThisYear(item); // letzter Termin war dieses Jahr - bezahlt?
-    }
-    return false; // naechste Faelligkeit ist noch dieses Jahr
-  }
   // Prueft, ob eine Kostenart, die DIESEN Monat faellig ist, bereits eine
   // Zahlung in diesem Monat erhalten hat - damit sie in der Liste nach unten
   // rutschen kann, statt weiter oben "erledigt" rumzuliegen.
@@ -2580,16 +2555,6 @@ var nativeStorage = {
     var thisMonthKey = todayISO().slice(0,7);
     return state.variablePayments.some(function(p){
       return p.itemId === item.id && p.date && p.date.slice(0,7) === thisMonthKey;
-    });
-  }
-  // Prueft, ob fuer diese Kostenart bereits eine Zahlung im laufenden
-  // Kalenderjahr erfasst wurde - unabhaengig davon, ob sie diesen Monat
-  // faellig ist. So bleibt eine im August bezahlte Jahresgebuehr auch im
-  // September noch gruen markiert.
-  function isPaidThisYear(item){
-    var thisYear = todayISO().slice(0,4);
-    return state.variablePayments.some(function(p){
-      return p.itemId === item.id && p.date && p.date.slice(0,4) === thisYear;
     });
   }
   function intervalGoalLabel(interval){
@@ -3403,11 +3368,7 @@ var nativeStorage = {
           var now = new Date();
           var dueDate = new Date(now.getFullYear(), now.getMonth() + monthsToDue, 1);
           var dueLabel = MONTH_NAMES[dueDate.getMonth()] + ' ' + dueDate.getFullYear();
-          var dueThisMonth = monthsToDue === 0;
-          var vcTint = '';
-          if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
-          else if((dueThisMonth && isPaidThisCycle(item)) || nothingDueRestOfYear(item)) vcTint = 'background:var(--savings-soft);';
-          html += '<div class="vc-card'+(payingVc === item.id ? ' expanded' : '')+'" data-id="'+item.id+'" style="'+vcTint+'">'+
+          html += '<div class="vc-card'+(payingVc === item.id ? ' expanded' : '')+'" data-id="'+item.id+'">'+
                     '<div class="vc-card-top">'+
                       '<span class="vc-name">'+escapeHtml(item.name)+'</span>'+
                       '<span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span>'+
@@ -8340,27 +8301,11 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 #tilgungConfirmButton:disabled { opacity: .65; cursor: default; }
 #vcList .vc-card,
 #potTransactions .compact-list-row {
-  position: relative;
-  padding: 10px 12px 10px 30px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  margin-bottom: 8px;
-}
-#vcList .vc-card::before,
-#potTransactions .compact-list-row::before {
-  content: "";
-  position: absolute;
-  top: 16px;
-  left: 12px;
-  width: 6px;
-  height: 6px;
-  border: solid var(--ink-soft);
-  border-width: 0 2px 2px 0;
-  transform: rotate(-45deg);
-}
-#vcList .vc-card.expanded::before,
-#potTransactions .compact-list-row.expanded::before {
-  transform: rotate(45deg);
+  background: var(--surface-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  margin: 0 8px 8px;
+  padding: 9px 12px;
 }
 #vcList .vc-card-top {
   display: grid;
@@ -8369,7 +8314,15 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   gap: 3px 8px;
   margin: 0;
 }
-#vcList .vc-name { overflow-wrap: anywhere; }
+#vcList .vc-name {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+#vcList .vc-monthly {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
 #vcList .vc-monthly,
 #vcList .vc-summary-invoice { text-align: right; }
 #vcList .vc-summary-due,
@@ -8390,11 +8343,10 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   overflow: visible;
 }
 #potTransactions .compact-list-row {
-  background: var(--surface);
   align-items: flex-start;
   cursor: pointer;
 }
-#potTransactions .compact-list-row:last-child { border-bottom: 1px solid var(--rule); }
+#potTransactions .compact-list-row:last-child { border-bottom: 1px solid var(--rule-strong); }
 #potTransactions .compact-name { font-weight: 800; }
 #potTransactions .compact-sub { display: block; }
 #potTransactions .compact-actions > .action-icon-btn-wrap { flex: 1 1 0; }
