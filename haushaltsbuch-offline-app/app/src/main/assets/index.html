@@ -3283,10 +3283,10 @@ var nativeStorage = {
         var d = inv.dueDate ? parseISO(inv.dueDate) : null;
         var now = new Date();
         var dueThisMonth = !inv.paid && d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        var rowTint = inv.paid ? '' : (dueThisMonth ? 'background:var(--expense-soft);' : 'background:var(--savings-soft);');
+        var rowStatus = inv.paid ? '' : (dueThisMonth ? ' entry-status-due' : ' entry-status-clear');
         var dateLabel = d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '';
         var statusLabel = inv.paid ? 'Bezahlt' : (isOverdue ? 'Überfällig seit '+dateLabel : 'Fällig am '+dateLabel);
-        html += '<div class="compact-list-row'+(inv.paid?' is-paid':'')+'" data-id="'+inv.id+'" style="'+rowTint+'">'+
+        html += '<div class="compact-list-row'+(inv.paid?' is-paid':'')+rowStatus+'" data-id="'+inv.id+'">'+
                   '<button class="invoice-check'+(inv.paid?' checked':'')+'" data-action="toggle-paid" data-id="'+inv.id+'" aria-label="Als bezahlt markieren" style="flex-shrink:0;margin-right:10px;">✓</button>'+
                   '<span class="compact-name-wrap">'+
                     '<span class="compact-name">'+escapeHtml(inv.name)+'</span>'+
@@ -3472,15 +3472,15 @@ var nativeStorage = {
           var dueDate = new Date(now.getFullYear(), now.getMonth() + monthsToDue, 1);
           var dueLabel = MONTH_NAMES[dueDate.getMonth()] + ' ' + dueDate.getFullYear();
           var dueThisMonth = monthsToDue === 0;
-          var vcTint = '';
-          if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
-          else if((dueThisMonth && isPaidThisCycle(item)) || nothingDueRestOfYear(item)) vcTint = 'background:var(--savings-soft);';
-          html += '<div class="vc-card'+(payingVc === item.id ? ' expanded' : '')+'" data-id="'+item.id+'" style="'+vcTint+'">'+
+          var vcStatus = '';
+          if(dueThisMonth && !isPaidThisCycle(item)) vcStatus = ' entry-status-due';
+          else if((dueThisMonth && isPaidThisCycle(item)) || nothingDueRestOfYear(item)) vcStatus = ' entry-status-clear';
+          html += '<div class="vc-card'+(payingVc === item.id ? ' expanded' : '')+vcStatus+'" data-id="'+item.id+'">'+
                     '<div class="vc-card-top">'+
                       '<span class="vc-name">'+escapeHtml(item.name)+'</span>'+
-                      '<span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span>'+
+                      '<span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' <span class="vc-monthly-unit">/ Monat</span></span>'+
                       '<span class="vc-summary-due">'+dueLabel+'</span>'+
-                      '<span class="vc-summary-invoice">Letzte Rechnung: '+fmtEUR(item.actualAmount||0)+'</span>'+
+                      '<span class="vc-summary-invoice">Letzte Rechnung: <strong>'+fmtEUR(item.actualAmount||0)+'</strong></span>'+
                     '</div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
                     '<div class="vc-detail-row"><span>'+intervalGoalLabel(item.interval)+'</span><span class="val">'+fmtEUR(annualGoal)+'</span></div>'+
@@ -4093,8 +4093,8 @@ var nativeStorage = {
       } else {
         var pct = loan.originalAmount > 0 ? Math.min(100, Math.max(0, ((loan.originalAmount-loan.remainingBalance)/loan.originalAmount)*100)) : 0;
         var paidThisMonth = isLoanPaidThisMonth(loan);
-        var cardTint = paidThisMonth ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
-        html += '<div class="loan-card'+(payingLoan === loan.id || increasingLoan === loan.id || reconcilingLoan === loan.id ? ' expanded' : '')+'" data-id="'+loan.id+'" style="'+cardTint+'">'+
+        var cardStatus = paidThisMonth ? ' entry-status-clear' : ' entry-status-due';
+        html += '<div class="loan-card'+(payingLoan === loan.id || increasingLoan === loan.id || reconcilingLoan === loan.id ? ' expanded' : '')+cardStatus+'" data-id="'+loan.id+'">'+
                   '<div class="loan-card-summary">'+
                     (loan.originalAmount > 0 ? renderLoanProgressRing(pct, false) : '')+
                     '<div class="loan-card-summary-text">'+
@@ -8566,7 +8566,27 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   border: 0;
   box-shadow: none;
 }
-#tilgungList > .tilgung-current-month { background: var(--primary-soft); }
+/* Status accents on entry cards, using the same palette in light and dark mode. */
+:is(#vcList .vc-card, #invoiceList .compact-list-row, #loanList > .loan-card,
+    #tilgungList > .tilgung-current-month) {
+  position: relative;
+  background: var(--surface-2);
+}
+#vcList .vc-card { padding-inline-start: 16px; }
+.entry-status-clear { --entry-accent: var(--savings); }
+.entry-status-due { --entry-accent: var(--expense); }
+#tilgungList > .tilgung-current-month { --entry-accent: var(--primary); }
+:is(.entry-status-clear, .entry-status-due, #tilgungList > .tilgung-current-month)::before {
+  content: "";
+  position: absolute;
+  inset-block: 9px;
+  inset-inline-start: 5px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--entry-accent);
+  opacity: .55;
+  pointer-events: none;
+}
 .loan-payoff-heading {
   margin: 20px 0 8px;
   color: var(--hero-blue-text);
@@ -8631,6 +8651,13 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   font-weight: 700;
   overflow-wrap: anywhere;
 }
+#vcList .vc-monthly-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+#vcList .vc-summary-invoice strong { color: var(--ink); font-weight: 700; }
 #vcList .vc-monthly,
 #vcList .vc-summary-invoice { text-align: right; }
 #vcList .vc-summary-due,
