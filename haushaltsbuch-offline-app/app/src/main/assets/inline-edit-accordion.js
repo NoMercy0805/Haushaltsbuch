@@ -15,7 +15,7 @@
     if(clone.classList.contains('loan-card')||clone.classList.contains('vc-card')){
       var isLoan=clone.classList.contains('loan-card');
       Array.prototype.slice.call(clone.children).forEach(function(child){
-        if(!child.matches(isLoan?'.loan-top,.loan-bar,.loan-sub':'.vc-card-top,.vc-detail-row'))child.remove();
+        if(!child.matches(isLoan?'.loan-card-summary,.loan-sub':'.vc-card-top,.vc-detail-row'))child.remove();
       });
     }else{
       clone.querySelectorAll('.compact-actions,button,.invoice-check').forEach(function(el){el.remove();});
