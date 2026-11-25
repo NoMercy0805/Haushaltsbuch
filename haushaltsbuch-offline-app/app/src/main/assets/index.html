@@ -1328,6 +1328,14 @@
     --balance-add-bg:#D4E5FC;
     color:var(--selection-text);
   }
+  #betaBalanceAdd::after{
+    content:"";
+    position:absolute;
+    inset:4px 0;
+    border-radius:16px / 12px;
+    box-shadow:inset 0 0 0 2px var(--selection-ring);
+    pointer-events:none;
+  }
   html[data-theme="dark"] #betaBalanceAdd{--balance-add-bg:#273D60;}
   #betaBalanceBar .beta-balance-value.balance-negative{color:var(--expense)!important;}
   #betaBalanceBar .beta-balance-value.balance-positive{color:var(--savings)!important;}
