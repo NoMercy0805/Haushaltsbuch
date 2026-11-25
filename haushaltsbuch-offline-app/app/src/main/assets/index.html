@@ -1132,17 +1132,17 @@
   #betaBalanceBar{padding:9px 12px 9px 14px!important;gap:8px!important;}
   #betaBalanceBar .beta-balance-value{flex:1!important;}
   #betaBalanceBar .beta-balance-range{margin-left:auto!important;}
-  #betaBalanceAdd{width:48px;height:46px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;align-self:stretch;border:0;border-left:1px solid rgba(255,255,255,.55);border-radius:0;background:transparent;color:white;cursor:pointer;margin-left:4px;padding-left:10px;}
+  #betaBalanceAdd{display:flex;align-items:center;justify-content:center;cursor:pointer;}
   #betaBalanceAdd svg{width:27px;height:27px;transition:transform .25s var(--ios-ease);}
   #betaBalanceAdd.is-open svg{transform:rotate(45deg);}
   /* Dezentes Tipp-Feedback fuer das Plus im Kontostand-Balken. */
   #betaBalanceAdd{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease;}
-  #betaBalanceAdd:active{background:rgba(255,255,255,.16);}
+  #betaBalanceAdd:active{background-color:rgba(136,179,244,.28);}
   #betaBalanceAdd.tap-feedback{animation:betaBalanceAddTap .3s ease-out;}
   #betaBalanceAdd.tap-feedback svg{animation:betaBalancePlusTap .3s ease-out;}
   @keyframes betaBalanceAddTap{
-    0%{background:rgba(255,255,255,.26);}
-    100%{background:transparent;}
+    0%{background-color:rgba(136,179,244,.38);}
+    100%{background-color:var(--balance-add-bg);}
   }
   @keyframes betaBalancePlusTap{
     0%{scale:.8;}
@@ -1219,14 +1219,25 @@
   }
 
   #addEntryFab.beta-integrated-hidden{display:none!important;}
-  @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceAdd{width:38px;flex-basis:38px;margin-left:2px;padding-left:7px;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
+  @media(max-width:380px){#betaBalanceBar{padding-right:8px!important;gap:5px!important;}#betaBalanceBar .beta-balance-value{font-size:19px!important;}}
   /* Zwei Kontostaende mit dem unveraenderten Plus mittig. */
   #betaBalanceBar{display:flex;align-items:center;justify-content:space-between;gap:3px!important;padding:9px 10px!important;}
   #betaBalanceBar .beta-balance-side{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;}
   #betaBalanceBar .beta-balance-side .beta-balance-value{font-size:clamp(14px,3.8vw,22px)!important;line-height:1.15;white-space:nowrap!important;letter-spacing:-.035em;flex:none!important;}
   #betaBalanceBar .beta-balance-side .beta-balance-label{font-size:clamp(10px,2.7vw,12px)!important;white-space:normal!important;line-height:1.15;opacity:.95;}
-  #betaBalanceAdd{order:0;flex:0 0 48px;width:48px;height:48px;align-self:center;margin:0;padding:0;border:0;border-left:1px solid rgba(255,255,255,.45);border-right:1px solid rgba(255,255,255,.45);}
-  @media(max-width:380px){#betaBalanceBar{padding:9px 6px!important;}#betaBalanceAdd{flex-basis:42px;width:42px;height:46px;}}
+  #betaBalanceAdd{
+    box-sizing:border-box;
+    flex:0 0 clamp(68px,24vw,96px);
+    height:48px;
+    align-self:center;
+    margin:0;
+    padding:4px 0;
+    border:0;
+    border-radius:16px;
+    background-color:var(--balance-add-bg);
+    background-clip:content-box;
+  }
+  @media(max-width:380px){#betaBalanceBar{padding:9px 6px!important;}#betaBalanceAdd{height:46px;}}
   /* Nur die rote Flaeche kompakter: Groessen von Plus, Linien und Text bleiben unveraendert. */
   #betaBalanceBar{min-height:0!important;padding-top:0!important;padding-bottom:0!important;}
 
@@ -1313,21 +1324,25 @@
     box-shadow:0 8px 24px rgba(0,0,0,.29),inset 0 1px 0 rgba(255,255,255,.13)!important;
   }
   #betaBalanceBar .beta-balance-label{color:var(--ink)!important;}
-  #betaBalanceAdd{color:var(--ink)!important;border-left-color:rgba(145,153,169,.46)!important;border-right-color:rgba(145,153,169,.46)!important;}
+  #betaBalanceAdd{
+    --balance-add-bg:#D4E5FC;
+    color:var(--selection-text);
+  }
+  html[data-theme="dark"] #betaBalanceAdd{--balance-add-bg:#273D60;}
   #betaBalanceBar .beta-balance-value.balance-negative{color:var(--expense)!important;}
   #betaBalanceBar .beta-balance-value.balance-positive{color:var(--savings)!important;}
   /* Im Hellmodus ist ein weisser Tipp-Effekt auf Glas kaum sichtbar.
      Ein dunklerer Kontrastimpuls laesst Groesse und Dunkelmodus unveraendert. */
   html:not([data-theme="dark"]) #betaBalanceAdd:active{
-    background:rgba(42,76,122,.24)!important;
+    background-color:#B8D2F6;
   }
   html:not([data-theme="dark"]) #betaBalanceAdd.tap-feedback{
-    animation:betaBalanceAddTapLight .38s ease-out!important;
+    animation:betaBalanceAddTapLight .38s ease-out;
   }
   @keyframes betaBalanceAddTapLight{
-    0%{background:rgba(42,76,122,.35);box-shadow:inset 0 0 0 1px rgba(43,83,139,.35);}
-    55%{background:rgba(42,76,122,.23);box-shadow:inset 0 0 0 1px rgba(43,83,139,.20);}
-    100%{background:transparent;box-shadow:inset 0 0 0 1px transparent;}
+    0%{background-color:#ACC8EF;}
+    55%{background-color:#C2D8F6;}
+    100%{background-color:var(--balance-add-bg);}
   }
 </style>
 </head>
