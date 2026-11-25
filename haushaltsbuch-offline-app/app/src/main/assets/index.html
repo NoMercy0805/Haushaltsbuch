@@ -1347,7 +1347,7 @@
 
         <div id="rechnungenSubView">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="invoiceSummary"></div></div>
-        <h2 class="ledger-list-heading">Offene Rechnungen</h2>
+        <h2 class="ledger-list-heading"><span class="ledger-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 14l2 2 4-4"/></svg></span>Offene Rechnungen</h2>
         <div id="invoiceList"></div>
 
         <div class="section-toggle-row" id="paidInvoicesHeader" style="margin-top:22px;">
@@ -1368,7 +1368,7 @@
         <div id="fixkostenSubView" style="display:none;">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fixedSummary"></div></div>
         <div id="incomeList"></div>
-        <h2 class="ledger-list-heading ledger-list-heading-fixed">Fixkosten</h2>
+        <h2 class="ledger-list-heading ledger-list-heading-fixed"><span class="ledger-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4M3 12.6v-1a4 4 0 0 1 4-4h14M7 20.4l-4-4 4-4M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></span>Fixkosten</h2>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
         </div>
@@ -4015,11 +4015,11 @@ var nativeStorage = {
         var pct = loan.originalAmount > 0 ? Math.min(100, Math.max(0, ((loan.originalAmount-loan.remainingBalance)/loan.originalAmount)*100)) : 0;
         var paidThisMonth = isLoanPaidThisMonth(loan);
         var cardTint = paidThisMonth ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
-        html += '<div class="loan-card" data-id="'+loan.id+'" style="'+cardTint+'">'+
+        html += '<div class="loan-card'+(payingLoan === loan.id || increasingLoan === loan.id || reconcilingLoan === loan.id ? ' expanded' : '')+'" data-id="'+loan.id+'" style="'+cardTint+'">'+
                   '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
-                  '<div class="loan-sub" style="margin-top:6px;"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
-                  (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
-                  '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
+                  '<div class="loan-sub"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
+                  (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub loan-card-detail"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
+                  '<div class="loan-sub loan-card-detail" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span class="action-icon-btn-label">Bearbeiten</span></span>'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn gold" data-action="increase-loan" data-id="'+loan.id+'" aria-label="Erhöhen" title="Schulden erhöhen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><span class="action-icon-btn-label">Erhöhen</span></span>'+
@@ -8424,7 +8424,27 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   font-size: 17px;
   font-weight: 800;
 }
+.ledger-list-heading:has(.ledger-heading-icon) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ledger-heading-icon {
+  display: grid;
+  flex: 0 0 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--surface-solid);
+}
 .ledger-list-heading-fixed { margin-block-start: 22px; }
+#loanList > .loan-card { padding: 12px 14px; }
+#loanList .loan-top { margin-bottom: 5px; }
+#loanList .loan-name { min-width: 0; overflow-wrap: anywhere; }
+#loanList .loan-bar { height: 8px; margin: 8px 0 0; }
+#loanList .loan-card:not(.expanded) > .loan-card-detail { display: none; }
+#loanList .loan-bar + .loan-card-detail { margin-top: 6px; }
 #incomeList .ledger-income-heading {
   color: var(--hero-green-text);
   font-size: 17px;
