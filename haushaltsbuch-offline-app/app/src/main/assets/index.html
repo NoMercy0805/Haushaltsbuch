@@ -623,13 +623,11 @@
   .loan-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:4px;}
   .loan-name{font-family:var(--serif);font-size:17px;font-weight:800;display:inline-flex;align-items:center;gap:6px;}
   .loan-remaining{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--expense);}
-  .loan-bar{background:var(--paper);border:none;border-radius:20px;height:10px;overflow:hidden;margin:10px 0;}
   .income-expense-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:12px;transition:height .2s ease, opacity .2s ease, margin-top .2s ease;}
   .income-expense-bar.collapsed{height:0;opacity:0;margin-top:0;}
   .income-expense-bar-income{background:var(--savings);height:100%;display:flex;align-items:center;padding-left:8px;box-sizing:border-box;overflow:hidden;}
   .income-expense-bar-expense{background:var(--expense);height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;overflow:hidden;}
   .income-expense-bar-label{font-size:11px;font-weight:700;white-space:nowrap;color:#fff;}
-  .loan-bar-fill{height:100%;background:var(--primary);border-radius:20px;}
   .loan-sub{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);font-weight:600;}
   .loan-history{margin-top:14px;padding-top:6px;border-top:1px solid var(--rule);}
   .info-btn{font-size:15px;width:26px;height:26px;background:var(--paper);flex-shrink:0;}
@@ -850,30 +848,44 @@
   }
   #loanSummary .cc-hero-title .hero-card-value { overflow-wrap:anywhere; }
   #loanSummary.collapsed .loan-summary-progress { display:none; }
-  .loan-summary-progress {
+  .loan-progress-ring {
     position:relative;
     isolation:isolate;
-    width:clamp(64px,21vw,86px);
+    display:grid;
+    place-content:center;
+    border-radius:50%;
     aspect-ratio:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
+    text-align:center;
     color:var(--ink);
-    font-size:11px;
     line-height:1.2;
+    font-variant-numeric:tabular-nums;
   }
-  .loan-summary-progress::before {
-    content:"";
+  .loan-progress-ring svg {
     position:absolute;
     z-index:-1;
     inset:0;
-    border-radius:50%;
-    background:conic-gradient(var(--primary) 0 var(--loan-paid), var(--rule-strong) var(--loan-paid) 100%);
-    -webkit-mask-image:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));
-    mask-image:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));
+    width:100%;
+    height:100%;
+    fill:none;
+    stroke-width:var(--loan-ring-stroke);
+    transform:rotate(-90deg);
   }
-  .loan-summary-progress strong { font-size:clamp(16px,5vw,22px); }
+  .loan-ring-track { stroke:var(--primary); opacity:.22; }
+  .loan-ring-fill { stroke:var(--primary); stroke-linecap:round; }
+  .loan-summary-progress {
+    --loan-ring-stroke:10;
+    width:clamp(76px,23vw,96px);
+    background:var(--surface-2);
+    box-shadow:0 4px 12px rgba(18,104,255,.16);
+    font-size:11px;
+  }
+  .loan-summary-progress strong { font-size:clamp(19px,5.5vw,25px); }
+  .loan-item-progress {
+    --loan-ring-stroke:8;
+    width:46px;
+    background:var(--surface);
+    font-size:11px;
+  }
   #tilgungSummary .cc-hero-heading,#fuelSummary .cc-hero-heading{min-height:46px;}
   html[data-theme="dark"] .hero-card:not(#fixedSummary) .hero-card-sub-row>div{
     background:var(--cc-tile,rgba(75,110,163,.16))!important;
@@ -3996,6 +4008,18 @@ var nativeStorage = {
     }
   }
 
+  function renderLoanProgressRing(pct, summary){
+    var label = pct.toFixed(0)+' %';
+    return '<div class="loan-progress-ring '+(summary ? 'loan-summary-progress' : 'loan-item-progress')+'" role="img" aria-label="'+label+' abbezahlt">'+
+      '<svg viewBox="0 0 100 100" aria-hidden="true">'+
+        '<circle class="loan-ring-track" cx="50" cy="50" r="44"/>'+
+        (pct > 0 ? '<circle class="loan-ring-fill" cx="50" cy="50" r="44" pathLength="100" stroke-dasharray="'+pct.toFixed(2)+' 100"/>' : '')+
+      '</svg>'+
+      '<strong>'+label+'</strong>'+
+      (summary ? '<span>abbezahlt</span>' : '')+
+    '</div>';
+  }
+
   function renderKredite(){
     var activeLoans = state.loans.filter(function(l){ return l.remainingBalance > 0; });
     var paidLoans = state.loans.filter(function(l){ return l.remainingBalance <= 0; });
@@ -4007,7 +4031,7 @@ var nativeStorage = {
     document.getElementById('loanSummary').innerHTML =
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Restschuld gesamt</div>'+
       '<div class="hero-card-value">'+fmtEUR(totalRemaining)+'</div>'+
-      (totalOriginal > 0 ? '<div class="loan-summary-progress" style="--loan-paid:'+totalPct.toFixed(2)+'%;"><strong>'+totalPct.toFixed(0)+' %</strong><span>abbezahlt</span></div>' : '')+
+      (totalOriginal > 0 ? renderLoanProgressRing(totalPct, true) : '')+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
@@ -4048,9 +4072,14 @@ var nativeStorage = {
         var paidThisMonth = isLoanPaidThisMonth(loan);
         var cardTint = paidThisMonth ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
         html += '<div class="loan-card'+(payingLoan === loan.id || increasingLoan === loan.id || reconcilingLoan === loan.id ? ' expanded' : '')+'" data-id="'+loan.id+'" style="'+cardTint+'">'+
-                  '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
-                  '<div class="loan-sub"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
-                  (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub loan-card-detail"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
+                  '<div class="loan-card-summary">'+
+                    (loan.originalAmount > 0 ? renderLoanProgressRing(pct, false) : '')+
+                    '<div class="loan-card-summary-text">'+
+                      '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
+                      '<div class="loan-sub"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
+                    '</div>'+
+                  '</div>'+
+                  (loan.originalAmount > 0 ? '<div class="loan-sub loan-card-detail"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
                   '<div class="loan-sub loan-card-detail" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span class="action-icon-btn-label">Bearbeiten</span></span>'+
@@ -5052,7 +5081,7 @@ var nativeStorage = {
       if(e.touches.length !== 1) return;
       // Auf interaktiven Elementen (Eingabefelder, Diagramme) nicht als Wisch werten,
       // damit normales Tippen/Ziehen dort nicht gestört wird.
-      if(e.target.closest('input, select, textarea, .bar-chart, .loan-bar, .goal-bar')){
+      if(e.target.closest('input, select, textarea, .bar-chart, .loan-progress-ring, .goal-bar')){
         tracking = false;
         return;
       }
@@ -8476,9 +8505,18 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 #loanList > .loan-card { padding: 12px 14px; }
 #loanList .loan-top { margin-bottom: 5px; }
 #loanList .loan-name { min-width: 0; overflow-wrap: anywhere; }
-#loanList .loan-bar { height: 8px; margin: 8px 0 0; }
+#loanList .loan-card-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#loanList .loan-item-progress { flex: 0 0 46px; }
+#loanList .loan-card-summary-text { flex: 1; min-width: 0; }
+#loanList .loan-remaining { overflow-wrap: anywhere; }
+#loanList .loan-card-summary-text .loan-sub { gap: 6px; }
+#loanList .loan-card-summary-text .loan-sub > :last-child { text-align: right; }
 #loanList .loan-card:not(.expanded) > .loan-card-detail { display: none; }
-#loanList .loan-bar + .loan-card-detail { margin-top: 6px; }
+#loanList .loan-card-summary + .loan-card-detail { margin-top: 6px; }
 #incomeList .compact-group-header { padding-inline: 0 12px; }
 .ledger-income-icon { background: var(--savings); }
 #incomeList .ledger-income-heading {
