@@ -3892,24 +3892,32 @@ var nativeStorage = {
       html += '<div class="vc-card" style="cursor:default;'+(isCurrent?'border:1.5px solid var(--primary);':'')+'">'+
                 '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+(isCurrent?' · aktuell':'')+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
                 loanRows+
-                (isCurrent ? '<label class="tab-visibility-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--rule);cursor:pointer;"><span>Diesen Monat erledigt</span><input type="checkbox" id="tilgungConfirmCheck" style="width:22px;height:22px;"></label>' : '')+
+                (isCurrent ?
+                  '<div class="tilgung-month-action"><span class="action-icon-btn-wrap">'+
+                    '<button type="button" class="action-icon-btn success" id="tilgungConfirmButton">'+
+                      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'+
+                      '<span class="action-icon-btn-label">Diesen Monat als erledigt markieren</span>'+
+                    '</button>'+
+                  '</span></div>' : '')+
               '</div>';
     });
     listEl.innerHTML = html;
-    var confirmCheck = document.getElementById('tilgungConfirmCheck');
-    if(confirmCheck){
-      confirmCheck.addEventListener('change', async function(){
-        if(!confirmCheck.checked) return;
-        var reallyDone = await confirmDialog(
-          'Diesen Monat wirklich als erledigt markieren? Der Plan geht dann zum nächsten Monat weiter.',
-          {icon:'✅', confirmLabel:'Ja, erledigt'}
-        );
-        if(reallyDone){
-          advanceTilgungCurrentMonth();
-          renderTilgungsplan();
-          renderOverviewWidgets();
-        } else {
-          confirmCheck.checked = false;
+    var confirmButton = document.getElementById('tilgungConfirmButton');
+    if(confirmButton){
+      confirmButton.addEventListener('click', async function(){
+        confirmButton.disabled = true;
+        try {
+          var reallyDone = await confirmDialog(
+            'Diesen Monat wirklich als erledigt markieren? Der Plan geht dann zum nächsten Monat weiter.',
+            {icon:'✅', confirmLabel:'Ja, erledigt'}
+          );
+          if(reallyDone){
+            advanceTilgungCurrentMonth();
+            renderTilgungsplan();
+            renderOverviewWidgets();
+          }
+        } finally {
+          confirmButton.disabled = false;
         }
       });
     }
@@ -8297,30 +8305,37 @@ if('serviceWorker' in navigator){
   })();
 </script>
 
-<!-- Einheitliche Aktionsbuttons ohne Änderungen an Kontostand oder Funktionslogik. -->
+<!-- Einheitliche Aktionsbuttons -->
 <style>
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) :is(.vc-actions,.compact-actions){gap:8px;justify-content:stretch;align-items:stretch}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) :is(.vc-actions,.compact-actions)>.action-icon-btn-wrap{display:flex;flex:1 1 120px;min-width:0;gap:0}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn{width:100%;height:auto;min-width:0;min-height:42px;padding:9px 8px;display:flex;justify-content:center;align-items:center;gap:7px;border-radius:13px;line-height:1.2;white-space:normal;background:rgba(22,105,244,.13);border:1px solid rgba(22,105,244,.2);color:var(--primary);box-shadow:none}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn.neutral{background:rgba(111,122,151,.12);border-color:rgba(111,122,151,.2);color:var(--ink)}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn.danger{background:rgba(242,75,86,.13);border-color:rgba(242,75,86,.20);color:var(--expense)}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn.gold{background:rgba(230,159,45,.15);border-color:rgba(230,159,45,.25);color:var(--gold)}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn[data-action="pay"],:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn[data-action="pay-loan"]{background:rgba(23,177,110,.15);border-color:rgba(23,177,110,.24);color:var(--savings)}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn svg{width:16px;height:16px;flex-shrink:0}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn .action-icon-btn-label{font:700 12px/1.2 var(--sans);color:inherit;white-space:normal;text-align:center}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .vc-card.expanded>.vc-actions,:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .loan-card.expanded>.vc-actions{max-height:280px}
-:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .compact-list-row.expanded .compact-actions{max-height:190px}
-html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn.neutral{background:rgba(190,203,235,.14);color:var(--ink)}
-html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn.danger{background:rgba(242,75,86,.18);color:#ffa4a8}
-html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn[data-action="pay"],html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn[data-action="pay-loan"]{background:rgba(23,177,110,.20);color:#80edb5}
-@media(max-width:380px){:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) :is(.vc-actions,.compact-actions){gap:5px}:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn .action-icon-btn-label{font-size:10.5px}:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList) .action-icon-btn-wrap>.action-icon-btn{padding:8px 5px}}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) :is(.vc-actions,.compact-actions,.beta-entry-actions-v3,.tilgung-month-action){gap:8px;justify-content:stretch;align-items:stretch}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) :is(.vc-actions,.compact-actions,.beta-entry-actions-v3,.tilgung-month-action)>.action-icon-btn-wrap{display:flex;flex:1 1 120px;min-width:0;gap:0}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn{width:100%;height:auto;min-width:0;min-height:42px;padding:9px 8px;display:flex;justify-content:center;align-items:center;gap:7px;border-radius:13px;line-height:1.2;white-space:normal;background:rgba(22,105,244,.13);border:1px solid rgba(22,105,244,.2);color:var(--primary);box-shadow:none}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn.neutral{background:rgba(111,122,151,.12);border-color:rgba(111,122,151,.2);color:var(--ink)}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn.danger{background:rgba(242,75,86,.13);border-color:rgba(242,75,86,.20);color:var(--expense)}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn.gold{background:rgba(230,159,45,.15);border-color:rgba(230,159,45,.25);color:var(--gold)}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn:is([data-action="pay"],[data-action="pay-loan"],.success){background:rgba(23,177,110,.15);border-color:rgba(23,177,110,.24);color:var(--savings)}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn svg{width:16px;height:16px;flex-shrink:0}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn .action-icon-btn-label{font:700 12px/1.2 var(--sans);color:inherit;white-space:normal;text-align:center}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .vc-card.expanded>.vc-actions,:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .loan-card.expanded>.vc-actions{max-height:280px}
+:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .compact-list-row.expanded .compact-actions{max-height:190px}
+html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn.neutral{background:rgba(190,203,235,.14);color:var(--ink)}
+html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn.danger{background:rgba(242,75,86,.18);color:#ffa4a8}
+html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn:is([data-action="pay"],[data-action="pay-loan"],.success){background:rgba(23,177,110,.20);color:#80edb5}
+@media(max-width:380px){:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) :is(.vc-actions,.compact-actions,.beta-entry-actions-v3,.tilgung-month-action){gap:5px}:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn .action-icon-btn-label{font-size:10.5px}:is(#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList) .action-icon-btn-wrap>.action-icon-btn{padding:8px 5px}}
+.tilgung-month-action {
+  display: flex;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+#tilgungConfirmButton:disabled { opacity: .65; cursor: default; }
 #vcList .vc-actions > .action-icon-btn-wrap { flex: 1 1 0; }
 #vcList .vc-actions > .action-icon-btn-wrap:has([data-action="pay"]) { flex-grow: 1.3; }
 #vcList .vc-actions .action-icon-btn.danger svg { display: none; }
 </style>
 <script>
 (function(){'use strict';
-var targets='#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList';
+var targets='#incomeList,#fixedList,#invoiceList,#paidInvoicesList,#vcList,#loanList,#paidLoansList,#potTransactions,#fuelHistoryList,#betaList,#tilgungList';
 function enhance(){document.querySelectorAll(targets).forEach(function(root){
 root.querySelectorAll('.action-icon-btn-wrap').forEach(function(wrap){
 var button=wrap.querySelector(':scope > .action-icon-btn');
@@ -8335,6 +8350,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="ai-monthly-analysis.js"></script>
 <script src="glass-selects.js"></script>
 <script src="inline-edit-accordion.js"></script>
+<script src="beta-entry-actions.js"></script>
 </body>
 </html>
 
