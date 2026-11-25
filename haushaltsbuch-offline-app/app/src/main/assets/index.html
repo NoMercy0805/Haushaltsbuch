@@ -1347,6 +1347,7 @@
 
         <div id="rechnungenSubView">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="invoiceSummary"></div></div>
+        <h2 class="ledger-list-heading">Offene Rechnungen</h2>
         <div id="invoiceList"></div>
 
         <div class="section-toggle-row" id="paidInvoicesHeader" style="margin-top:22px;">
@@ -1367,6 +1368,7 @@
         <div id="fixkostenSubView" style="display:none;">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="fixedSummary"></div></div>
         <div id="incomeList"></div>
+        <h2 class="ledger-list-heading ledger-list-heading-fixed">Fixkosten</h2>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
         </div>
@@ -1387,6 +1389,7 @@
 
         <div id="kostenartenSubView">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="vcSummary"></div></div>
+        <h2 class="ledger-list-heading">Kostenarten</h2>
         <div id="vcList"></div>
         </div>
 
@@ -1418,6 +1421,7 @@
         <div id="krediteSubView">
         <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="loanSummary"></div></div>
 
+        <h2 class="ledger-list-heading">Kredite</h2>
         <div id="loanList"></div>
 
         <div class="section-toggle-row" id="paidLoansHeader" style="margin-top:22px;">
@@ -1447,6 +1451,7 @@
 
         <div id="tilgungPerLoanSummary"></div>
 
+        <h2 class="ledger-list-heading">Tilgungsplan</h2>
         <div id="tilgungList"></div>
 
         <div class="section-toggle-row" id="tilgungHistoryHeader">
@@ -2960,7 +2965,7 @@ var nativeStorage = {
       '<div class="compact-group-header">'+
         '<span style="display:flex;align-items:center;gap:8px;">'+
           '<span style="width:22px;height:22px;border-radius:50%;background:var(--savings);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;">↑</span>'+
-          '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">Einnahmen</span>'+
+          '<span class="ledger-income-heading">Einnahmen</span>'+
         '</span>'+
         '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(sum(list,'amount'))+'</span>'+
       '</div>';
@@ -3017,7 +3022,7 @@ var nativeStorage = {
       html += '<div class="compact-group-header">'+
                 '<span style="display:flex;align-items:center;gap:8px;">'+
                   '<span style="width:22px;height:22px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;">'+iconSvgMarkup(iconKey)+'</span>'+
-                  '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">'+escapeHtml(label)+'</span>'+
+                  '<span class="ledger-category-heading">'+escapeHtml(label)+'</span>'+
                 '</span>'+
                 '<span style="color:var(--ink-soft);font-size:11.5px;font-weight:700;">'+fmtEUR(groupTotal)+'</span>'+
               '</div>';
@@ -3224,7 +3229,7 @@ var nativeStorage = {
                     '<span class="compact-name">'+escapeHtml(inv.name)+'</span>'+
                     '<span class="compact-sub" style="'+(isOverdue?'color:var(--expense);':'')+'">'+statusLabel+'</span>'+
                   '</span>'+
-                  '<span class="compact-amount expense">'+fmtEUR(inv.amount)+'</span>'+
+                  '<span class="compact-amount expense'+(isOverdue?' invoice-overdue':'')+'">'+fmtEUR(inv.amount)+'</span>'+
                   '<span class="compact-actions">'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="edit-invoice" data-id="'+inv.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span class="action-icon-btn-label">Bearbeiten</span></span>'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn danger" data-action="delete-invoice" data-id="'+inv.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button><span class="action-icon-btn-label">Löschen</span></span>'+
@@ -3898,7 +3903,7 @@ var nativeStorage = {
                                 return '<div class="ledger-row" style="padding:7px 0 2px;"><span class="row-desc">'+escapeHtml(d.name)+'</span><span class="row-leader"></span><span class="row-amount" style="color:var(--savings);font-size:14px;">+'+fmtEUR(d.extra)+'</span></div>'+
                                        '<div style="font-size:12px;color:var(--ink-soft);margin:0 0 6px 2px;">Restschuld danach: '+fmtEUR(d.remainingAfter)+'</div>';
                               }).join('');
-      html += '<div class="vc-card" style="cursor:default;'+(isCurrent?'border:1.5px solid var(--primary);':'')+'">'+
+      html += '<div class="vc-card'+(isCurrent?' tilgung-current-month':'')+'" style="cursor:default;">'+
                 '<div class="vc-card-top"><span class="vc-name">'+m.monthLabel+(isCurrent?' · aktuell':'')+'</span><span class="vc-monthly">'+fmtEUR(m.totalPaid)+'</span></div>'+
                 loanRows+
                 (isCurrent ?
@@ -4012,8 +4017,8 @@ var nativeStorage = {
         var cardTint = paidThisMonth ? 'background:var(--savings-soft);' : 'background:var(--expense-soft);';
         html += '<div class="loan-card" data-id="'+loan.id+'" style="'+cardTint+'">'+
                   '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
-                  (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
                   '<div class="loan-sub" style="margin-top:6px;"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
+                  (loan.originalAmount > 0 ? '<div class="loan-bar"><div class="loan-bar-fill" style="width:'+pct.toFixed(0)+'%;"></div></div><div class="loan-sub"><span>'+pct.toFixed(0)+'% abbezahlt</span><span>von '+fmtEUR(loan.originalAmount)+'</span></div>' : '')+
                   '<div class="loan-sub" style="margin-top:2px;"><span>Restlaufzeit</span><span>'+formatRemainingTerm(loan)+'</span></div>'+
                   '<div class="vc-actions">'+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="edit-loan" data-id="'+loan.id+'" aria-label="Bearbeiten" title="Bearbeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><span class="action-icon-btn-label">Bearbeiten</span></span>'+
@@ -8395,6 +8400,59 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   border-radius: 10px;
   box-shadow: none;
   margin: 0 0 8px;
+}
+:is(#tab-buchungen, #tab-variabel, #tab-kredite) .hero-sticky-wrap {
+  padding-inline: 5px;
+}
+:is(#fixedSummary, #invoiceSummary, #vcSummary, #potSummary, #loanSummary, #tilgungSummary) {
+  border-width: 0 !important;
+}
+:is(#tab-buchungen, #tab-variabel, #tab-kredite)
+:is(#incomeList, #fixedList, #autoFixedList, #invoiceList, #paidInvoicesList,
+    #vcList, #potTransactions, #loanList, #paidLoansList, #tilgungList, #tilgungHistoryList) {
+  padding-inline: 11px;
+}
+:is(#paidInvoicesHeader, #paidInvoicesFilter, #potHeader, #paidLoansHeader,
+    #tilgungHistoryHeader, #tilgungPerLoanSummary, #tilgungsplanSubView > .summary-card) {
+  margin-inline: 11px;
+}
+#tilgungsplanSubView > .summary-card { width: auto; }
+#potYearSelect { margin-inline: 11px !important; }
+.ledger-list-heading {
+  margin: 16px 11px 8px;
+  color: var(--hero-blue-text);
+  font-size: 17px;
+  font-weight: 800;
+}
+.ledger-list-heading-fixed { margin-block-start: 22px; }
+#incomeList .ledger-income-heading {
+  color: var(--hero-green-text);
+  font-size: 17px;
+  font-weight: 800;
+}
+:is(#fixedList, #autoFixedList) .compact-group-header {
+  background: var(--primary-soft);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+#fixedList .ledger-category-heading {
+  color: var(--hero-blue-text);
+  font-size: 14px;
+  font-weight: 750;
+}
+:is(#invoiceList, #paidInvoicesList) .compact-sub {
+  display: block;
+}
+#invoiceList .compact-amount.invoice-overdue { color: var(--expense); }
+#vcList .vc-card,
+#potTransactions .compact-list-row {
+  border: 0;
+  box-shadow: none;
+}
+#tilgungList > .tilgung-current-month { background: var(--primary-soft); }
+:is(#tab-buchungen, #tab-variabel, #tab-kredite)
+:is(.compact-amount, .vc-monthly, .loan-remaining, .loan-sub) {
+  font-variant-numeric: tabular-nums;
 }
 #vcList .vc-card-top {
   display: grid;
