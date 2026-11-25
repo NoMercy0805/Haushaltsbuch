@@ -8356,6 +8356,33 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   margin: 0 0 8px;
   padding: 9px 12px;
 }
+:is(#incomeList, #fixedList, #autoFixedList, #invoiceList, #paidInvoicesList,
+    #loanList, #paidLoansList, #tilgungList, #tilgungHistoryList, #fuelHistoryList) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
+}
+:is(#incomeList, #fixedList, #autoFixedList, #invoiceList, #paidInvoicesList,
+    #paidLoansList, #tilgungHistoryList, #fuelHistoryList) .compact-list {
+  background: transparent;
+  overflow: visible;
+}
+:is(#incomeList, #fixedList, #autoFixedList, #invoiceList, #paidInvoicesList,
+    #paidLoansList, #tilgungHistoryList, #fuelHistoryList) .compact-list-row {
+  background: var(--surface);
+}
+:is(#incomeList, #fixedList, #autoFixedList, #invoiceList, #paidInvoicesList,
+    #paidLoansList, #tilgungHistoryList, #fuelHistoryList) .compact-list-row,
+#loanList > .loan-card,
+#tilgungList > .vc-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  margin: 0 0 8px;
+}
 #vcList .vc-card-top {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
