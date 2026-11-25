@@ -3399,12 +3399,21 @@ var nativeStorage = {
         } else {
           var annualGoal = item.monthlyAmount * intervalMonths(item.interval);
           var buffer = annualGoal - (item.actualAmount||0);
-          var dueThisMonth = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear) === 0;
+          var monthsToDue = monthsUntilNextDue(item.interval, item.dueMonth, item.dueYear);
+          var now = new Date();
+          var dueDate = new Date(now.getFullYear(), now.getMonth() + monthsToDue, 1);
+          var dueLabel = MONTH_NAMES[dueDate.getMonth()] + ' ' + dueDate.getFullYear();
+          var dueThisMonth = monthsToDue === 0;
           var vcTint = '';
           if(dueThisMonth && !isPaidThisCycle(item)) vcTint = 'background:var(--expense-soft);';
           else if((dueThisMonth && isPaidThisCycle(item)) || nothingDueRestOfYear(item)) vcTint = 'background:var(--savings-soft);';
-          html += '<div class="vc-card" data-id="'+item.id+'" style="'+vcTint+'">'+
-                    '<div class="vc-card-top"><span class="vc-name">'+escapeHtml(item.name)+'</span><span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span></div>'+
+          html += '<div class="vc-card'+(payingVc === item.id ? ' expanded' : '')+'" data-id="'+item.id+'" style="'+vcTint+'">'+
+                    '<div class="vc-card-top">'+
+                      '<span class="vc-name">'+escapeHtml(item.name)+'</span>'+
+                      '<span class="vc-monthly">'+fmtEUR(item.monthlyAmount)+' / Monat</span>'+
+                      '<span class="vc-summary-due">'+dueLabel+'</span>'+
+                      '<span class="vc-summary-invoice">Letzte Rechnung: '+fmtEUR(item.actualAmount||0)+'</span>'+
+                    '</div>'+
                     '<div class="vc-detail-row"><span>Fälligkeit</span><span class="val">'+intervalLabel(item.interval, item.dueMonth, item.dueYear)+'</span></div>'+
                     '<div class="vc-detail-row"><span>'+intervalGoalLabel(item.interval)+'</span><span class="val">'+fmtEUR(annualGoal)+'</span></div>'+
                     '<div class="vc-detail-row"><span>Letzte Rechnung</span><span class="val">'+fmtEUR(item.actualAmount||0)+'</span></div>'+
@@ -8329,6 +8338,67 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   border-top: 1px solid var(--rule);
 }
 #tilgungConfirmButton:disabled { opacity: .65; cursor: default; }
+#vcList .vc-card,
+#potTransactions .compact-list-row {
+  position: relative;
+  padding: 10px 12px 10px 30px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+#vcList .vc-card::before,
+#potTransactions .compact-list-row::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  width: 6px;
+  height: 6px;
+  border: solid var(--ink-soft);
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+}
+#vcList .vc-card.expanded::before,
+#potTransactions .compact-list-row.expanded::before {
+  transform: rotate(45deg);
+}
+#vcList .vc-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 3px 8px;
+  margin: 0;
+}
+#vcList .vc-name { overflow-wrap: anywhere; }
+#vcList .vc-monthly,
+#vcList .vc-summary-invoice { text-align: right; }
+#vcList .vc-summary-due,
+#vcList .vc-summary-invoice {
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.25;
+}
+#vcList .vc-summary-invoice { max-width: min(54vw, 210px); }
+#vcList .vc-card:not(.expanded) > .vc-detail-row,
+#vcList .vc-card.expanded :is(.vc-summary-due, .vc-summary-invoice) {
+  display: none;
+}
+#vcList .vc-card.expanded > .vc-card-top { margin-bottom: 8px; }
+#potTransactions .compact-list {
+  background: transparent;
+  overflow: visible;
+}
+#potTransactions .compact-list-row {
+  background: var(--surface);
+  align-items: flex-start;
+  cursor: pointer;
+}
+#potTransactions .compact-list-row:last-child { border-bottom: 1px solid var(--rule); }
+#potTransactions .compact-name { font-weight: 800; }
+#potTransactions .compact-sub { display: block; }
+#potTransactions .compact-actions > .action-icon-btn-wrap { flex: 1 1 0; }
+#potTransactions .compact-actions > .action-icon-btn-wrap > .action-icon-btn { flex-grow: 1; }
 #vcList .vc-actions > .action-icon-btn-wrap { flex: 1 1 0; }
 #vcList .vc-actions > .action-icon-btn-wrap > .action-icon-btn { flex-grow: 1; }
 #vcList .vc-actions > .action-icon-btn-wrap:has([data-action="pay"]) { flex-grow: 1.3; }
