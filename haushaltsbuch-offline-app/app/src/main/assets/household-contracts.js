@@ -173,7 +173,7 @@
           row.status === 'beendet' ? ' entry-status-clear' : '';
         var durationBadge = '';
         if(!row.end){
-          durationBadge = '<span class="contract-unlimited-badge" role="img" aria-label="Unbefristete Laufzeit">∞</span>';
+          durationBadge = app.renderRing(100,false,'Unbefristete Laufzeit','∞');
         }else if(elapsed !== null){
           durationBadge = app.renderRing(elapsed,false,'der Laufzeit vergangen');
         }
