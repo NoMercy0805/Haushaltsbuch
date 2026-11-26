@@ -47,8 +47,9 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public boolean showContractNotification(String contractId, String message) {
-        NotificationManager manager = context.getSystemService(NotificationManager.class);
-        if (manager == null || !manager.areNotificationsEnabled()) return false;
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager == null) return false;
+        if (Build.VERSION.SDK_INT >= 24 && !manager.areNotificationsEnabled()) return false;
         if (Build.VERSION.SDK_INT >= 26) {
             manager.createNotificationChannel(new NotificationChannel(
                     CONTRACT_NOTIFICATION_CHANNEL, "Kündigungsfristen", NotificationManager.IMPORTANCE_DEFAULT));
@@ -57,7 +58,8 @@ public class WebAppInterface {
         }
         Intent intent = new Intent(context, MainActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent openApp = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        int flags = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
+        PendingIntent openApp = PendingIntent.getActivity(context, 0, intent, flags);
         Notification.Builder notification = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(context, CONTRACT_NOTIFICATION_CHANNEL)
                 : new Notification.Builder(context);
