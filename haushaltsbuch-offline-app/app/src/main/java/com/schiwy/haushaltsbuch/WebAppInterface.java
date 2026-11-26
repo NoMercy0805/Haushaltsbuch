@@ -1,6 +1,11 @@
 package com.schiwy.haushaltsbuch;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.SharedPreferences;
@@ -32,6 +37,43 @@ public class WebAppInterface {
     private static final String PREFS = "backup_prefs";
     private static final String KEY_TREE_URI = "backup_tree_uri";
     private static final String KEY_TREE_NAME = "backup_tree_name";
+
+    private static final String CONTRACT_NOTIFICATION_CHANNEL = "contract_deadlines";
+
+    @JavascriptInterface
+    public void requestContractNotificationPermission() {
+        mainHandler.post(activity::requestNotificationPermissionIfNeeded);
+    }
+
+    @JavascriptInterface
+    public boolean showContractNotification(String contractId, String message) {
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
+        if (manager == null || !manager.areNotificationsEnabled()) return false;
+        if (Build.VERSION.SDK_INT >= 26) {
+            manager.createNotificationChannel(new NotificationChannel(
+                    CONTRACT_NOTIFICATION_CHANNEL, "Kündigungsfristen", NotificationManager.IMPORTANCE_DEFAULT));
+            if (manager.getNotificationChannel(CONTRACT_NOTIFICATION_CHANNEL).getImportance()
+                    == NotificationManager.IMPORTANCE_NONE) return false;
+        }
+        Intent intent = new Intent(context, MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent openApp = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        Notification.Builder notification = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(context, CONTRACT_NOTIFICATION_CHANNEL)
+                : new Notification.Builder(context);
+        notification.setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Kündigungsfrist läuft ab")
+                .setContentText(message)
+                .setStyle(new Notification.BigTextStyle().bigText(message))
+                .setContentIntent(openApp)
+                .setAutoCancel(true);
+        try {
+            manager.notify("contract-deadline:" + contractId, 0, notification.build());
+            return true;
+        } catch (SecurityException denied) {
+            return false;
+        }
+    }
 
     public WebAppInterface(MainActivity activity) {
         this.activity = activity;

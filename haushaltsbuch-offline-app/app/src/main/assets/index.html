@@ -1352,6 +1352,7 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 20.4l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg>
             Einnahmen & Fixkosten
           </button>
+          <button type="button" class="sub-nav-btn" data-sub-view="vertraege"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v5h4M8 12h8M8 16h6"/></svg><span>Verträge</span></button>
         </div>
 
         <div id="rechnungenSubView">
@@ -1380,6 +1381,13 @@
         <h2 class="ledger-list-heading ledger-list-heading-fixed"><span class="ledger-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.6l4 4-4 4M3 12.6v-1a4 4 0 0 1 4-4h14M7 20.4l-4-4 4-4M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></span>Fixkosten</h2>
         <div id="fixedList"></div>
         <div id="autoFixedList"></div>
+        </div>
+
+        <div id="vertraegeSubView" style="display:none;">
+          <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="contractSummary"></div></div>
+          <h2 class="ledger-list-heading">Alle Verträge chronologisch</h2>
+          <div id="contractList"></div>
+          <button type="button" class="settings-btn" id="openContractOptions">Vertragsoptionen</button>
         </div>
       </section>
 
@@ -1653,6 +1661,77 @@
         </div>
         <button type="submit">Kredit hinzufügen</button>
       </form>
+    </div>
+  </div>
+
+  <div id="addContractOverlay" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <h2 id="contractFormTitle">Neuer Vertrag</h2>
+        <button class="settings-close-btn" data-close-form="addContractOverlay" aria-label="Schließen">×</button>
+      </div>
+      <form id="contractForm" class="entry-form">
+        <input type="text" id="cName" placeholder="Vertragsname (z. B. Handyvertrag)" class="full" required>
+        <div>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Startdatum</label>
+          <input type="date" id="cStart" required>
+        </div>
+        <div>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Mindestlaufzeit</label>
+          <select id="cMinTerm">
+            <option value="0" selected>Keine</option>
+            <option value="1w">1 Woche</option>
+            <option value="2w">2 Wochen</option>
+            <option value="3w">3 Wochen</option>
+            <option value="4w">4 Wochen</option>
+            <option value="1">1 Monat</option>
+            <option value="3">3 Monate</option>
+            <option value="6">6 Monate</option>
+            <option value="12">12 Monate</option>
+            <option value="18">18 Monate</option>
+            <option value="24">24 Monate</option>
+            <option value="36">36 Monate</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Enddatum</label>
+          <input type="date" id="cEnd">
+        </div>
+        <div>
+          <label class="field-label" style="margin:0 0 -2px 2px;display:block;">Kündigungsfrist (optional)</label>
+          <select id="cNotice">
+            <option value="0" selected>Keine</option>
+            <option value="1w">1 Woche</option>
+            <option value="2w">2 Wochen</option>
+            <option value="3w">3 Wochen</option>
+            <option value="4w">4 Wochen</option>
+            <option value="1">1 Monat</option>
+            <option value="3">3 Monate</option>
+            <option value="6">6 Monate</option>
+            <option value="12">12 Monate</option>
+          </select>
+        </div>
+        <select id="cStatus" class="full">
+          <option value="aktiv" selected>Aktiv</option>
+          <option value="gekuendigt">Gekündigt</option>
+          <option value="pausiert">Pausiert</option>
+          <option value="beendet">Beendet</option>
+        </select>
+        <button type="submit" id="contractFormSubmit">Vertrag hinzufügen</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="contractOptionsOverlay" class="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-head">
+        <h2>Vertragsoptionen</h2>
+        <button type="button" class="settings-close-btn" data-close-form="contractOptionsOverlay" aria-label="Schließen">×</button>
+      </div>
+      <label class="tab-visibility-row"><span>An Kündigungsfristen erinnern</span><input type="checkbox" id="contractNotify"></label>
+      <label class="tab-visibility-row"><span>Tage vorher</span><select id="contractNotifyDays"></select></label>
+      <button type="button" class="settings-btn" id="contractImport">Verträge-Sicherung importieren</button>
+      <input type="file" id="contractImportFile" accept=".csv,.json,text/csv,application/json" hidden>
     </div>
   </div>
 
@@ -2070,6 +2149,7 @@ id,name,amount
   </div>
 </div>
 
+<script src="household-contracts.js"></script>
 <script>
 // ---------- Native Speicherung (ersetzt localStorage als eigentliche Ablage) ----------
 // In der Android-App gehen alle Lese-/Schreibzugriffe jetzt an eine echte
@@ -2536,6 +2616,7 @@ var nativeStorage = {
       savings: [],
       cars: [],
       fuelLogs: [],
+      contracts: [],
       betaEntries: [],
       betaHiddenTitles: []
     };
@@ -2558,6 +2639,7 @@ var nativeStorage = {
         if(!Array.isArray(parsed.savings)) parsed.savings = [];
         if(!Array.isArray(parsed.cars)) parsed.cars = [];
         if(!Array.isArray(parsed.fuelLogs)) parsed.fuelLogs = [];
+        if(!Array.isArray(parsed.contracts)) parsed.contracts = [];
         if(!Array.isArray(parsed.betaEntries)) parsed.betaEntries = [];
         if(!Array.isArray(parsed.betaHiddenTitles)) parsed.betaHiddenTitles = [];
         parsed.variableCosts.forEach(function(v){
@@ -4084,6 +4166,7 @@ var nativeStorage = {
   /* Card Clean: einheitliche Symbol-/Kachelstruktur fuer bestehende Hero-Karten. */
   function applyCardCleanHeroLayout(){
     var icons = {
+      contractSummary:'<path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v5h4M8 12h8M8 16h6"/>',
       invoiceSummary:'<path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M15 3v4a1 1 0 0 0 1 1h3"/><path d="m9 14 2 2 4-4"/>',
       vcSummary:'<circle cx="9" cy="20" r="1"/><circle cx="19" cy="20" r="1"/><path d="M2 3h2l3.4 12.4a2 2 0 0 0 2 1.6h9.4a2 2 0 0 0 2-1.6L23 7H6"/>',
       potSummary:'<path d="M4.3 10.3C5.4 6.7 8.8 5 12.2 5c2 0 3.6.6 4.8 1.7l2-1.5v3.5c1 .8 1.7 1.8 2 3v3.2l-2.2.8c-.6 1.1-1.6 1.9-2.8 2.5V20h-3v-1.3H9V20H6v-3c-1.4-1-2.2-2.5-2.2-4.2 0-1 .2-1.8.5-2.5z"/><path d="M3.8 11.3c-2-.2-2.6-1.8-1.4-2.7.8-.6 1.8.1 1.5 1.1"/><path d="M9.3 7.4c1.2-.6 2.7-.7 4-.4"/><circle cx="17.5" cy="11.2" r=".8" fill="currentColor" stroke="none"/>',
@@ -4169,6 +4252,7 @@ var nativeStorage = {
     renderSparen();
     renderDiagramme();
     renderBeta();
+    contractsUi.render();
     applyCardCleanHeroLayout();
     watchCardCleanHeroes();
   }
@@ -4176,7 +4260,7 @@ var nativeStorage = {
   /* Hero-Karten werden auch durch einzelne Render-Funktionen neu aufgebaut.
      Die Darstellung daher nach jeder Aktualisierung erneut anwenden. */
   function watchCardCleanHeroes(){
-    var ids=['invoiceSummary','fixedSummary','vcSummary','potSummary','loanSummary','tilgungSummary'];
+    var ids=['invoiceSummary','fixedSummary','vcSummary','potSummary','loanSummary','tilgungSummary','contractSummary'];
     ids.forEach(function(id){
       var el=document.getElementById(id);
       if(!el || el.dataset.ccWatching) return;
@@ -4632,10 +4716,11 @@ var nativeStorage = {
   }
 
   var activeBuchungenSubView = 'rechnungen';
-  var BUCHUNGEN_SUB_VIEWS = ['rechnungen', 'fixkosten'];
+  var BUCHUNGEN_SUB_VIEWS = ['rechnungen', 'fixkosten', 'vertraege'];
   function switchBuchungenSubView(view){
     if(view === 'einnahmen') view = 'fixkosten';
     activeBuchungenSubView = view;
+    if(view === 'vertraege') contractsUi.render();
     BUCHUNGEN_SUB_VIEWS.forEach(function(v){
       document.getElementById(v+'SubView').style.display = v === view ? '' : 'none';
     });
@@ -4756,7 +4841,7 @@ var nativeStorage = {
 
     var formOverlayIds = [
       'addInvoiceOverlay','addIncomeOverlay','addFixedOverlay','addContribOverlay',
-      'addVcOverlay','addLoanOverlay','addSparOverlay','addSparExpenseOverlay'
+      'addVcOverlay','addLoanOverlay','addSparOverlay','addSparExpenseOverlay','addContractOverlay','contractOptionsOverlay'
     ];
 
     function closeAllFormOverlays(){
@@ -4789,6 +4874,7 @@ var nativeStorage = {
       // Kombinierte Einnahmen/Fixkosten-Ansicht: Plus-Menue bietet beide Formulare.
       'spartopf': 'addContribOverlay',
       'kostenarten': 'addVcOverlay',
+      'vertraege': 'addContractOverlay',
       'beta': 'addBetaOverlay'
     };
 
@@ -4835,6 +4921,10 @@ var nativeStorage = {
       var tab = getActiveTab();
       var directFormId = tab ? singleOptionFormByTab[tab] : null;
       if(directFormId){
+        if(directFormId === 'addContractOverlay'){
+          contractsUi.openForm();
+          return;
+        }
         if(directFormId === 'addBetaOverlay') resetBetaForm();
         document.getElementById(directFormId).classList.add('open');
         return;
@@ -5549,6 +5639,7 @@ var nativeStorage = {
     {name:'savings', columns:['id','date','amount','type','comment']},
     {name:'cars', columns:['id','name']},
     {name:'fuelLogs', columns:['id','carId','liters','pricePerLiter','date']},
+    {name:'contracts', columns:['id','name','start','minTerm','end','notice','status','autoRenewed']},
     {name:'betaEntries', columns:['id','type','title','date','amount','category','recurring','reconciled','isRecurringTemplate','recurrencePeriod','recurrenceEnd','recurringGroupId']}
   ];
 
@@ -5613,6 +5704,7 @@ var nativeStorage = {
       if(first.indexOf('# TABLE:') === 0){
         currentTable = first.slice('# TABLE:'.length).trim();
         currentColumns = null;
+        if(currentTable === 'contracts') result.contracts = [];
         return;
       }
       var isEmptyRow = row.every(function(c){ return (c||'').trim() === ''; });
@@ -5671,6 +5763,8 @@ var nativeStorage = {
         var parsedLastReconciled = parseFloat(obj.lastReconciledBalance);
         obj.lastReconciledBalance = isNaN(parsedLastReconciled) ? null : parsedLastReconciled;
         if(!obj.lastReconciledDate) obj.lastReconciledDate = null;
+      } else if(currentTable === 'contracts'){
+        obj = contractsUi.normalize(obj);
       } else if(currentTable === 'fuelLogs'){
         obj.liters = parseFloat(obj.liters) || 0;
         obj.pricePerLiter = parseFloat(obj.pricePerLiter) || 0;
@@ -5847,6 +5941,9 @@ var nativeStorage = {
   }
 
   async function restoreDatabaseFromText(text){
+    if(contractsUi.isStandaloneBackup(text)){
+      return contractsUi.importBackup(text);
+    }
     var parsed;
     try{
       // Abwärtskompatibilität: ältere Sicherungen waren JSON
@@ -5881,6 +5978,7 @@ var nativeStorage = {
     parsed.savings.forEach(function(s){
       if(s.type !== 'expense') s.type = 'deposit';
     });
+    if(!Array.isArray(parsed.contracts)) parsed.contracts = state.contracts || [];
     state = parsed;
     editing = { income:null, fixed:null, vc:null, loan:null, tx:null, spar:null };
     if(parsed.tabVisibility && typeof parsed.tabVisibility === 'object'){
@@ -7817,8 +7915,16 @@ var nativeStorage = {
     },true);
   }
 
+  var contractsUi = window.createHouseholdContracts({
+    getState: function(){ return state; },
+    saveState: saveState, storage: nativeStorage, parseCSV: parseCSV,
+    confirm: confirmDialog, message: showMessage, takeId: genId,
+    escape: escapeHtml, decorate: applyCardCleanHeroLayout
+  });
+
   async function init(){
     state = await loadState();
+    contractsUi.init();
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('mainUI').style.display = 'block';
     setupTabs();
@@ -8198,6 +8304,41 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 #vcList .vc-actions > .action-icon-btn-wrap > .action-icon-btn { flex-grow: 1; }
 #vcList .vc-actions > .action-icon-btn-wrap:has([data-action="pay"]) { grid-column: 1 / -1; }
 #vcList .vc-actions .action-icon-btn.danger svg { display: none; }
+/* Verträge im Stil der Haushaltsbuch-Karten */
+#buchungenSubNav .sub-nav-btn { min-width:0; padding-inline:5px; gap:4px; }
+#buchungenSubNav .sub-nav-btn > span { min-width:0; }
+#vertraegeSubView .hero-sticky-wrap { padding-inline:5px; }
+#contractSummary { border-width:0 !important; }
+.contract-hero-name { margin:-7px 0 10px; font-size:13px; color:var(--hero-blue-text); overflow-wrap:anywhere; }
+#contractList { padding-inline:11px; }
+#contractList .contract-entry {
+  position:relative;
+  width:100%;
+  box-sizing:border-box;
+  background:var(--surface-2);
+  border:0;
+  border-radius:10px;
+  box-shadow:none;
+  margin:0 0 8px;
+  padding:10px 13px 10px 16px;
+}
+.contract-entry.expanded .contract-details { display:grid; gap:5px; margin-top:9px; }
+.contract-details { display:none; font-size:13px; color:var(--ink-soft); }
+.contract-top { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; align-items:baseline; overflow-wrap:anywhere; }
+.contract-top strong { font-size:16px; }
+.contract-top > :nth-child(even) { text-align:right; }
+.contract-sub { font-size:12px; color:var(--ink-soft); }
+.contract-status-soon { --entry-accent:var(--gold); }
+.contract-entry.contract-status-soon::before {
+  content:""; position:absolute; inset-block:9px; inset-inline-start:5px;
+  border-radius:999px; width:3px; background:var(--entry-accent); opacity:.65;
+}
+#vertraegeSubView > .settings-btn { margin:8px 11px; width:calc(100% - 22px); }
+#contractList .vc-actions { gap:8px; align-items:stretch; }
+#contractList .action-icon-btn { flex:1 1 0; min-height:42px; border-radius:13px; font-weight:700; }
+#contractList .action-icon-btn.neutral { background:rgba(111,122,151,.16); color:var(--ink); }
+#contractList .action-icon-btn.danger { background:rgba(242,75,86,.16); color:var(--expense); }
+html[data-theme="dark"] #contractList .action-icon-btn.danger { color:#ffa4a8; }
 </style>
 <script>
 (function(){'use strict';

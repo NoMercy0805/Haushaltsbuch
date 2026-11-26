@@ -298,6 +298,9 @@ public class MainActivity extends FragmentActivity {
             boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
             if (granted && bridge != null) {
                 bridge.showKontostandNotificationIfEnabled();
+                if (webView != null) {
+                    webView.evaluateJavascript("window.checkHouseholdContractReminders?.()", null);
+                }
             }
         }
     }
