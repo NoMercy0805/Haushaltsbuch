@@ -785,14 +785,17 @@
   .hero-card:not(#fixedSummary) .hero-card-sub-value{
     font-size:clamp(15px,4vw,19px)!important;font-weight:750!important;line-height:1.2!important;
   }
-  #loanSummary .cc-hero-heading:has(.loan-summary-progress) {
+  .hero-card#loanSummary .cc-hero-heading:has(.loan-summary-progress) {
     grid-template-columns:minmax(0,1fr) auto!important;
-    column-gap:8px!important;
+    column-gap:12px!important;
   }
-  #loanSummary .cc-hero-heading:has(.loan-summary-progress) .cc-hero-icon {
+  .hero-card#loanSummary .cc-hero-heading:has(.loan-summary-progress) .cc-hero-icon {
     display:none!important;
   }
-  #loanSummary .cc-hero-title .hero-card-value { overflow-wrap:anywhere; }
+  #loanSummary .cc-hero-title .hero-card-value {
+    overflow-wrap:normal;
+    font-variant-numeric:tabular-nums;
+  }
   .loan-progress-ring {
     position:relative;
     isolation:isolate;
