@@ -3962,7 +3962,7 @@ var nativeStorage = {
     }
   }
 
-  function renderLoanProgressRing(pct, summary){
+  function renderProgressRing(pct, summary, description){
     var label = pct.toFixed(0)+' %';
     var fill = '';
     if(pct > 0){
@@ -3972,7 +3972,7 @@ var nativeStorage = {
       var angle = pct * 3.6;
       fill = '<span class="loan-ring-fill" aria-hidden="true" style="--loan-ring-mask:url(&quot;data:image/svg+xml,'+encodeURIComponent(progressMask)+'&quot;);--loan-ring-azure:'+(8 + angle * .85).toFixed(2)+'deg;--loan-ring-tip:'+(8 + angle).toFixed(2)+'deg;"></span>';
     }
-    return '<div class="loan-progress-ring '+(summary ? 'loan-summary-progress' : 'loan-item-progress')+'" role="img" aria-label="'+label+' abbezahlt">'+
+    return '<div class="loan-progress-ring '+(summary ? 'loan-summary-progress' : 'loan-item-progress')+'" role="img" aria-label="'+label+' '+(description || 'abbezahlt')+'">'+
       '<svg viewBox="0 0 100 100" aria-hidden="true">'+
         '<circle class="loan-ring-track" cx="50" cy="50" r="44"/>'+
       '</svg>'+
@@ -3993,7 +3993,7 @@ var nativeStorage = {
     document.getElementById('loanSummary').innerHTML =
       '<div class="hero-card-label" style="color:var(--hero-blue-text);">Restschuld gesamt</div>'+
       '<div class="hero-card-value">'+fmtEUR(totalRemaining)+'</div>'+
-      (totalOriginal > 0 ? renderLoanProgressRing(totalPct, true) : '')+
+      (totalOriginal > 0 ? renderProgressRing(totalPct, true) : '')+
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
@@ -4034,7 +4034,7 @@ var nativeStorage = {
         var cardStatus = paidThisMonth ? ' entry-status-clear' : ' entry-status-due';
         html += '<div class="loan-card'+(payingLoan === loan.id || increasingLoan === loan.id || reconcilingLoan === loan.id ? ' expanded' : '')+cardStatus+'" data-id="'+loan.id+'">'+
                   '<div class="loan-card-summary">'+
-                    (loan.originalAmount > 0 ? renderLoanProgressRing(pct, false) : '')+
+                    (loan.originalAmount > 0 ? renderProgressRing(pct, false) : '')+
                     '<div class="loan-card-summary-text">'+
                       '<div class="loan-top"><span class="loan-name">'+escapeHtml(loan.name)+'</span><span class="loan-remaining">'+fmtEUR(loan.remainingBalance)+'</span></div>'+
                       '<div class="loan-sub"><span>Rate</span><span>'+fmtEUR(loan.monthlyPayment)+' / Monat</span></div>'+
@@ -7937,7 +7937,7 @@ var nativeStorage = {
     getState: function(){ return state; },
     saveState: saveState, storage: nativeStorage, parseCSV: parseCSV,
     confirm: confirmDialog, message: showMessage, takeId: genId,
-    escape: escapeHtml, decorate: applyCardCleanHeroLayout
+    escape: escapeHtml, decorate: applyCardCleanHeroLayout, renderRing: renderProgressRing
   });
 
   async function init(){
@@ -8356,7 +8356,9 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 }
 .contract-entry.expanded .contract-details { display:grid; gap:5px; margin-top:9px; }
 .contract-details { display:none; font-size:13px; color:var(--ink-soft); }
-.contract-top { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; align-items:baseline; overflow-wrap:anywhere; }
+.contract-card-summary { display:flex; align-items:center; gap:10px; }
+.contract-card-summary .loan-item-progress { flex:0 0 46px; }
+.contract-top { flex:1; min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; align-items:baseline; overflow-wrap:anywhere; }
 .contract-top strong { font-size:16px; }
 .contract-top > :nth-child(even) { text-align:right; }
 .contract-sub { font-size:12px; color:var(--ink-soft); }

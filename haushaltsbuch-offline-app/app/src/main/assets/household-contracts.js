@@ -75,6 +75,15 @@
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
+  function elapsedTermPercent(start, end){
+    if(!start || !end) return null;
+    var from = Date.parse(start);
+    var to = Date.parse(end);
+    var now = Date.parse(todayISO());
+    if(to <= from) return now >= to ? 100 : 0;
+    return Math.min(100, Math.max(0, (now - from) * 100 / (to - from)));
+  }
+
   var statuses = {aktiv:'Aktiv', gekuendigt:'Gekündigt', pausiert:'Pausiert', beendet:'Beendet'};
   var noticeKey = 'household-contract-notifications';
   var daysKey = 'household-contract-notification-days';
@@ -152,7 +161,9 @@
           (a.end || '9999').localeCompare(b.end || '9999');
       });
       list.innerHTML = ordered.map(function(row){
+        var start = isoDate(row.start);
         var end = isoDate(row.end);
+        var elapsed = elapsedTermPercent(start,end);
         var endDays = daysUntil(end);
         var deadline = end && readTermValue(row.notice) ? shiftDateByTerm(end,row.notice,-1) : '';
         var deadlineDays = daysUntil(deadline);
@@ -161,11 +172,13 @@
           active && ((deadline && deadlineDays <= 30) || (end && endDays <= 30)) ? ' contract-status-soon' :
           row.status === 'beendet' ? ' entry-status-clear' : '';
         return '<article class="vc-card contract-entry'+tone+(expanded.has(row.id)?' expanded':'')+'" data-contract-id="'+esc(row.id)+'">'+
+          '<div class="contract-card-summary">'+
+          (elapsed === null ? '' : app.renderRing(elapsed,false,'der Laufzeit vergangen'))+
           '<div class="contract-top"><strong>'+esc(row.name)+'</strong><strong>'+fmtDate(end)+'</strong>'+
           '<span class="contract-sub">'+esc(statuses[row.status] || 'Aktiv')+'</span>'+
-          '<span class="contract-sub">'+(deadline ? 'Kündigen bis '+fmtDate(deadline) : end ? 'Vertragsende' : 'Kein Enddatum')+'</span></div>'+
+          '<span class="contract-sub">'+(deadline ? 'Kündigen bis '+fmtDate(deadline) : end ? 'Vertragsende' : 'Kein Enddatum')+'</span></div></div>'+
           '<div class="contract-details">'+
-            '<span>Startdatum: '+fmtDate(isoDate(row.start))+'</span>'+
+            '<span>Startdatum: '+fmtDate(start)+'</span>'+
             (end ? '<span>'+(endDays<0 ? 'Abgelaufen' : endDays===0 ? 'Läuft heute aus' : 'Restlaufzeit: '+endDays+(endDays===1?' Tag':' Tage'))+'</span>' : '')+
             (deadline && active && deadlineDays<0 ? '<span>Kündigungsfrist verstrichen</span>' : '')+
             (row.autoRenewed === true && active ? '<span>Automatisch um einen Monat verlängert</span>' : '')+
