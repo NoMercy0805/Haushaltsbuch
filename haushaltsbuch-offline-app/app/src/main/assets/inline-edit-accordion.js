@@ -5,7 +5,7 @@
   window.__householdInlineEditInstalled=true;
   var editActions={
     'edit':true,'edit-invoice':true,'edit-vc':true,
-    'edit-tx':true,'edit-spar':true,'edit-loan':true,'edit-fuel':true
+    'edit-tx':true,'edit-spar':true,'edit-loan':true
   };
   function makeCardPreview(original){
     if(!original)return null;
