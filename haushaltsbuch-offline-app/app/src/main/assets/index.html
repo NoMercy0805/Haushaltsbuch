@@ -1387,7 +1387,6 @@
           <div class="hero-sticky-wrap"><div class="hero-card hero-blue" id="contractSummary"></div></div>
           <h2 class="ledger-list-heading">Alle Verträge chronologisch</h2>
           <div id="contractList"></div>
-          <button type="button" class="settings-btn" id="openContractOptions">Vertragsoptionen</button>
         </div>
       </section>
 
@@ -1722,11 +1721,12 @@
     </div>
   </div>
 
-  <div id="contractOptionsOverlay" class="settings-overlay">
+  <div id="settingsSubOverlay-vertraege" class="settings-overlay">
     <div class="settings-panel">
       <div class="settings-panel-head">
-        <h2>Vertragsoptionen</h2>
-        <button type="button" class="settings-close-btn" data-close-form="contractOptionsOverlay" aria-label="Schließen">×</button>
+        <button type="button" class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <h2>Verträge</h2>
+        <span style="width:34px;"></span>
       </div>
       <label class="tab-visibility-row"><span>An Kündigungsfristen erinnern</span><input type="checkbox" id="contractNotify"></label>
       <label class="tab-visibility-row"><span>Tage vorher</span><select id="contractNotifyDays"></select></label>
@@ -1859,6 +1859,11 @@
         <button type="button" class="settings-nav-row" data-open-settings="kontostand">
           <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="6" cy="18" rx="4" ry="1.6"/><path d="M2 18v-3"/><path d="M10 18v-3"/><ellipse cx="6" cy="15" rx="4" ry="1.6"/><ellipse cx="13" cy="20" rx="4" ry="1.6"/><path d="M9 20v-4"/><path d="M17 20v-4"/><ellipse cx="13" cy="16" rx="4" ry="1.6"/><ellipse cx="19" cy="17" rx="4" ry="1.6"/><path d="M15 17v-5"/><path d="M23 17v-5"/><ellipse cx="19" cy="12" rx="4" ry="1.6"/></svg></span>
           <span class="settings-nav-text"><span class="settings-nav-title">Kontostand</span><span class="settings-nav-sub">Import, Dauerauftrag-Vorlagen, Titel-Vorschläge</span></span>
+          <span class="settings-nav-arrow">›</span>
+        </button>
+        <button type="button" class="settings-nav-row" data-open-settings="vertraege">
+          <span class="settings-nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3v5h4M8 12h8M8 16h6"/></svg></span>
+          <span class="settings-nav-text"><span class="settings-nav-title">Verträge</span><span class="settings-nav-sub">Import und Kündigungserinnerungen</span></span>
           <span class="settings-nav-arrow">›</span>
         </button>
         <button type="button" class="settings-nav-row" data-open-settings="reset">
@@ -4841,7 +4846,7 @@ var nativeStorage = {
 
     var formOverlayIds = [
       'addInvoiceOverlay','addIncomeOverlay','addFixedOverlay','addContribOverlay',
-      'addVcOverlay','addLoanOverlay','addSparOverlay','addSparExpenseOverlay','addContractOverlay','contractOptionsOverlay'
+      'addVcOverlay','addLoanOverlay','addSparOverlay','addSparExpenseOverlay','addContractOverlay'
     ];
 
     function closeAllFormOverlays(){
@@ -5658,13 +5663,16 @@ var nativeStorage = {
       return lines.join('\n');
     });
     sections.push(['# TABLE:settings', 'amount', csvEscape(state.potCarryover||0)].join('\n'));
+    var contractReminderSettings = contractsUi.getReminderSettings();
     sections.push([
       '# TABLE:appSettings',
-      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth',
+      'tabVisibilityJson,tilgungExtra,tilgungCurrentMonth,contractNotify,contractNotifyDays',
       [
         csvEscape(JSON.stringify(tabVisibility)),
         csvEscape(getTilgungExtra()),
-        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })())
+        csvEscape((function(){ try{ return nativeStorage.getItem(TILGUNG_CURRENT_MONTH_KEY)||''; }catch(e){ return ''; } })()),
+        csvEscape(contractReminderSettings.enabled ? '1' : '0'),
+        csvEscape(contractReminderSettings.days)
       ].join(',')
     ].join('\n'));
     return sections.join('\n\n');
@@ -5724,6 +5732,12 @@ var nativeStorage = {
         var parsedExtra = parseFloat(appSettingsObj.tilgungExtra);
         if(!isNaN(parsedExtra) && parsedExtra >= 0) result.tilgungExtra = parsedExtra;
         if(appSettingsObj.tilgungCurrentMonth) result.tilgungCurrentMonth = appSettingsObj.tilgungCurrentMonth;
+        if(appSettingsObj.contractNotify === '1' || appSettingsObj.contractNotify === '0'){
+          result.contractReminderSettings = {
+            enabled:appSettingsObj.contractNotify === '1',
+            days:Number(appSettingsObj.contractNotifyDays)
+          };
+        }
         return;
       }
       if(!currentTable || !result.hasOwnProperty(currentTable)) return;
@@ -5980,6 +5994,7 @@ var nativeStorage = {
     });
     if(!Array.isArray(parsed.contracts)) parsed.contracts = state.contracts || [];
     state = parsed;
+    if(parsed.contractReminderSettings) contractsUi.restoreReminderSettings(parsed.contractReminderSettings);
     editing = { income:null, fixed:null, vc:null, loan:null, tx:null, spar:null };
     if(parsed.tabVisibility && typeof parsed.tabVisibility === 'object'){
       TAB_ORDER.forEach(function(t){
@@ -8305,8 +8320,22 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 #vcList .vc-actions > .action-icon-btn-wrap:has([data-action="pay"]) { grid-column: 1 / -1; }
 #vcList .vc-actions .action-icon-btn.danger svg { display: none; }
 /* Verträge im Stil der Haushaltsbuch-Karten */
-#buchungenSubNav .sub-nav-btn { min-width:0; padding-inline:5px; gap:4px; }
-#buchungenSubNav .sub-nav-btn > span { min-width:0; }
+#buchungenSubNav .sub-nav-btn {
+  flex:1 1 auto;
+  min-width:0;
+  min-height:38px;
+  padding:0 5px;
+  gap:4px;
+  white-space:nowrap;
+}
+#buchungenSubNav .sub-nav-btn svg { flex:none; }
+@media(max-width:380px){
+  #buchungenSubNav .sub-nav-btn { font-size:12px; padding-inline:3px; gap:3px; }
+  #buchungenSubNav .sub-nav-btn svg { width:14px; height:14px; }
+}
+@media(max-width:340px){
+  #buchungenSubNav .sub-nav-btn { font-size:11px; }
+}
 #vertraegeSubView .hero-sticky-wrap { padding-inline:5px; }
 #contractSummary { border-width:0 !important; }
 .contract-hero-name { margin:-7px 0 10px; font-size:13px; color:var(--hero-blue-text); overflow-wrap:anywhere; }
@@ -8333,7 +8362,6 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
   content:""; position:absolute; inset-block:9px; inset-inline-start:5px;
   border-radius:999px; width:3px; background:var(--entry-accent); opacity:.65;
 }
-#vertraegeSubView > .settings-btn { margin:8px 11px; width:calc(100% - 22px); }
 #contractList .vc-actions { gap:8px; align-items:stretch; }
 #contractList .action-icon-btn { flex:1 1 0; min-height:42px; border-radius:13px; font-weight:700; }
 #contractList .action-icon-btn.neutral { background:rgba(111,122,151,.16); color:var(--ink); }
