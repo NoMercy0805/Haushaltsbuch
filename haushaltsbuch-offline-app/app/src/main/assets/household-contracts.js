@@ -238,12 +238,26 @@
       }
     }
 
+    function getReminderSettings(){
+      return {enabled:storage.getItem(noticeKey) === '1', days:Number(storage.getItem(daysKey)) || 10};
+    }
+
+    function restoreReminderSettings(settings){
+      if(typeof settings.enabled !== 'boolean') return;
+      var days = Number(settings.days);
+      if(!Number.isInteger(days) || days < 1 || days > 10) days = 10;
+      storage.setItem(noticeKey,settings.enabled ? '1' : '0');
+      storage.setItem(daysKey,String(days));
+      el('contractNotify').checked = settings.enabled;
+      el('contractNotifyDays').value = String(days);
+    }
+
     function checkReminders(){
       var bridge = window.AndroidBridge;
-      if(storage.getItem(noticeKey) !== '1' || !bridge || typeof bridge.showContractNotification !== 'function') return;
-      var windowDays = Number(storage.getItem(daysKey)) || 10;
+      var settings = getReminderSettings();
+      if(!settings.enabled || !bridge || typeof bridge.showContractNotification !== 'function') return;
       deadlines().forEach(function(item){
-        if(item.days < 0 || item.days > windowDays) return;
+        if(item.days < 0 || item.days > settings.days) return;
         var key = 'household-contract-notice:'+item.row.id;
         var today = todayISO();
         if(storage.getItem(key) === today) return;
@@ -261,7 +275,6 @@
         return row;
       });
       renew();
-      el('openContractOptions').addEventListener('click',function(){ el('contractOptionsOverlay').classList.add('open'); });
       el('contractList').addEventListener('click',async function(event){
         var btn = event.target.closest('[data-contract-action]');
         if(!btn) return;
@@ -303,7 +316,7 @@
         if(!file) return;
         try{
           var contents = await file.text();
-          el('contractOptionsOverlay').classList.remove('open');
+          el('settingsSubOverlay-vertraege').classList.remove('open');
           await importBackup(contents);
         }catch(err){ app.message('Die Datei konnte nicht gelesen werden.',{icon:'⚠️'}); }
       });
@@ -324,6 +337,7 @@
       window.checkHouseholdContractReminders = checkReminders;
       checkReminders();
     }
-    return {init:init, render:render, openForm:openForm, importBackup:importBackup, isStandaloneBackup:isStandaloneBackup, normalize:normalize};
+    return {init:init, render:render, openForm:openForm, importBackup:importBackup, isStandaloneBackup:isStandaloneBackup, normalize:normalize,
+      getReminderSettings:getReminderSettings, restoreReminderSettings:restoreReminderSettings};
   };
 })();
