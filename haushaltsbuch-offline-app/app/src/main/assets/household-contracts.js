@@ -171,9 +171,15 @@
         var tone = active && deadline && deadlineDays < 0 ? ' entry-status-due' :
           active && ((deadline && deadlineDays <= 30) || (end && endDays <= 30)) ? ' contract-status-soon' :
           row.status === 'beendet' ? ' entry-status-clear' : '';
+        var durationBadge = '';
+        if(!row.end){
+          durationBadge = '<span class="contract-unlimited-badge" role="img" aria-label="Unbefristete Laufzeit">∞</span>';
+        }else if(elapsed !== null){
+          durationBadge = app.renderRing(elapsed,false,'der Laufzeit vergangen');
+        }
         return '<article class="vc-card contract-entry'+tone+(expanded.has(row.id)?' expanded':'')+'" data-contract-id="'+esc(row.id)+'">'+
           '<div class="contract-card-summary">'+
-          (elapsed === null ? '' : app.renderRing(elapsed,false,'der Laufzeit vergangen'))+
+          durationBadge+
           '<div class="contract-top"><strong>'+esc(row.name)+'</strong><strong>'+fmtDate(end)+'</strong>'+
           '<span class="contract-sub">'+esc(statuses[row.status] || 'Aktiv')+'</span>'+
           '<span class="contract-sub">'+(deadline ? 'Kündigen bis '+fmtDate(deadline) : end ? 'Vertragsende' : 'Kein Enddatum')+'</span></div></div>'+

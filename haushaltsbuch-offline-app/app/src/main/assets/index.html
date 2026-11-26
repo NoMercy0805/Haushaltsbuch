@@ -8357,7 +8357,19 @@ html[data-theme="dark"] :is(#incomeList,#fixedList,#invoiceList,#paidInvoicesLis
 .contract-entry.expanded .contract-details { display:grid; gap:5px; margin-top:9px; }
 .contract-details { display:none; font-size:13px; color:var(--ink-soft); }
 .contract-card-summary { display:flex; align-items:center; gap:10px; }
-.contract-card-summary .loan-item-progress { flex:0 0 46px; }
+.contract-card-summary .loan-item-progress,
+.contract-unlimited-badge { flex:0 0 46px; }
+.contract-unlimited-badge {
+  display:grid;
+  place-items:center;
+  height:46px;
+  border-radius:50%;
+  background:linear-gradient(145deg, #1947ed, #007e98);
+  color:#fff;
+  font-size:25px;
+  font-weight:800;
+  line-height:1;
+}
 .contract-top { flex:1; min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; align-items:baseline; overflow-wrap:anywhere; }
 .contract-top strong { font-size:16px; }
 .contract-top > :nth-child(even) { text-align:right; }
