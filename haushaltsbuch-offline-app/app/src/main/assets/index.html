@@ -291,11 +291,6 @@
     opacity:0;transform:translateY(-16px);pointer-events:none;
   }
   #heroCard{transition:opacity .2s ease, transform .2s ease;}
-  #invoiceSummary, #potSummary, #loanSummary, #tilgungSummary, #fuelSummary{
-    transition:padding .2s ease, transform .12s var(--ios-ease);
-    cursor:pointer;
-  }
-  #invoiceSummary:active, #potSummary:active, #loanSummary:active, #tilgungSummary:active, #fuelSummary:active{transform:scale(0.985);}
   .hero-card.hero-gold{background:var(--hero-gold-grad);}
   .hero-card.hero-green{background:var(--hero-green-grad);}
   .hero-card.hero-red{background:var(--hero-red-grad);}
@@ -304,37 +299,9 @@
   .hero-card.hero-exhaust{background:var(--hero-exhaust-grad);}
   .hero-card-label{font-size:13px;margin-bottom:6px;color:var(--hero-blue-text);}
   .hero-card-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;color:var(--ink);transform-origin:left center;transition:transform .2s ease, margin-bottom .2s ease;will-change:transform;}
-  #invoiceSummary.collapsed, #potSummary.collapsed, #loanSummary.collapsed, #tilgungSummary.collapsed, #fuelSummary.collapsed{
-    padding-top:10px;padding-bottom:10px;
-  }
   .hero-card-label{max-height:20px;opacity:1;overflow:hidden;transition:max-height .18s ease, opacity .12s ease, margin-bottom .18s ease;}
   .hero-card-sub-row{max-height:40px;opacity:1;overflow:hidden;transition:max-height .18s ease, opacity .12s ease;}
-  #invoiceSummary.collapsed .hero-card-label,
-  #potSummary.collapsed .hero-card-label,
-  #loanSummary.collapsed .hero-card-label,
-  #tilgungSummary.collapsed .hero-card-label,
-  #fuelSummary.collapsed .hero-card-label{
-    max-height:0;opacity:0;margin-bottom:0;
-  }
-  #invoiceSummary.collapsed .hero-card-sub-row,
-  #potSummary.collapsed .hero-card-sub-row,
-  #loanSummary.collapsed .hero-card-sub-row,
-  #tilgungSummary.collapsed .hero-card-sub-row,
-  #fuelSummary.collapsed .hero-card-sub-row{
-    max-height:0;opacity:0;
-  }
-  #invoiceSummary.collapsed .hero-card-value,
-  #potSummary.collapsed .hero-card-value,
-  #loanSummary.collapsed .hero-card-value,
-  #tilgungSummary.collapsed .hero-card-value,
-  #fuelSummary.collapsed .hero-card-value{
-    transform:scale(0.56);margin-bottom:0;
-  }
   .hero-card-sub-row{display:flex;gap:18px;}
-  .hero-toggle-btn{display:flex;align-items:center;justify-content:center;margin:6px -20px -22px;padding:8px 20px 10px;width:calc(100% + 40px);background:none;border:none;color:inherit;cursor:pointer;}
-  .hero-toggle-btn svg{opacity:0.85;}
-  .hero-toggle-btn svg{transition:transform .2s ease;}
-  .collapsed .hero-toggle-btn svg{transform:rotate(180deg);}
   .hero-card-sub-label{font-size:11px;margin-bottom:2px;}
   .hero-card-sub-value{font-size:14px;font-weight:700;color:var(--ink);}
   .mini-hero-card{border-radius:14px;padding:16px 18px;margin-bottom:12px;}
@@ -836,18 +803,14 @@
   .hero-card:not(#fixedSummary) .hero-card-sub-value{
     font-size:clamp(15px,4vw,19px)!important;font-weight:750!important;line-height:1.2!important;
   }
-  .hero-card:not(#fixedSummary) .hero-toggle-btn{z-index:3;}
-  .hero-card:not(#fixedSummary).collapsed .hero-card-sub-row{max-height:0!important;overflow:hidden!important;}
-  .hero-card:not(#fixedSummary).collapsed .cc-hero-title .hero-card-label{max-height:0!important;opacity:0!important;margin:0!important;overflow:hidden!important;}
-  #loanSummary:not(.collapsed) .cc-hero-heading:has(.loan-summary-progress) {
+  #loanSummary .cc-hero-heading:has(.loan-summary-progress) {
     grid-template-columns:minmax(0,1fr) auto!important;
     column-gap:8px!important;
   }
-  #loanSummary:not(.collapsed) .cc-hero-heading:has(.loan-summary-progress) .cc-hero-icon {
+  #loanSummary .cc-hero-heading:has(.loan-summary-progress) .cc-hero-icon {
     display:none!important;
   }
   #loanSummary .cc-hero-title .hero-card-value { overflow-wrap:anywhere; }
-  #loanSummary.collapsed .loan-summary-progress { display:none; }
   .loan-progress-ring {
     position:relative;
     isolation:isolate;
@@ -2392,12 +2355,6 @@ var nativeStorage = {
   function todayISO(){ return new Date().toISOString().slice(0,10); }
   function fmtEUR(n){ return (n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
 
-  function heroToggleButtonHTML(id){
-    return '<button type="button" class="hero-toggle-btn" data-hero-toggle="'+id+'" aria-label="Details ein-/ausblenden">'+
-             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>'+
-           '</button>';
-  }
-
   // Robuste Betrags-Erkennung fuer Eingabefelder: interpretiert deutsche Schreibweise
   // (Punkt als Tausendertrennzeichen, Komma als Dezimaltrennzeichen) korrekt,
   // damit z.B. "15.000" nicht faelschlich als 15 statt 15000 gelesen wird.
@@ -3262,8 +3219,7 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Folgemonat</div><div class="hero-card-sub-value">'+fmtEUR(nextMonthTotal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Alle offenen Rechnungen</div><div class="hero-card-sub-value">'+fmtEUR(allOpenTotal)+'</div></div>'+
-      '</div>'+
-      heroToggleButtonHTML('invoiceSummary');
+      '</div>';
 
     var container = document.getElementById('invoiceList');
     var list = state.openInvoices.filter(function(i){ return !i.paid; }).slice().sort(function(a,b){
@@ -3416,8 +3372,7 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Eingezahlt</div><div class="hero-card-sub-value">'+fmtEUR(contribTotal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Ausgegeben</div><div class="hero-card-sub-value">'+fmtEUR(paymentTotal)+'</div></div>'+
-      '</div>'+
-      heroToggleButtonHTML('potSummary');
+      '</div>';
 
     document.getElementById('contribDate').value = todayISO();
     var contribAmountEl = document.getElementById('contribAmount');
@@ -3913,8 +3868,7 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Voraussichtlich fertig</div><div class="hero-card-sub-value">'+lastMonth.monthLabel+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Betrag/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthlyBudget)+'</div></div>'+
-      '</div>'+
-      heroToggleButtonHTML('tilgungSummary');
+      '</div>';
 
     // Pro Kredit ermitteln, in welchem Monat er (durch die letzte Rate/Extra-
     // Zahlung dieses Plans) auf 0 faellt.
@@ -4072,8 +4026,7 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Kreditsumme</div><div class="hero-card-sub-value">'+fmtEUR(totalOriginal)+'</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-blue-sub);">Raten/Monat</div><div class="hero-card-sub-value">'+fmtEUR(totalMonthly)+'</div></div>'+
-      '</div>'+
-      heroToggleButtonHTML('loanSummary');
+      '</div>';
 
     var container = document.getElementById('loanList');
     if(activeLoans.length === 0){
@@ -7932,8 +7885,7 @@ var nativeStorage = {
       '<div class="hero-card-sub-row">'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-exhaust-sub);">Liter</div><div class="hero-card-sub-value">'+monthLiters.toFixed(2).replace('.', ',')+' L</div></div>'+
         '<div><div class="hero-card-sub-label" style="color:var(--hero-exhaust-sub);">Ø Preis/Liter</div><div class="hero-card-sub-value">'+(monthAvgPrice>0?monthAvgPrice.toFixed(3).replace('.', ','):'–')+' €</div></div>'+
-      '</div>'+
-      heroToggleButtonHTML('fuelSummary');
+      '</div>';
 
     var carNamesById = {};
     state.cars.forEach(function(c){ carNamesById[c.id] = c.name; });
@@ -8339,26 +8291,12 @@ var nativeStorage = {
     betaRefreshCategorySelect();
     setupCardExpandToggle();
     setupCentInputs();
-    setupHeroCardToggle();
     setupKeyboardAware();
     renderAll();
     setupAutoBackup(); // ersetzt die alte checkSyncReminder()-Erinnerung
     maybeOfferFreshRestore();
     maybeShowWhatsNew();
     renderUpdateHistorie();
-  }
-
-  function toggleHeroCard(id){
-    var el = document.getElementById(id);
-    if(el) el.classList.toggle('collapsed');
-  }
-  function setupHeroCardToggle(){
-    var ids = ['invoiceSummary', 'potSummary', 'loanSummary', 'tilgungSummary', 'fuelSummary'];
-    document.addEventListener('click', function(e){
-      var card = e.target.closest('#invoiceSummary, #potSummary, #loanSummary, #tilgungSummary, #fuelSummary');
-      if(!card || ids.indexOf(card.id) === -1) return;
-      card.classList.toggle('collapsed');
-    });
   }
 
   init();
