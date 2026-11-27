@@ -18,7 +18,7 @@
         if(!child.matches(isLoan?'.loan-card-summary,.loan-sub':'.vc-card-top,.vc-detail-row'))child.remove();
       });
     }else{
-      clone.querySelectorAll('.compact-actions,button,.invoice-check').forEach(function(el){el.remove();});
+      clone.querySelectorAll('.compact-actions,button').forEach(function(el){el.remove();});
     }
     // Die Originalansicht soll ein ruhiger Kartenkopf bleiben, ohne klickbare Dubletten.
     clone.querySelectorAll('[data-action]').forEach(function(el){el.removeAttribute('data-action');});
