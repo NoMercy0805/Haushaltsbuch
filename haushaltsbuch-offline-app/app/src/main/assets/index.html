@@ -4050,8 +4050,8 @@ var nativeStorage = {
                     (loan.monthlyRate ? '<span class="action-icon-btn-wrap"><button class="action-icon-btn neutral" data-action="reconcile-loan" data-id="'+loan.id+'" aria-label="Abgleichen" title="Restschuld mit Bank abgleichen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.3L3 8"/><path d="M3 3v5h5"/></svg></button><span class="action-icon-btn-label">Abgleichen</span></span>' : '')+
                     '<span class="action-icon-btn-wrap"><button class="action-icon-btn danger" data-action="delete-loan" data-id="'+loan.id+'" aria-label="Löschen" title="Löschen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button><span class="action-icon-btn-label">Löschen</span></span>'+
                   '</div>'+
-                  renderLoanHistory(loan.id)+
                   (payingLoan === loan.id ? renderPayLoanForm(loan) : '')+
+                  renderLoanHistory(loan.id)+
                   (increasingLoan === loan.id ? renderIncreaseLoanForm(loan) : '')+
                   (reconcilingLoan === loan.id ? renderReconcileLoanForm(loan) : '')+
                 '</div>';
